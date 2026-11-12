@@ -13,6 +13,25 @@ export default function Usuarios() {
   const { datos, actualizar, usuario: yo } = useApp();
   const [form, setForm] = useState(FORMULARIO_VACIO);
   const [error, setError] = useState("");
+  const [filtro, setFiltro] = useState("");
+
+  // Normaliza texto para buscar sin distinguir mayúsculas ni acentos
+  const normalizar = (texto) =>
+    String(texto ?? "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+  const busqueda = normalizar(filtro.trim());
+  const usuariosVisibles = datos.usuarios.filter((u) => {
+    if (!busqueda) return true;
+    return (
+      normalizar(u.nombre).includes(busqueda) ||
+      normalizar(u.correo).includes(busqueda) ||
+      normalizar(u.rol).includes(busqueda) ||
+      normalizar(NOMBRE_ROL[u.rol]).includes(busqueda)
+    );
+  });
 
   // Actualiza un solo campo del formulario sin perder los demás
   const cambiar = (campo) => (e) =>
@@ -116,7 +135,22 @@ export default function Usuarios() {
       </form>
 
       <div className="space-y-4">
-        {datos.usuarios.map((u) => {
+        <input
+          type="search"
+          className="border rounded px-3 py-2 w-full sm:max-w-sm"
+          placeholder="Filtrar por nombre, correo o rol"
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          aria-label="Filtrar usuarios"
+        />
+
+        {usuariosVisibles.length === 0 && (
+          <p className="text-sm text-neutral-600">
+            No hay usuarios que coincidan con “{filtro.trim()}”.
+          </p>
+        )}
+
+        {usuariosVisibles.map((u) => {
           const esYo = u.id === yo.id;
           return (
             <article
