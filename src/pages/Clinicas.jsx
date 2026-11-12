@@ -1,21 +1,9 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import { normalizar } from "../lib/texto.js";
+import { formatearFecha } from "../lib/fechas.js";
 
 const FORMULARIO_VACIO = { nombre: "", sede: "", plantillaId: "" };
-
-// Normaliza texto para buscar sin distinguir mayúsculas ni acentos
-const normalizar = (texto) =>
-  String(texto ?? "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-const formatearFecha = (fecha) =>
-  new Date(`${fecha}T00:00:00`).toLocaleDateString("es-CL", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 
 export default function Clinicas() {
   const { datos, actualizar } = useApp();
@@ -75,7 +63,10 @@ export default function Clinicas() {
     actualizar((d) => ({ ...d, clinicas: [...d.clinicas, nueva] }));
 
     // Limpiar el formulario
-    setForm({ ...FORMULARIO_VACIO, plantillaId: datos.plantillas[0]?.id ?? "" });
+    setForm({
+      ...FORMULARIO_VACIO,
+      plantillaId: datos.plantillas[0]?.id ?? "",
+    });
     setDias([]);
     setDia("");
   };
@@ -182,59 +173,58 @@ export default function Clinicas() {
         )}
       </form>
 
-        <div className="flex flex-wrap items-end gap-3">
-          <input
-            type="search"
-            className="border rounded px-3 py-2 w-full sm:max-w-sm"
-            placeholder="Filtrar por nombre o sede"
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            aria-label="Filtrar clínicas por nombre o sede"
-          />
-          <input
-            type="search"
-            className="border rounded px-3 py-2"
-            placeholder="Filtrar por día (ej. 09/10/2026)"
-            value={filtroFecha}
-            onChange={(e) => setFiltroFecha(e.target.value)}
-            aria-label="Filtrar clínicas por día"
-          />
-          {(filtro || filtroFecha) && (
-            <button
-              type="button"
-              onClick={() => {
-                setFiltro("");
-                setFiltroFecha("");
-              }}
-              className="text-sm underline"
-            >
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-
-        {clinicasVisibles.length === 0 && (
-          <p className="text-sm text-neutral-600">
-            No hay clínicas que coincidan con el filtro.
-          </p>
+      <div className="flex flex-wrap items-end gap-3">
+        <input
+          type="search"
+          className="border rounded px-3 py-2 w-full sm:max-w-sm"
+          placeholder="Filtrar por nombre o sede"
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          aria-label="Filtrar clínicas por nombre o sede"
+        />
+        <input
+          type="search"
+          className="border rounded px-3 py-2"
+          placeholder="Filtrar por día (ej. 09/10/2026)"
+          value={filtroFecha}
+          onChange={(e) => setFiltroFecha(e.target.value)}
+          aria-label="Filtrar clínicas por día"
+        />
+        {(filtro || filtroFecha) && (
+          <button
+            type="button"
+            onClick={() => {
+              setFiltro("");
+              setFiltroFecha("");
+            }}
+            className="text-sm underline"
+          >
+            Limpiar filtros
+          </button>
         )}
-
-        {clinicasVisibles.map((c) => (
-          <article key={c.id} className="border rounded p-4">
-            <header>
-              <h2 className="font-semibold">{c.nombre}</h2>
-              <p className="text-sm text-neutral-600">
-                {c.sede} · Plantilla: {nombrePlantilla(c.plantillaId)}
-              </p>
-            </header>
-            <p className="mt-3 text-sm">
-              {c.dias.length > 0
-                ? c.dias.map(formatearFecha).join(" · ")
-                : "Sin días definidos"}
-            </p>
-          </article>
-        ))}
       </div>
-    
+
+      {clinicasVisibles.length === 0 && (
+        <p className="text-sm text-neutral-600">
+          No hay clínicas que coincidan con el filtro.
+        </p>
+      )}
+
+      {clinicasVisibles.map((c) => (
+        <article key={c.id} className="border rounded p-4">
+          <header>
+            <h2 className="font-semibold">{c.nombre}</h2>
+            <p className="text-sm text-neutral-600">
+              {c.sede} · Plantilla: {nombrePlantilla(c.plantillaId)}
+            </p>
+          </header>
+          <p className="mt-3 text-sm">
+            {c.dias.length > 0
+              ? c.dias.map(formatearFecha).join(" · ")
+              : "Sin días definidos"}
+          </p>
+        </article>
+      ))}
+    </div>
   );
 }

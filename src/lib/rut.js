@@ -1,5 +1,8 @@
 // Deja solo dígitos y K
-export const limpiarRut = (rut) => rut.replace(/[^0-9kK]/g, "").toUpperCase();
+export const limpiarRut = (rut) =>
+  String(rut ?? "")
+    .replace(/[^0-9kK]/g, "")
+    .toUpperCase();
 
 // Validación con el algoritmo módulo 11
 export function validarRut(rut) {
@@ -21,7 +24,19 @@ export function validarRut(rut) {
   return dv === esperado;
 }
 
-// 12.345.678-5 -> ****678-5 (solo se muestran los últimos dígitos)
+// 123456785 -> 12.345.678-5
+export function formatearRut(rut) {
+  const limpio = limpiarRut(rut);
+  if (limpio.length < 2) return rut;
+  const cuerpo = limpio.slice(0, -1);
+  if (!/^\d+$/.test(cuerpo)) return rut; // evita mostrar "NaN-5" si escriben letras
+  return `${Number(cuerpo).toLocaleString("es-CL")}-${limpio.slice(-1)}`;
+}
+
+// Compara dos RUT sin importar puntos ni guion
+export const mismoRut = (a, b) => limpiarRut(a) === limpiarRut(b);
+
+// 12.345.678-5 -> *****678-5
 export function enmascararRut(rut) {
   const limpio = limpiarRut(rut);
   if (limpio.length < 4) return "***";

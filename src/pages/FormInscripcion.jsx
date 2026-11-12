@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../store.jsx";
+import { validarRut, formatearRut } from "../lib/rut.js";
+import { normalizar, normalizarTelefono } from "../lib/texto.js";
 
 // Comunas de la Región del Biobío (33)
 const COMUNAS_BIOBIO = [
@@ -57,50 +59,6 @@ const EQUIPO_VACIO = { tipo: "" };
 
 const ESTILO_INPUT =
   "border rounded-lg px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-[#EE0000]/30 focus:border-[#EE0000]";
-
-// Normaliza texto para buscar sin distinguir mayúsculas ni acentos
-const normalizar = (texto) =>
-  String(texto ?? "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-
-const limpiarRut = (rut) =>
-  String(rut ?? "")
-    .replace(/\./g, "")
-    .replace(/-/g, "")
-    .toUpperCase();
-
-const formatearRut = (rut) => {
-  const limpio = limpiarRut(rut);
-  if (limpio.length < 2) return rut;
-  const cuerpo = limpio.slice(0, -1);
-  const dv = limpio.slice(-1);
-  return `${Number(cuerpo).toLocaleString("es-CL")}-${dv}`;
-};
-
-// Valida el RUT chileno con módulo 11
-const validarRut = (rut) => {
-  const limpio = limpiarRut(rut);
-  if (!/^\d{7,8}[\dK]$/.test(limpio)) return false;
-
-  const cuerpo = limpio.slice(0, -1);
-  const dv = limpio.slice(-1);
-  let suma = 0;
-  let factor = 2;
-
-  for (let i = cuerpo.length - 1; i >= 0; i--) {
-    suma += Number(cuerpo[i]) * factor;
-    factor = factor === 7 ? 2 : factor + 1;
-  }
-
-  const resto = 11 - (suma % 11);
-  const dvEsperado = resto === 11 ? "0" : resto === 10 ? "K" : String(resto);
-  return dv === dvEsperado;
-};
-
-const formatearTelefono = (telefono) =>
-  String(telefono ?? "").replace(/\D/g, "");
 
 // Selector con escritura para filtrar la lista de comunas
 function SelectorComuna({ valor, onChange, error }) {
@@ -256,7 +214,7 @@ export default function FormInscripcion() {
     e.preventDefault();
     const rut = formatearRut(form.rut);
     const correo = form.correo.trim().toLowerCase();
-    const telefono = formatearTelefono(form.telefono);
+    const telefono = normalizarTelefono(form.telefono);
     const nombre = form.nombre.trim();
     const apellidoPaterno = form.apellidoPaterno.trim();
     const apellidoMaterno = form.apellidoMaterno.trim();
