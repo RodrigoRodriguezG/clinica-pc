@@ -5,6 +5,7 @@ import { puede } from "./lib/permisos.js";
 import Login from "./pages/Login.jsx";
 import Usuarios from "./pages/Usuarios.jsx";
 import Clinicas from "./pages/Clinicas.jsx";
+import Checklists from "./pages/Checklists.jsx";
 
 const MENU = [
   {
@@ -16,6 +17,11 @@ const MENU = [
     ruta: "/clinicas",
     texto: "Clínicas",
     permiso: PERMISOS.CREAR_CLINICAS,
+  },
+  {
+    ruta: "/checklists",
+    texto: "Checklists",
+    permiso: PERMISOS.EDITAR_CHECKLISTS,
   },
 ];
 
@@ -88,11 +94,19 @@ function Panel() {
               </Protegida>
             }
           />
-            <Route
+          <Route
             path="/clinicas"
             element={
               <Protegida permiso={PERMISOS.CREAR_CLINICAS}>
                 <Clinicas />
+              </Protegida>
+            }
+          />
+          <Route
+            path="/checklists"
+            element={
+              <Protegida permiso={PERMISOS.EDITAR_CHECKLISTS}>
+                <Checklists />
               </Protegida>
             }
           />
