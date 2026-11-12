@@ -6,6 +6,7 @@ import Login from "./pages/Login.jsx";
 import Usuarios from "./pages/Usuarios.jsx";
 import Clinicas from "./pages/Clinicas.jsx";
 import Checklists from "./pages/Checklists.jsx";
+import FormInscripcion from "./pages/FormInscripcion.jsx";
 
 const MENU = [
   {
@@ -22,6 +23,11 @@ const MENU = [
     ruta: "/checklists",
     texto: "Checklists",
     permiso: PERMISOS.EDITAR_CHECKLISTS,
+  },
+  {
+    ruta: "/inscripcion",
+    texto: "Inscribir propietario",
+    permiso: PERMISOS.RECEPCIONAR,
   },
 ];
 
@@ -120,7 +126,12 @@ export default function App() {
   return (
     <AppProvider>
       <HashRouter>
-        <Panel />
+        <Routes>
+          {/* Pública: el QR lleva aquí sin iniciar sesión */}
+          <Route path="/inscripcion" element={<FormInscripcion />} />
+          {/* Todo lo demás sigue pasando por el panel con login */}
+          <Route path="*" element={<Panel />} />
+        </Routes>
       </HashRouter>
     </AppProvider>
   );

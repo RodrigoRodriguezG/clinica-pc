@@ -58,3 +58,9 @@ export const ESTADOS_FICHA = [
   "Entregado",
   "No retirado",
 ];
+
+export const SERVICIOS = [
+  "Mantención lógica",
+  "Mantención física",
+  "Formateo",
+];
