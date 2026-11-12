@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useApp } from "../storage.jsx";
+import { useApp } from "../store.jsx";
 
 export default function Login() {
   const { ingresar, datos } = useApp();

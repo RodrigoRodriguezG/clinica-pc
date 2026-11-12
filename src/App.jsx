@@ -1,5 +1,5 @@
 import { HashRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
-import { AppProvider, useApp } from "./storage.jsx";
+import { AppProvider, useApp } from "../store.jsx";
 import { NOMBRE_ROL, PERMISOS } from "./constantes.js";
 import { puede } from "./lib/permisos.js";
 import Login from "./pages/Login.jsx";

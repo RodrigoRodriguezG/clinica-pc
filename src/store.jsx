@@ -7,6 +7,7 @@ const CLAVE_SESION = "clinica-pc-sesion";
 const AppContext = createContext(null);
 
 // Hook para usar el almacén desde cualquier pantalla: const { datos } = useApp()
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => useContext(AppContext);
 
 // Lee los datos guardados; si no hay (o están dañados), usa los de ejemplo
