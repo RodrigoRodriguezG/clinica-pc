@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useApp } from "../store.jsx";
-import { NOMBRE_ROL } from "../constantes.js";
+import { NOMBRE_ROL, PERMISOS } from "../constantes.js";
+import { puede } from "../lib/permisos.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
 import { limpiarRut, enmascararRut } from "../lib/rut.js";
+import AjustesClinica from "../components/AjustesClinica.jsx";
 
 // Input de filtro reutilizable para las tres listas
 function Filtro({ valor, onChange, placeholder, ariaLabel }) {
@@ -22,7 +24,7 @@ function Filtro({ valor, onChange, placeholder, ariaLabel }) {
 
 export default function ClinicaDetalle() {
   const { clinicaId } = useParams();
-  const { datos } = useApp();
+  const { datos, usuario } = useApp();
 
   const [filtroParticipantes, setFiltroParticipantes] = useState("");
   const [filtroPropietarios, setFiltroPropietarios] = useState("");
@@ -131,9 +133,7 @@ export default function ClinicaDetalle() {
         )
       );
     })
-    .sort((a, b) =>
-      a.equipo.numeroEquipo.localeCompare(b.equipo.numeroEquipo),
-    );
+    .sort((a, b) => a.equipo.numeroEquipo.localeCompare(b.equipo.numeroEquipo));
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -176,6 +176,18 @@ export default function ClinicaDetalle() {
             {equiposClinica.length === 1 ? "equipo" : "equipos"}
           </span>
         </div>
+
+        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <span>
+            <strong>{fichas.length}</strong>{" "}
+            {fichas.length === 1 ? "ficha" : "fichas"}
+          </span>
+          {/* ...los otros tres <span> quedan igual... */}
+        </div>
+
+        {puede(usuario, PERMISOS.CREAR_CLINICAS) && (
+          <AjustesClinica clinica={clinica} />
+        )}
       </header>
 
       {/* Participantes */}
@@ -206,8 +218,7 @@ export default function ClinicaDetalle() {
                   {NOMBRE_ROL[usuario.rol]} · {usuario.correo}
                 </p>
                 <p className="text-xs text-neutral-600 mt-1">
-                  {totalFichas}{" "}
-                  {totalFichas === 1 ? "ficha" : "fichas"}
+                  {totalFichas} {totalFichas === 1 ? "ficha" : "fichas"}
                   {recepciones > 0 && ` · ${recepciones} recepción(es)`}
                   {revisiones > 0 && ` · ${revisiones} revisión(es)`}
                 </p>
@@ -310,7 +321,11 @@ export default function ClinicaDetalle() {
                     : "Sin propietario registrado"}
                 </p>
                 <p className="text-sm text-neutral-600">
-                  {[equipo.marca, equipo.modelo, equipo.numeroSerie && `Serie ${equipo.numeroSerie}`]
+                  {[
+                    equipo.marca,
+                    equipo.modelo,
+                    equipo.numeroSerie && `Serie ${equipo.numeroSerie}`,
+                  ]
                     .filter(Boolean)
                     .join(" · ") || "Datos técnicos pendientes"}
                 </p>

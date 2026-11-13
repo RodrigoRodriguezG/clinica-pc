@@ -4,7 +4,6 @@ import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
 
-
 const FORMULARIO_VACIO = { nombre: "", sede: "", plantillaId: "" };
 
 export default function Clinicas() {
