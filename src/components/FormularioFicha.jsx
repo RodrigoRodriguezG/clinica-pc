@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useApp } from "../store.jsx";
 import { PERMISOS } from "../constantes.js";
 import { puede } from "../lib/permisos.js";
-import { normalizar } from "../lib/texto.js";
 import { siguienteCodigo } from "../lib/codigos.js";
 
 const ESTILO_INPUT = "border rounded-lg px-3 py-2 w-full bg-white";
@@ -10,14 +9,8 @@ const ESTILO_INPUT = "border rounded-lg px-3 py-2 w-full bg-white";
 export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
   const { datos, actualizar, usuario } = useApp();
 
-  // Si el equipo ya tenía datos (reingreso), el formulario parte con ellos
   const [form, setForm] = useState({
-    marca: equipo.marca ?? "",
-    modelo: equipo.modelo ?? "",
-    numeroSerie: equipo.numeroSerie ?? "",
     accesorios: equipo.accesorios ?? "",
-    diagnostico: "",
-    trabajo: "",
     clinicaId: datos.clinicas[0]?.id ?? "",
     tecnicosIds: [],
   });
@@ -42,29 +35,11 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
 
   const crear = (e) => {
     e.preventDefault();
-    const marca = form.marca.trim();
-    const modelo = form.modelo.trim();
-    const numeroSerie = form.numeroSerie.trim();
-    const diagnostico = form.diagnostico.trim();
-    const trabajo = form.trabajo.trim();
     const clinica = datos.clinicas.find((c) => c.id === form.clinicaId);
 
-    if (!marca || !modelo || !numeroSerie)
-      return setError("Completa marca, modelo y número de serie.");
-    if (
-      datos.equipos.some(
-        (x) =>
-          x.id !== equipo.id &&
-          normalizar(x.numeroSerie) === normalizar(numeroSerie),
-      )
-    )
-      return setError("Ese número de serie ya está registrado en otro equipo.");
-    if (!diagnostico || !trabajo)
-      return setError("Completa el diagnóstico y el trabajo a realizar.");
     if (!clinica) return setError("Selecciona una clínica.");
     if (form.tecnicosIds.length < 1 || form.tecnicosIds.length > 2)
       return setError("Asigna uno o dos técnicos al equipo.");
-
     setError("");
 
     // El checklist se copia de la plantilla de la clínica, con el texto de cada ítem
@@ -78,8 +53,8 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
       equipoId: equipo.id,
       recepcionistaId: usuario.id,
       tecnicosIds: form.tecnicosIds,
-      diagnostico,
-      trabajo,
+      diagnostico: "", // lo registra el técnico
+      trabajo: "", // lo registra el técnico
       estado: "Recibido",
       checklist: (plantilla?.items ?? []).map((i) => ({
         itemId: i.id,
@@ -94,15 +69,7 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
     actualizar((d) => ({
       ...d,
       equipos: d.equipos.map((x) =>
-        x.id === equipo.id
-          ? {
-              ...x,
-              marca,
-              modelo,
-              numeroSerie,
-              accesorios: form.accesorios.trim(),
-            }
-          : x,
+        x.id === equipo.id ? { ...x, accesorios: form.accesorios.trim() } : x,
       ),
       fichas: [...d.fichas, ficha],
     }));
@@ -115,39 +82,6 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
         Recepción de {equipo.numeroEquipo} · {equipo.tipo}
       </h3>
 
-      <div className="grid sm:grid-cols-3 gap-3">
-        <label className="text-sm">
-          Marca
-          <input
-            className={ESTILO_INPUT}
-            value={form.marca}
-            onChange={cambiar("marca")}
-            maxLength={40}
-            required
-          />
-        </label>
-        <label className="text-sm">
-          Modelo
-          <input
-            className={ESTILO_INPUT}
-            value={form.modelo}
-            onChange={cambiar("modelo")}
-            maxLength={60}
-            required
-          />
-        </label>
-        <label className="text-sm">
-          Número de serie
-          <input
-            className={ESTILO_INPUT}
-            value={form.numeroSerie}
-            onChange={cambiar("numeroSerie")}
-            maxLength={40}
-            required
-          />
-        </label>
-      </div>
-
       <label className="block text-sm">
         Accesorios que deja el propietario
         <input
@@ -156,30 +90,6 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
           onChange={cambiar("accesorios")}
           maxLength={120}
           placeholder="Ej. cargador, mouse"
-        />
-      </label>
-
-      <label className="block text-sm">
-        Diagnóstico
-        <textarea
-          className={ESTILO_INPUT}
-          rows={2}
-          value={form.diagnostico}
-          onChange={cambiar("diagnostico")}
-          maxLength={500}
-          required
-        />
-      </label>
-
-      <label className="block text-sm">
-        Trabajo a realizar
-        <textarea
-          className={ESTILO_INPUT}
-          rows={2}
-          value={form.trabajo}
-          onChange={cambiar("trabajo")}
-          maxLength={500}
-          required
         />
       </label>
 

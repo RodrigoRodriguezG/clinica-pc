@@ -16,3 +16,9 @@ export function normalizarTelefono(telefono) {
 // Nombre completo de un propietario, tolerando campos vacíos
 export const nombreCompleto = (p) =>
   [p.nombre, p.apellidoPaterno, p.apellidoMaterno].filter(Boolean).join(" ");
+
+// 912345678 -> +56 9 1234 5678
+export function mostrarTelefono(telefono) {
+  const d = normalizarTelefono(telefono);
+  return d.length === 9 ? `+56 ${d[0]} ${d.slice(1, 5)} ${d.slice(5)}` : d;
+}
