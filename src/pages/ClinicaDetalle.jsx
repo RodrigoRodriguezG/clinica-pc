@@ -6,6 +6,7 @@ import { puede } from "../lib/permisos.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
 import { limpiarRut, enmascararRut } from "../lib/rut.js";
+import { clinicaEsActiva } from "../lib/clinicas.js";
 import AjustesClinica from "../components/AjustesClinica.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -148,7 +149,12 @@ export default function ClinicaDetalle() {
     .sort((a, b) => a.equipo.numeroEquipo.localeCompare(b.equipo.numeroEquipo));
 
   const resumen = [
-    { etiqueta: "Fichas", valor: fichas.length, uno: "ficha", varios: "fichas" },
+    {
+      etiqueta: "Fichas",
+      valor: fichas.length,
+      uno: "ficha",
+      varios: "fichas",
+    },
     {
       etiqueta: "Participantes",
       valor: participantes.length,
@@ -179,7 +185,7 @@ export default function ClinicaDetalle() {
               <h1 className="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
                 {clinica.nombre}
               </h1>
-              {clinica.activa && (
+              {clinicaEsActiva(clinica) && (
                 <Insignia tono="exito">Clínica activa</Insignia>
               )}
             </div>
@@ -286,8 +292,7 @@ export default function ClinicaDetalle() {
                       </p>
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         <Insignia tono="neutral">
-                          {totalFichas}{" "}
-                          {totalFichas === 1 ? "ficha" : "fichas"}
+                          {totalFichas} {totalFichas === 1 ? "ficha" : "fichas"}
                         </Insignia>
                         {recepciones > 0 && (
                           <Insignia tono="info">

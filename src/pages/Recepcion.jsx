@@ -95,8 +95,8 @@ export default function Recepcion() {
 
         <Tarjeta className="space-y-5 p-5 sm:p-6">
           <Alerta variante="exito" titulo="Recepción completada">
-            El equipo quedó en estado <strong>{creada.estado}</strong> y asignado
-            a{" "}
+            El equipo quedó en estado <strong>{creada.estado}</strong> y
+            asignado a{" "}
             {creada.tecnicosIds.length === 1
               ? "un técnico"
               : "una pareja de técnicos"}
@@ -155,8 +155,8 @@ export default function Recepcion() {
         </Alerta>
       ) : (
         <Alerta variante="aviso" role="alert">
-          No tienes una clínica activa. Pídele al encargado que active una
-          clínica y te asigne a ella.
+          “No estás asignado a la clínica de este año. Pídele al encargado que
+          te asigne a una.”
         </Alerta>
       )}
 

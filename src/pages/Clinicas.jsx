@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
+import { clinicaEsActiva } from "../lib/clinicas.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -298,7 +299,7 @@ export default function Clinicas() {
                       <h2 className="text-lg font-semibold text-tinta">
                         {c.nombre}
                       </h2>
-                      {c.activa && (
+                      {clinicaEsActiva(c) && (
                         <Insignia tono="exito">Clínica activa</Insignia>
                       )}
                     </div>
