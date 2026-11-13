@@ -7,17 +7,29 @@ import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
 import { limpiarRut, enmascararRut } from "../lib/rut.js";
 import AjustesClinica from "../components/AjustesClinica.jsx";
+import Boton from "../components/ui/Boton.jsx";
+import Campo from "../components/ui/Campo.jsx";
+import EstadoVacio from "../components/ui/EstadoVacio.jsx";
+import Insignia from "../components/ui/Insignia.jsx";
+import Tarjeta from "../components/ui/Tarjeta.jsx";
+import {
+  IconoCalendario,
+  IconoClinicas,
+  IconoFlechaIzquierda,
+  IconoUsuarios,
+} from "../components/ui/iconos.jsx";
 
 // Input de filtro reutilizable para las tres listas
 function Filtro({ valor, onChange, placeholder, ariaLabel }) {
   return (
-    <input
+    <Campo
+      etiqueta={ariaLabel}
       type="search"
-      className="border rounded-lg px-3 py-2 w-full sm:max-w-sm"
       placeholder={placeholder}
       value={valor}
       onChange={(e) => onChange(e.target.value)}
       aria-label={ariaLabel}
+      autoComplete="off"
     />
   );
 }
@@ -34,17 +46,17 @@ export default function ClinicaDetalle() {
 
   if (!clinica) {
     return (
-      <div className="max-w-xl space-y-4">
-        <h1 className="text-2xl font-semibold">Clínica no encontrada</h1>
-        <p className="text-neutral-600">
-          Puede que el enlace sea incorrecto o que la clínica ya no exista.
-        </p>
-        <Link
-          to="/clinicas"
-          className="inline-block bg-[#EE0000] text-white rounded-lg py-2 px-4"
-        >
-          Volver a clínicas
-        </Link>
+      <div className="mx-auto max-w-xl">
+        <EstadoVacio
+          icono={<IconoClinicas className="h-6 w-6" />}
+          titulo="Clínica no encontrada"
+          descripcion="Puede que el enlace sea incorrecto o que la clínica ya no exista."
+          accion={
+            <Boton as={Link} to="/clinicas">
+              Volver a clínicas
+            </Boton>
+          }
+        />
       </div>
     );
   }
@@ -135,73 +147,93 @@ export default function ClinicaDetalle() {
     })
     .sort((a, b) => a.equipo.numeroEquipo.localeCompare(b.equipo.numeroEquipo));
 
+  const resumen = [
+    { etiqueta: "Fichas", valor: fichas.length, uno: "ficha", varios: "fichas" },
+    {
+      etiqueta: "Participantes",
+      valor: participantes.length,
+      uno: "participante",
+      varios: "participantes",
+    },
+    {
+      etiqueta: "Propietarios",
+      valor: propietarios.length,
+      uno: "propietario",
+      varios: "propietarios",
+    },
+    {
+      etiqueta: "Equipos",
+      valor: equiposClinica.length,
+      uno: "equipo",
+      varios: "equipos",
+    },
+  ];
+
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="space-y-7">
       {/* Encabezado de la clínica */}
-      <header className="border rounded-xl bg-neutral-50 p-5 space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold">{clinica.nombre}</h1>
-            <p className="text-sm text-neutral-600">
+      <Tarjeta className="p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+                {clinica.nombre}
+              </h1>
+              {clinica.activa && (
+                <Insignia tono="exito">Clínica activa</Insignia>
+              )}
+            </div>
+            <p className="text-sm leading-relaxed text-neutral-600">
               {clinica.sede} · Plantilla: {nombrePlantilla}
             </p>
-            <p className="text-sm text-neutral-600">
+            <p className="flex flex-wrap items-center gap-1.5 text-sm text-neutral-600">
+              <IconoCalendario className="h-4 w-4 text-neutral-500" />
               {clinica.dias.length > 0
                 ? `Días: ${clinica.dias.map(formatearFecha).join(" · ")}`
                 : "Sin días definidos"}
             </p>
           </div>
-          <Link
-            to="/clinicas"
-            className="border rounded-lg py-2 px-4 text-sm bg-white hover:border-[#EE0000]"
-          >
-            ← Volver a clínicas
-          </Link>
+          <Boton as={Link} to="/clinicas" variante="secundario">
+            <IconoFlechaIzquierda className="h-4 w-4" />
+            Volver a clínicas
+          </Boton>
         </div>
 
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <span>
-            <strong>{fichas.length}</strong>{" "}
-            {fichas.length === 1 ? "ficha" : "fichas"}
-          </span>
-          <span>
-            <strong>{participantes.length}</strong> participantes
-          </span>
-          <span>
-            <strong>{propietarios.length}</strong>{" "}
-            {propietarios.length === 1 ? "propietario" : "propietarios"}
-          </span>
-          <span>
-            <strong>{equiposClinica.length}</strong>{" "}
-            {equiposClinica.length === 1 ? "equipo" : "equipos"}
-          </span>
-        </div>
-
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          <span>
-            <strong>{fichas.length}</strong>{" "}
-            {fichas.length === 1 ? "ficha" : "fichas"}
-          </span>
-          {/* ...los otros tres <span> quedan igual... */}
-        </div>
+        <dl className="mt-5 grid grid-cols-2 gap-3 rounded-control border border-neutral-200 bg-neutral-50 p-4 sm:grid-cols-4">
+          {resumen.map(({ etiqueta, valor, uno, varios }) => (
+            <div key={etiqueta}>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                {etiqueta}
+              </dt>
+              <dd className="mt-0.5 text-xl font-bold text-tinta">
+                {valor}
+                <span className="ml-1 text-xs font-medium text-neutral-500">
+                  {valor === 1 ? uno : varios}
+                </span>
+              </dd>
+            </div>
+          ))}
+        </dl>
 
         {puede(usuario, PERMISOS.CREAR_CLINICAS) && (
-          <AjustesClinica clinica={clinica} />
+          <div className="mt-4">
+            <AjustesClinica clinica={clinica} />
+          </div>
         )}
-      </header>
+      </Tarjeta>
 
       {/* Participantes */}
       <section className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Participantes</h2>
+            <h2 className="text-lg font-semibold text-tinta">Participantes</h2>
             <p className="text-sm text-neutral-600">
               Recepcionistas y técnicos que trabajaron en esta clínica.
             </p>
           </div>
-          <span className="text-sm text-neutral-500">
+          <Insignia tono="neutral">
             {participantesVisibles.length} de {participantes.length}
-          </span>
+          </Insignia>
         </div>
         <Filtro
           valor={filtroParticipantes}
@@ -209,44 +241,86 @@ export default function ClinicaDetalle() {
           placeholder="Filtrar por nombre, correo o rol"
           ariaLabel="Filtrar participantes"
         />
-        <ul className="grid sm:grid-cols-2 gap-2">
-          {participantesVisibles.map(
-            ({ usuario, fichas: totalFichas, recepciones, revisiones }) => (
-              <li key={usuario.id} className="border rounded-lg p-3">
-                <p className="font-semibold">{usuario.nombre}</p>
-                <p className="text-sm text-neutral-600">
-                  {NOMBRE_ROL[usuario.rol]} · {usuario.correo}
-                </p>
-                <p className="text-xs text-neutral-600 mt-1">
-                  {totalFichas} {totalFichas === 1 ? "ficha" : "fichas"}
-                  {recepciones > 0 && ` · ${recepciones} recepción(es)`}
-                  {revisiones > 0 && ` · ${revisiones} revisión(es)`}
-                </p>
-              </li>
-            ),
-          )}
-        </ul>
-        {participantesVisibles.length === 0 && (
-          <p className="text-sm text-neutral-600">
-            {participantes.length === 0
-              ? "Esta clínica aún no tiene fichas registradas."
-              : "No hay participantes que coincidan con el filtro."}
-          </p>
+        {participantesVisibles.length === 0 ? (
+          <EstadoVacio
+            icono={<IconoUsuarios className="h-6 w-6" />}
+            titulo={
+              participantes.length === 0
+                ? "Esta clínica aún no tiene fichas registradas."
+                : "No hay participantes que coincidan con el filtro."
+            }
+            descripcion={
+              participantes.length === 0
+                ? "Los participantes aparecerán cuando se cree la primera ficha."
+                : "Prueba con otro nombre, correo o rol."
+            }
+            accion={
+              participantes.length > 0 ? (
+                <Boton
+                  variante="secundario"
+                  onClick={() => setFiltroParticipantes("")}
+                >
+                  Limpiar filtro
+                </Boton>
+              ) : null
+            }
+          />
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {participantesVisibles.map(
+              ({ usuario, fichas: totalFichas, recepciones, revisiones }) => (
+                <Tarjeta as="li" key={usuario.id} className="p-4">
+                  <div className="flex items-start gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600"
+                    >
+                      <IconoUsuarios className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-semibold text-tinta">
+                        {usuario.nombre}
+                      </p>
+                      <p className="break-all text-sm text-neutral-600">
+                        {NOMBRE_ROL[usuario.rol]} · {usuario.correo}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        <Insignia tono="neutral">
+                          {totalFichas}{" "}
+                          {totalFichas === 1 ? "ficha" : "fichas"}
+                        </Insignia>
+                        {recepciones > 0 && (
+                          <Insignia tono="info">
+                            {recepciones} recepción(es)
+                          </Insignia>
+                        )}
+                        {revisiones > 0 && (
+                          <Insignia tono="aviso">
+                            {revisiones} revisión(es)
+                          </Insignia>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Tarjeta>
+              ),
+            )}
+          </ul>
         )}
       </section>
 
       {/* Propietarios */}
       <section className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Propietarios</h2>
+            <h2 className="text-lg font-semibold text-tinta">Propietarios</h2>
             <p className="text-sm text-neutral-600">
               Personas que trajeron equipos a esta clínica.
             </p>
           </div>
-          <span className="text-sm text-neutral-500">
+          <Insignia tono="neutral">
             {propietariosVisibles.length} de {propietarios.length}
-          </span>
+          </Insignia>
         </div>
         <Filtro
           valor={filtroPropietarios}
@@ -254,50 +328,73 @@ export default function ClinicaDetalle() {
           placeholder="Filtrar por nombre, RUT, correo, teléfono o comuna"
           ariaLabel="Filtrar propietarios"
         />
-        <ul className="grid sm:grid-cols-2 gap-2">
-          {propietariosVisibles.map((p) => {
-            const susEquipos = equiposClinica.filter(
-              (e) => e.propietarioId === p.id,
-            );
-            return (
-              <li key={p.id} className="border rounded-lg p-3">
-                <p className="font-semibold">{nombreCompleto(p)}</p>
-                <p className="text-sm text-neutral-600">
-                  RUT {enmascararRut(p.rut)} · {p.comuna}
-                </p>
-                <p className="text-sm text-neutral-600">
-                  {p.correo} · {p.telefono}
-                </p>
-                <p className="text-xs text-neutral-600 mt-1">
-                  {susEquipos.length}{" "}
-                  {susEquipos.length === 1 ? "equipo" : "equipos"} en esta
-                  clínica
-                </p>
-              </li>
-            );
-          })}
-        </ul>
-        {propietariosVisibles.length === 0 && (
-          <p className="text-sm text-neutral-600">
-            {propietarios.length === 0
-              ? "Esta clínica aún no tiene propietarios registrados."
-              : "No hay propietarios que coincidan con el filtro."}
-          </p>
+        {propietariosVisibles.length === 0 ? (
+          <EstadoVacio
+            icono={<IconoUsuarios className="h-6 w-6" />}
+            titulo={
+              propietarios.length === 0
+                ? "Esta clínica aún no tiene propietarios registrados."
+                : "No hay propietarios que coincidan con el filtro."
+            }
+            descripcion={
+              propietarios.length === 0
+                ? "Los propietarios aparecerán cuando se registre la primera ficha."
+                : "Prueba con otro nombre, RUT, correo, teléfono o comuna."
+            }
+            accion={
+              propietarios.length > 0 ? (
+                <Boton
+                  variante="secundario"
+                  onClick={() => setFiltroPropietarios("")}
+                >
+                  Limpiar filtro
+                </Boton>
+              ) : null
+            }
+          />
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {propietariosVisibles.map((p) => {
+              const susEquipos = equiposClinica.filter(
+                (e) => e.propietarioId === p.id,
+              );
+              return (
+                <Tarjeta as="li" key={p.id} className="p-4">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-tinta">
+                      {nombreCompleto(p)}
+                    </p>
+                    <p className="text-sm text-neutral-600">
+                      RUT {enmascararRut(p.rut)} · {p.comuna}
+                    </p>
+                    <p className="break-all text-sm text-neutral-600">
+                      {p.correo} · {p.telefono}
+                    </p>
+                    <p className="pt-1 text-xs text-neutral-500">
+                      {susEquipos.length}{" "}
+                      {susEquipos.length === 1 ? "equipo" : "equipos"} en esta
+                      clínica
+                    </p>
+                  </div>
+                </Tarjeta>
+              );
+            })}
+          </ul>
         )}
       </section>
 
       {/* Equipos */}
       <section className="space-y-3">
-        <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Equipos</h2>
+            <h2 className="text-lg font-semibold text-tinta">Equipos</h2>
             <p className="text-sm text-neutral-600">
               Equipos recibidos, con el estado de su ficha.
             </p>
           </div>
-          <span className="text-sm text-neutral-500">
+          <Insignia tono="neutral">
             {equiposVisibles.length} de {equiposClinica.length}
-          </span>
+          </Insignia>
         </div>
         <Filtro
           valor={filtroEquipos}
@@ -305,48 +402,71 @@ export default function ClinicaDetalle() {
           placeholder="Filtrar por N° de equipo, tipo, marca, serie o propietario"
           ariaLabel="Filtrar equipos"
         />
-        <ul className="space-y-2">
-          {equiposVisibles.map(({ equipo, propietario, fichasEquipo }) => (
-            <li
-              key={equipo.id}
-              className="border rounded-lg p-3 flex flex-wrap justify-between items-start gap-3"
-            >
-              <div>
-                <p className="font-semibold">
-                  {equipo.numeroEquipo} · {equipo.tipo}
-                </p>
-                <p className="text-sm text-neutral-600">
-                  {propietario
-                    ? nombreCompleto(propietario)
-                    : "Sin propietario registrado"}
-                </p>
-                <p className="text-sm text-neutral-600">
-                  {[
-                    equipo.marca,
-                    equipo.modelo,
-                    equipo.numeroSerie && `Serie ${equipo.numeroSerie}`,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || "Datos técnicos pendientes"}
-                </p>
-              </div>
-              <div className="text-sm text-right space-y-1">
-                {fichasEquipo.map((f) => (
-                  <p key={f.id}>
-                    <span className="font-semibold">{f.numero}</span> ·{" "}
-                    {f.estado}
-                  </p>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-        {equiposVisibles.length === 0 && (
-          <p className="text-sm text-neutral-600">
-            {equiposClinica.length === 0
-              ? "Esta clínica aún no tiene equipos recibidos."
-              : "No hay equipos que coincidan con el filtro."}
-          </p>
+        {equiposVisibles.length === 0 ? (
+          <EstadoVacio
+            icono={<IconoClinicas className="h-6 w-6" />}
+            titulo={
+              equiposClinica.length === 0
+                ? "Esta clínica aún no tiene equipos recibidos."
+                : "No hay equipos que coincidan con el filtro."
+            }
+            descripcion={
+              equiposClinica.length === 0
+                ? "Los equipos aparecerán cuando se cree la primera ficha."
+                : "Prueba con otro número, tipo, marca, serie o propietario."
+            }
+            accion={
+              equiposClinica.length > 0 ? (
+                <Boton
+                  variante="secundario"
+                  onClick={() => setFiltroEquipos("")}
+                >
+                  Limpiar filtro
+                </Boton>
+              ) : null
+            }
+          />
+        ) : (
+          <ul className="space-y-3">
+            {equiposVisibles.map(({ equipo, propietario, fichasEquipo }) => (
+              <Tarjeta as="li" key={equipo.id} className="p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 space-y-1">
+                    <p className="font-semibold text-tinta">
+                      {equipo.numeroEquipo} · {equipo.tipo}
+                    </p>
+                    <p className="text-sm text-neutral-600">
+                      {propietario
+                        ? nombreCompleto(propietario)
+                        : "Sin propietario registrado"}
+                    </p>
+                    <p className="text-sm text-neutral-600">
+                      {[
+                        equipo.marca,
+                        equipo.modelo,
+                        equipo.numeroSerie && `Serie ${equipo.numeroSerie}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "Datos técnicos pendientes"}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1.5 sm:items-end">
+                    {fichasEquipo.map((f) => (
+                      <div
+                        key={f.id}
+                        className="flex flex-wrap items-center gap-2 sm:justify-end"
+                      >
+                        <span className="text-xs font-semibold text-neutral-500">
+                          {f.numero}
+                        </span>
+                        <Insignia estado={f.estado} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Tarjeta>
+            ))}
+          </ul>
         )}
       </section>
     </div>

@@ -6,6 +6,15 @@ import {
   PERMISOS_POR_ROL,
   PERMISOS,
 } from "../constantes.js";
+import Alerta from "../components/ui/Alerta.jsx";
+import Boton from "../components/ui/Boton.jsx";
+import Campo from "../components/ui/Campo.jsx";
+import Encabezado from "../components/ui/Encabezado.jsx";
+import EstadoVacio from "../components/ui/EstadoVacio.jsx";
+import Insignia from "../components/ui/Insignia.jsx";
+import Tarjeta from "../components/ui/Tarjeta.jsx";
+import { cx } from "../components/ui/cx.js";
+import { IconoUsuarios } from "../components/ui/iconos.jsx";
 
 const FORMULARIO_VACIO = { nombre: "", correo: "", clave: "", rol: "tecnico" };
 
@@ -86,113 +95,198 @@ export default function Usuarios() {
     }));
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Usuarios y permisos</h1>
+    <div className="space-y-6">
+      <Encabezado
+        titulo="Usuarios y permisos"
+        descripcion="Crea cuentas y ajusta qué puede hacer cada persona en el sistema."
+      />
 
-      <form onSubmit={crear} className="grid sm:grid-cols-5 gap-3 items-end">
-        <input
-          className="border rounded px-3 py-2"
-          placeholder="Nombre"
-          value={form.nombre}
-          onChange={cambiar("nombre")}
-          required
-        />
-        <input
-          className="border rounded px-3 py-2"
-          type="email"
-          placeholder="Correo"
-          value={form.correo}
-          onChange={cambiar("correo")}
-          required
-        />
-        <input
-          className="border rounded px-3 py-2"
-          type="password"
-          placeholder="Contraseña inicial"
-          value={form.clave}
-          onChange={cambiar("clave")}
-          required
-        />
-        <select
-          className="border rounded px-3 py-2"
-          value={form.rol}
-          onChange={cambiar("rol")}
-        >
-          {Object.keys(NOMBRE_ROL).map((r) => (
-            <option key={r} value={r}>
-              {NOMBRE_ROL[r]}
-            </option>
-          ))}
-        </select>
-        <button className="bg-[#EE0000] text-white rounded py-2">
-          Crear usuario
-        </button>
-        {error && (
-          <p role="alert" className="sm:col-span-5 text-sm text-red-700">
-            {error}
-          </p>
-        )}
-      </form>
+      <Tarjeta className="p-4 sm:p-5">
+        <form onSubmit={crear} className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 items-center justify-center rounded-control bg-inacap-tenue text-inacap-oscuro"
+            >
+              <IconoUsuarios className="h-4 w-4" />
+            </span>
+            <h2 className="text-lg font-semibold text-tinta">Nuevo usuario</h2>
+          </div>
 
-      <div className="space-y-4">
-        <input
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
+            <Campo
+              etiqueta="Nombre"
+              placeholder="Nombre completo"
+              value={form.nombre}
+              onChange={cambiar("nombre")}
+              required
+              autoComplete="name"
+            />
+            <Campo
+              etiqueta="Correo"
+              type="email"
+              placeholder="correo@inacap.cl"
+              value={form.correo}
+              onChange={cambiar("correo")}
+              required
+              inputMode="email"
+              autoComplete="off"
+            />
+            <Campo
+              etiqueta="Contraseña inicial"
+              type="password"
+              placeholder="Mínimo 8 caracteres"
+              value={form.clave}
+              onChange={cambiar("clave")}
+              required
+              autoComplete="new-password"
+              ayuda="Mínimo 8 caracteres."
+            />
+            <Campo
+              as="select"
+              etiqueta="Rol"
+              value={form.rol}
+              onChange={cambiar("rol")}
+            >
+              {Object.keys(NOMBRE_ROL).map((r) => (
+                <option key={r} value={r}>
+                  {NOMBRE_ROL[r]}
+                </option>
+              ))}
+            </Campo>
+            <div className="flex items-end">
+              <Boton type="submit" bloque>
+                Crear usuario
+              </Boton>
+            </div>
+          </div>
+
+          {error && (
+            <Alerta variante="error" role="alert">
+              {error}
+            </Alerta>
+          )}
+        </form>
+      </Tarjeta>
+
+      <Tarjeta className="p-4 sm:p-5">
+        <Campo
+          etiqueta="Buscar usuario"
           type="search"
-          className="border rounded px-3 py-2 w-full sm:max-w-sm"
           placeholder="Filtrar por nombre, correo o rol"
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
           aria-label="Filtrar usuarios"
+          autoComplete="off"
         />
+      </Tarjeta>
 
-        {usuariosVisibles.length === 0 && (
-          <p className="text-sm text-neutral-600">
-            No hay usuarios que coincidan con “{filtro.trim()}”.
-          </p>
-        )}
-
-        {usuariosVisibles.map((u) => {
-          const esYo = u.id === yo.id;
-          return (
-            <article
-              key={u.id}
-              className={`border rounded p-4 ${u.activo ? "" : "opacity-60"}`}
-            >
-              <header className="flex justify-between items-center">
-                <div>
-                  <h2 className="font-semibold">
-                    {u.nombre} {esYo && "(tú)"}
-                  </h2>
-                  <p className="text-sm text-neutral-600">
-                    {u.correo} · {NOMBRE_ROL[u.rol]}
-                  </p>
-                </div>
-                {!esYo && (
-                  <button
-                    onClick={() => alternarActivo(u.id)}
-                    className="text-sm underline"
-                  >
-                    {u.activo ? "Dar de baja" : "Reactivar"}
-                  </button>
-                )}
-              </header>
-
-              <div className="mt-3 grid sm:grid-cols-2 gap-1 text-sm">
-                {Object.entries(ETIQUETA_PERMISO).map(([permiso, etiqueta]) => (
-                  <label key={permiso} className="flex gap-2">
-                    <input
-                      type="checkbox"
-                      checked={u.permisos.includes(permiso)}
-                      onChange={() => alternarPermiso(u.id, permiso)}
-                      disabled={esYo && permiso === PERMISOS.GESTIONAR_USUARIOS}
-                    />
-                    {etiqueta}
-                  </label>
-                ))}
-              </div>
-            </article>
-          );
-        })}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-neutral-700">
+          Usuarios registrados
+        </h2>
+        <p className="text-sm text-neutral-600" aria-live="polite">
+          {usuariosVisibles.length}{" "}
+          {usuariosVisibles.length === 1 ? "usuario" : "usuarios"}
+        </p>
       </div>
+
+      {usuariosVisibles.length === 0 ? (
+        <EstadoVacio
+          icono={<IconoUsuarios className="h-6 w-6" />}
+          titulo="No hay usuarios que coincidan"
+          descripcion={`No encontramos usuarios para “${filtro.trim()}”.`}
+          accion={
+            <Boton variante="secundario" onClick={() => setFiltro("")}>
+              Limpiar búsqueda
+            </Boton>
+          }
+        />
+      ) : (
+        <div className="space-y-4">
+          {usuariosVisibles.map((u) => {
+            const esYo = u.id === yo.id;
+            return (
+              <Tarjeta
+                key={u.id}
+                className={cx("p-4 sm:p-5", !u.activo && "opacity-70")}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600"
+                    >
+                      <IconoUsuarios className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="font-semibold text-tinta">
+                          {u.nombre} {esYo && "(tú)"}
+                        </h2>
+                        <Insignia tono={u.activo ? "exito" : "neutral"}>
+                          {u.activo ? "Activo" : "Inactivo"}
+                        </Insignia>
+                      </div>
+                      <p className="break-all text-sm text-neutral-600">
+                        {u.correo} · {NOMBRE_ROL[u.rol]}
+                      </p>
+                    </div>
+                  </div>
+                  {!esYo && (
+                    <Boton
+                      variante="secundario"
+                      onClick={() => alternarActivo(u.id)}
+                    >
+                      {u.activo ? "Dar de baja" : "Reactivar"}
+                    </Boton>
+                  )}
+                </div>
+
+                <fieldset className="mt-4 border-t border-neutral-200 pt-4">
+                  <legend className="text-sm font-semibold text-neutral-700">
+                    Permisos
+                  </legend>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {Object.entries(ETIQUETA_PERMISO).map(
+                      ([permiso, etiqueta]) => {
+                        const deshabilitado =
+                          esYo && permiso === PERMISOS.GESTIONAR_USUARIOS;
+                        return (
+                          <label
+                            key={permiso}
+                            className={cx(
+                              "flex min-h-11 items-center gap-3 rounded-control border border-neutral-200 bg-white px-3 py-2 text-sm transition-colors duration-150",
+                              deshabilitado
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer hover:border-neutral-300 hover:bg-neutral-50",
+                            )}
+                            title={
+                              deshabilitado
+                                ? "No puedes quitarte este permiso"
+                                : undefined
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 shrink-0"
+                              checked={u.permisos.includes(permiso)}
+                              onChange={() => alternarPermiso(u.id, permiso)}
+                              disabled={deshabilitado}
+                              aria-label={`${etiqueta} de ${u.nombre}`}
+                            />
+                            {etiqueta}
+                          </label>
+                        );
+                      },
+                    )}
+                  </div>
+                </fieldset>
+              </Tarjeta>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

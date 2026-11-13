@@ -3,6 +3,19 @@ import { Link } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
+import Alerta from "../components/ui/Alerta.jsx";
+import Boton from "../components/ui/Boton.jsx";
+import Campo from "../components/ui/Campo.jsx";
+import Encabezado from "../components/ui/Encabezado.jsx";
+import EstadoVacio from "../components/ui/EstadoVacio.jsx";
+import Insignia from "../components/ui/Insignia.jsx";
+import Tarjeta from "../components/ui/Tarjeta.jsx";
+import {
+  IconoCalendario,
+  IconoChevronDerecha,
+  IconoClinicas,
+  IconoMas,
+} from "../components/ui/iconos.jsx";
 
 const FORMULARIO_VACIO = { nombre: "", sede: "", plantillaId: "" };
 
@@ -93,146 +106,231 @@ export default function Clinicas() {
     return coincideTexto && coincideFecha(c);
   });
 
+  const hayFiltros = Boolean(filtro || filtroFecha);
+
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">Clínicas</h1>
+    <div className="space-y-6">
+      <Encabezado
+        titulo="Clínicas"
+        descripcion="Crea las jornadas de atención, define sus días y asigna la plantilla de checklist."
+      />
 
-      <form onSubmit={crear} className="space-y-3">
-        <div className="grid sm:grid-cols-4 gap-3 items-end">
-          <input
-            className="border rounded px-3 py-2"
-            placeholder="Nombre"
-            value={form.nombre}
-            onChange={cambiar("nombre")}
-            required
-          />
-          <input
-            className="border rounded px-3 py-2"
-            placeholder="Sede"
-            value={form.sede}
-            onChange={cambiar("sede")}
-            required
-          />
-          <select
-            className="border rounded px-3 py-2"
-            value={form.plantillaId}
-            onChange={cambiar("plantillaId")}
-          >
-            {datos.plantillas.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre}
-              </option>
-            ))}
-          </select>
-          <button className="bg-[#EE0000] text-white rounded py-2">
-            Crear clínica
-          </button>
-        </div>
+      <Tarjeta className="p-4 sm:p-5">
+        <form onSubmit={crear} className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 items-center justify-center rounded-control bg-inacap-tenue text-inacap-oscuro"
+            >
+              <IconoClinicas className="h-4 w-4" />
+            </span>
+            <h2 className="text-lg font-semibold text-tinta">Nueva clínica</h2>
+          </div>
 
-        <div className="flex flex-wrap items-end gap-3">
-          <input
-            type="date"
-            className="border rounded px-3 py-2"
-            value={dia}
-            onChange={(e) => setDia(e.target.value)}
-            aria-label="Día de la clínica"
-          />
-          <button
-            type="button"
-            onClick={agregarDia}
-            className="border rounded px-3 py-2"
-          >
-            Agregar día
-          </button>
-
-          {dias.length > 0 && (
-            <ul className="flex flex-wrap gap-2">
-              {dias.map((fecha) => (
-                <li
-                  key={fecha}
-                  className="flex items-center gap-2 bg-neutral-100 rounded px-2 py-1 text-sm"
-                >
-                  {formatearFecha(fecha)}
-                  <button
-                    type="button"
-                    onClick={() => quitarDia(fecha)}
-                    aria-label={`Quitar ${fecha}`}
-                    className="text-neutral-600"
-                  >
-                    ×
-                  </button>
-                </li>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Campo
+              etiqueta="Nombre"
+              placeholder="Nombre de la clínica"
+              value={form.nombre}
+              onChange={cambiar("nombre")}
+              required
+            />
+            <Campo
+              etiqueta="Sede"
+              placeholder="Sede"
+              value={form.sede}
+              onChange={cambiar("sede")}
+              required
+            />
+            <Campo
+              as="select"
+              etiqueta="Plantilla de checklist"
+              value={form.plantillaId}
+              onChange={cambiar("plantillaId")}
+            >
+              {datos.plantillas.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
               ))}
-            </ul>
+            </Campo>
+            <div className="flex items-end">
+              <Boton type="submit" bloque>
+                Crear clínica
+              </Boton>
+            </div>
+          </div>
+
+          <div className="rounded-control border border-neutral-200 bg-neutral-50 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <Campo
+                etiqueta="Días de atención"
+                type="date"
+                className="sm:max-w-xs"
+                value={dia}
+                onChange={(e) => setDia(e.target.value)}
+                aria-label="Día de la clínica"
+              />
+              <Boton type="button" variante="secundario" onClick={agregarDia}>
+                <IconoMas className="h-4 w-4" />
+                Agregar día
+              </Boton>
+            </div>
+
+            {dias.length > 0 ? (
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {dias.map((fecha) => (
+                  <li
+                    key={fecha}
+                    className="flex min-h-11 items-center gap-1 rounded-control border border-neutral-200 bg-white py-1 pl-3 pr-1 text-sm"
+                  >
+                    <IconoCalendario
+                      className="h-4 w-4 text-neutral-500"
+                      aria-hidden="true"
+                    />
+                    {formatearFecha(fecha)}
+                    <button
+                      type="button"
+                      onClick={() => quitarDia(fecha)}
+                      aria-label={`Quitar ${fecha}`}
+                      className="flex h-9 w-9 items-center justify-center rounded-control text-lg leading-none text-neutral-500 transition-colors duration-150 hover:bg-neutral-100 hover:text-error"
+                    >
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-xs text-neutral-500">
+                Agrega al menos un día para poder crear la clínica.
+              </p>
+            )}
+          </div>
+
+          {error && (
+            <Alerta variante="error" role="alert">
+              {error}
+            </Alerta>
+          )}
+        </form>
+      </Tarjeta>
+
+      <Tarjeta className="p-4 sm:p-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+          <Campo
+            etiqueta="Buscar clínica"
+            type="search"
+            placeholder="Filtrar por nombre o sede"
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            aria-label="Filtrar clínicas por nombre o sede"
+            autoComplete="off"
+          />
+          <Campo
+            etiqueta="Filtrar por día"
+            type="search"
+            placeholder="Ej. 09/10/2026"
+            value={filtroFecha}
+            onChange={(e) => setFiltroFecha(e.target.value)}
+            aria-label="Filtrar clínicas por día"
+            autoComplete="off"
+          />
+          {hayFiltros && (
+            <Boton
+              variante="enlace"
+              onClick={() => {
+                setFiltro("");
+                setFiltroFecha("");
+              }}
+            >
+              Limpiar filtros
+            </Boton>
           )}
         </div>
+      </Tarjeta>
 
-        {error && (
-          <p role="alert" className="text-sm text-red-700">
-            {error}
-          </p>
-        )}
-      </form>
-
-      <div className="flex flex-wrap items-end gap-3">
-        <input
-          type="search"
-          className="border rounded px-3 py-2 w-full sm:max-w-sm"
-          placeholder="Filtrar por nombre o sede"
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          aria-label="Filtrar clínicas por nombre o sede"
-        />
-        <input
-          type="search"
-          className="border rounded px-3 py-2"
-          placeholder="Filtrar por día (ej. 09/10/2026)"
-          value={filtroFecha}
-          onChange={(e) => setFiltroFecha(e.target.value)}
-          aria-label="Filtrar clínicas por día"
-        />
-        {(filtro || filtroFecha) && (
-          <button
-            type="button"
-            onClick={() => {
-              setFiltro("");
-              setFiltroFecha("");
-            }}
-            className="text-sm underline"
-          >
-            Limpiar filtros
-          </button>
-        )}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-neutral-700">
+          Clínicas registradas
+        </h2>
+        <p className="text-sm text-neutral-600" aria-live="polite">
+          {clinicasVisibles.length}{" "}
+          {clinicasVisibles.length === 1 ? "clínica" : "clínicas"}
+        </p>
       </div>
 
-      {clinicasVisibles.length === 0 && (
-        <p className="text-sm text-neutral-600">
-          No hay clínicas que coincidan con el filtro.
-        </p>
-      )}
+      {clinicasVisibles.length === 0 ? (
+        <EstadoVacio
+          icono={<IconoClinicas className="h-6 w-6" />}
+          titulo="No hay clínicas que coincidan"
+          descripcion={
+            hayFiltros
+              ? "Prueba con otro nombre, sede o día."
+              : "Crea la primera clínica para comenzar a recibir equipos."
+          }
+          accion={
+            hayFiltros ? (
+              <Boton
+                variante="secundario"
+                onClick={() => {
+                  setFiltro("");
+                  setFiltroFecha("");
+                }}
+              >
+                Limpiar filtros
+              </Boton>
+            ) : null
+          }
+        />
+      ) : (
+        <ul className="space-y-3">
+          {clinicasVisibles.map((c) => (
+            <li key={c.id}>
+              <Tarjeta
+                as={Link}
+                to={`/clinicas/${c.id}`}
+                interactiva
+                className="group block p-4 hover:border-inacap/40 sm:p-5"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-lg font-semibold text-tinta">
+                        {c.nombre}
+                      </h2>
+                      {c.activa && (
+                        <Insignia tono="exito">Clínica activa</Insignia>
+                      )}
+                    </div>
+                    <p className="text-sm leading-relaxed text-neutral-600">
+                      {c.sede} · Plantilla: {nombrePlantilla(c.plantillaId)}
+                    </p>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-inacap">
+                    Ver detalle
+                    <IconoChevronDerecha className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+                  </span>
+                </div>
 
-      {clinicasVisibles.map((c) => (
-        <Link
-          key={c.id}
-          to={`/clinicas/${c.id}`}
-          className="block border rounded p-4 hover:border-[#EE0000] hover:shadow-sm transition"
-        >
-          <header className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              <h2 className="font-semibold">{c.nombre}</h2>
-              <p className="text-sm text-neutral-600">
-                {c.sede} · Plantilla: {nombrePlantilla(c.plantillaId)}
-              </p>
-            </div>
-            <span className="text-sm text-[#EE0000]">Ver detalle →</span>
-          </header>
-          <p className="mt-3 text-sm">
-            {c.dias.length > 0
-              ? c.dias.map(formatearFecha).join(" · ")
-              : "Sin días definidos"}
-          </p>
-        </Link>
-      ))}
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {c.dias.length > 0 ? (
+                    c.dias.map((fecha) => (
+                      <Insignia key={fecha} tono="neutral" punto={false}>
+                        <IconoCalendario className="h-3.5 w-3.5" />
+                        {formatearFecha(fecha)}
+                      </Insignia>
+                    ))
+                  ) : (
+                    <span className="text-sm text-neutral-500">
+                      Sin días definidos
+                    </span>
+                  )}
+                </div>
+              </Tarjeta>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

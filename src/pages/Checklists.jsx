@@ -1,5 +1,17 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import Alerta from "../components/ui/Alerta.jsx";
+import Boton from "../components/ui/Boton.jsx";
+import Campo from "../components/ui/Campo.jsx";
+import Encabezado from "../components/ui/Encabezado.jsx";
+import EstadoVacio from "../components/ui/EstadoVacio.jsx";
+import Insignia from "../components/ui/Insignia.jsx";
+import Tarjeta from "../components/ui/Tarjeta.jsx";
+import {
+  IconoBasura,
+  IconoChecklist,
+  IconoMas,
+} from "../components/ui/iconos.jsx";
 
 function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
   const [nuevoItem, setNuevoItem] = useState("");
@@ -25,67 +37,93 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
     onCambiar((p) => ({ ...p, items: p.items.filter((i) => i.id !== itemId) }));
 
   return (
-    <article className="border rounded p-4 space-y-3">
-      <header className="flex justify-between items-center">
-        <h2 className="font-semibold">
-          {plantilla.nombre}
-          <span className="ml-2 text-sm font-normal text-neutral-600">
-            {plantilla.items.length} ítems{enUso && " · en uso por una clínica"}
-          </span>
-        </h2>
-        <div className="flex gap-4 text-sm">
-          <button onClick={onDuplicar} className="underline">
+    <Tarjeta as="article" className="p-4 sm:p-5">
+      <header className="flex flex-col gap-3 border-b border-neutral-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold text-tinta">
+              {plantilla.nombre}
+            </h2>
+            <Insignia tono="neutral">{plantilla.items.length} ítems</Insignia>
+            {enUso && (
+              <Insignia tono="aviso">En uso por una clínica</Insignia>
+            )}
+          </div>
+          <p className="text-sm text-neutral-600">
+            Edita los ítems que verán los técnicos al revisar cada equipo.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-1">
+          <Boton variante="enlace" onClick={onDuplicar}>
             Duplicar
-          </button>
-          <button
+          </Boton>
+          <Boton
+            variante="peligro-enlace"
             onClick={onEliminar}
             disabled={enUso}
             title={enUso ? "No se puede eliminar: una clínica la usa" : ""}
-            className="underline text-red-700 disabled:opacity-40 disabled:no-underline"
           >
             Eliminar
-          </button>
+          </Boton>
         </div>
       </header>
 
-      <ul className="space-y-2">
-        {plantilla.items.map((item) => (
-          <li key={item.id} className="flex gap-2">
-            <input
-              className="flex-1 border rounded px-3 py-1"
+      <ul className="mt-4 space-y-2">
+        {plantilla.items.map((item, indice) => (
+          <li
+            key={item.id}
+            className="flex flex-col gap-2 rounded-control border border-neutral-200 bg-neutral-50 p-2.5 sm:flex-row sm:items-center"
+          >
+            <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-neutral-500 ring-1 ring-neutral-200 sm:flex">
+              {indice + 1}
+            </span>
+            <Campo
+              etiqueta={`Ítem ${indice + 1}`}
+              className="flex-1"
+              classNameControl="min-h-11 bg-white"
               value={item.texto}
               maxLength={80}
               onChange={(e) => editarItem(item.id, e.target.value)}
-              aria-label="Texto del ítem"
+              aria-label={`Texto del ítem ${indice + 1}`}
             />
-            <button
+            <Boton
+              variante="peligro-enlace"
               onClick={() => quitarItem(item.id)}
-              className="text-sm underline"
+              className="self-end sm:self-auto"
             >
+              <IconoBasura className="h-4 w-4" />
               Quitar
-            </button>
+            </Boton>
           </li>
         ))}
         {plantilla.items.length === 0 && (
-          <li className="text-sm text-neutral-600">
-            Esta plantilla no tiene ítems. Agrega el primero abajo.
+          <li>
+            <Alerta variante="info">
+              Esta plantilla no tiene ítems. Agrega el primero abajo.
+            </Alerta>
           </li>
         )}
       </ul>
 
-      <form onSubmit={agregarItem} className="flex gap-2">
-        <input
-          className="flex-1 border rounded px-3 py-1"
+      <form
+        onSubmit={agregarItem}
+        className="mt-4 flex flex-col gap-3 border-t border-neutral-200 pt-4 sm:flex-row sm:items-end"
+      >
+        <Campo
+          etiqueta="Nuevo ítem"
+          className="flex-1"
           placeholder="Nuevo ítem, por ejemplo: Ventilador sin ruido"
           value={nuevoItem}
           maxLength={80}
           onChange={(e) => setNuevoItem(e.target.value)}
+          aria-label="Nuevo ítem de la plantilla"
         />
-        <button className="bg-[#EE0000] text-white rounded px-3">
+        <Boton type="submit" variante="secundario">
+          <IconoMas className="h-4 w-4" />
           Agregar ítem
-        </button>
+        </Boton>
       </form>
-    </article>
+    </Tarjeta>
   );
 }
 
@@ -145,43 +183,66 @@ export default function Checklists() {
   const usaClinica = (id) => datos.clinicas.some((c) => c.plantillaId === id);
 
   return (
-    <div className="space-y-8 max-w-3xl">
-      <h1 className="text-2xl font-semibold">Plantillas de checklist</h1>
-      <p className="text-neutral-600">
-        Cada clínica elige una plantilla. Los técnicos la completan al revisar
-        cada equipo.
-      </p>
+    <div className="space-y-6">
+      <Encabezado
+        titulo="Plantillas de checklist"
+        descripcion="Cada clínica elige una plantilla. Los técnicos la completan al revisar cada equipo."
+      />
 
-      <form onSubmit={crear} className="flex gap-2">
-        <input
-          className="flex-1 border rounded px-3 py-2"
-          placeholder="Nombre de la nueva plantilla"
-          value={nombre}
-          maxLength={60}
-          onChange={(e) => setNombre(e.target.value)}
+      <Tarjeta className="p-4 sm:p-5">
+        <form onSubmit={crear} className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="flex h-8 w-8 items-center justify-center rounded-control bg-inacap-tenue text-inacap-oscuro"
+            >
+              <IconoChecklist className="h-4 w-4" />
+            </span>
+            <h2 className="text-lg font-semibold text-tinta">
+              Nueva plantilla
+            </h2>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Campo
+              etiqueta="Nombre de la plantilla"
+              className="flex-1"
+              placeholder="Nombre de la nueva plantilla"
+              value={nombre}
+              maxLength={60}
+              onChange={(e) => setNombre(e.target.value)}
+            />
+            <Boton type="submit">Crear plantilla</Boton>
+          </div>
+
+          {error && (
+            <Alerta variante="error" role="alert">
+              {error}
+            </Alerta>
+          )}
+        </form>
+      </Tarjeta>
+
+      {datos.plantillas.length === 0 ? (
+        <EstadoVacio
+          icono={<IconoChecklist className="h-6 w-6" />}
+          titulo="Aún no hay plantillas"
+          descripcion="Crea la primera plantilla para que las clínicas puedan revisar equipos."
         />
-        <button className="bg-[#E30613] text-white rounded px-4">
-          Crear plantilla
-        </button>
-      </form>
-      {error && (
-        <p role="alert" className="text-sm text-red-700">
-          {error}
-        </p>
+      ) : (
+        <div className="space-y-4">
+          {datos.plantillas.map((p) => (
+            <Plantilla
+              key={p.id}
+              plantilla={p}
+              enUso={usaClinica(p.id)}
+              onCambiar={(fn) => cambiar(p.id, fn)}
+              onDuplicar={() => duplicar(p)}
+              onEliminar={() => eliminar(p.id)}
+            />
+          ))}
+        </div>
       )}
-
-      <div className="space-y-4">
-        {datos.plantillas.map((p) => (
-          <Plantilla
-            key={p.id}
-            plantilla={p}
-            enUso={usaClinica(p.id)}
-            onCambiar={(fn) => cambiar(p.id, fn)}
-            onDuplicar={() => duplicar(p)}
-            onEliminar={() => eliminar(p.id)}
-          />
-        ))}
-      </div>
     </div>
   );
 }
