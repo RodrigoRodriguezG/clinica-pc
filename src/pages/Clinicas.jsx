@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
+
 
 const FORMULARIO_VACIO = { nombre: "", sede: "", plantillaId: "" };
 
@@ -211,19 +213,26 @@ export default function Clinicas() {
       )}
 
       {clinicasVisibles.map((c) => (
-        <article key={c.id} className="border rounded p-4">
-          <header>
-            <h2 className="font-semibold">{c.nombre}</h2>
-            <p className="text-sm text-neutral-600">
-              {c.sede} · Plantilla: {nombrePlantilla(c.plantillaId)}
-            </p>
+        <Link
+          key={c.id}
+          to={`/clinicas/${c.id}`}
+          className="block border rounded p-4 hover:border-[#EE0000] hover:shadow-sm transition"
+        >
+          <header className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h2 className="font-semibold">{c.nombre}</h2>
+              <p className="text-sm text-neutral-600">
+                {c.sede} · Plantilla: {nombrePlantilla(c.plantillaId)}
+              </p>
+            </div>
+            <span className="text-sm text-[#EE0000]">Ver detalle →</span>
           </header>
           <p className="mt-3 text-sm">
             {c.dias.length > 0
               ? c.dias.map(formatearFecha).join(" · ")
               : "Sin días definidos"}
           </p>
-        </article>
+        </Link>
       ))}
     </div>
   );

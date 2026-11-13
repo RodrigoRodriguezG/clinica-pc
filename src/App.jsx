@@ -9,6 +9,7 @@ import Checklists from "./pages/Checklists.jsx";
 import FormInscripcion from "./pages/FormInscripcion.jsx";
 import Recepcion from "./pages/Recepcion.jsx";
 import Fichas from "./pages/Fichas.jsx";
+import ClinicaDetalle from "./pages/ClinicaDetalle.jsx";
 
 const MENU = [
   {
@@ -32,11 +33,6 @@ const MENU = [
     permiso: PERMISOS.RECEPCIONAR,
   },
   { ruta: "/recepcion", texto: "Recepción", permiso: PERMISOS.RECEPCIONAR },
-  {
-    ruta: "/fichas",
-    texto: "Fichas",
-    permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
-  },
 ];
 
 function Protegida({ permiso, children }) {
@@ -142,6 +138,14 @@ function Panel() {
                 permiso={[PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS]}
               >
                 <Fichas />
+              </Protegida>
+            }
+          />
+          <Route
+            path="/clinicas/:clinicaId"
+            element={
+              <Protegida permiso={PERMISOS.CREAR_CLINICAS}>
+                <ClinicaDetalle />
               </Protegida>
             }
           />
