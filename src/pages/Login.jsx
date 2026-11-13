@@ -56,9 +56,6 @@ export default function Login() {
           <h1 className="mt-4 text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
             Clínica del PC
           </h1>
-          <p className="mt-4 max-w-sm text-lg leading-relaxed text-neutral-300">
-            Recibe, revisa y entrega equipos con registro de cada paso.
-          </p>
           <div aria-hidden="true" className="mt-8 h-1 w-16 bg-inacap" />
         </div>
 
