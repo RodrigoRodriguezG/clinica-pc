@@ -59,8 +59,7 @@ export const ESTADOS_FICHA = [
   "No retirado",
 ];
 
-export const SERVICIOS = [
-  "Mantención lógica",
-  "Mantención física",
-  "Formateo",
-];
+export const SERVICIOS = ["Mantención lógica", "Mantención física", "Formateo"];
+
+// Una ficha en estos estados ya terminó su atención
+export const ESTADOS_CERRADOS = ["Entregado", "No retirado"];

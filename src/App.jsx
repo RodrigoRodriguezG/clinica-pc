@@ -7,6 +7,7 @@ import Usuarios from "./pages/Usuarios.jsx";
 import Clinicas from "./pages/Clinicas.jsx";
 import Checklists from "./pages/Checklists.jsx";
 import FormInscripcion from "./pages/FormInscripcion.jsx";
+import Recepcion from "./pages/Recepcion.jsx";
 
 const MENU = [
   {
@@ -29,6 +30,7 @@ const MENU = [
     texto: "Inscribir propietario",
     permiso: PERMISOS.RECEPCIONAR,
   },
+  { ruta: "/recepcion", texto: "Recepción", permiso: PERMISOS.RECEPCIONAR },
 ];
 
 function Protegida({ permiso, children }) {
@@ -113,6 +115,14 @@ function Panel() {
             element={
               <Protegida permiso={PERMISOS.EDITAR_CHECKLISTS}>
                 <Checklists />
+              </Protegida>
+            }
+          />
+          <Route
+            path="/recepcion"
+            element={
+              <Protegida permiso={PERMISOS.RECEPCIONAR}>
+                <Recepcion />
               </Protegida>
             }
           />
