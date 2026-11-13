@@ -34,12 +34,6 @@ const MENU = [
     texto: "Inscribir propietario",
     permiso: PERMISOS.RECEPCIONAR,
   },
-  { ruta: "/recepcion", texto: "Recepción", permiso: PERMISOS.RECEPCIONAR },
-  {
-    ruta: "/fichas",
-    texto: "Fichas",
-    permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
-  },
 ];
 
 function Protegida({ permiso, children }) {

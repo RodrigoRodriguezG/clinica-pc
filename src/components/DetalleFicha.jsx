@@ -45,6 +45,7 @@ export default function DetalleFicha({ ficha }) {
   const [texto, setTexto] = useState("");
   const [aviso, setAviso] = useState("");
   const [errorDatos, setErrorDatos] = useState("");
+  const [confirmarReingreso, setConfirmarReingreso] = useState(false);
   const [datosForm, setDatosForm] = useState({
     marca: equipo?.marca ?? "",
     modelo: equipo?.modelo ?? "",
@@ -54,6 +55,22 @@ export default function DetalleFicha({ ficha }) {
   });
 
   const revisados = ficha.checklist.filter((i) => i.ok !== null).length;
+
+  // Busca atenciones anteriores con el mismo número de serie en otros equipos
+  const serieBuscada = normalizar(datosForm.numeroSerie.trim());
+  const reingresos = serieBuscada
+    ? datos.fichas
+        .filter((f) => {
+          if (f.id === ficha.id) return false;
+          const eq = datos.equipos.find((e) => e.id === f.equipoId);
+          return (
+            eq &&
+            eq.id !== equipo.id &&
+            normalizar(eq.numeroSerie) === serieBuscada
+          );
+        })
+        .sort((a, b) => b.creada.localeCompare(a.creada))
+    : [];
 
   const irA = (id) => {
     setPestana(id);
@@ -67,8 +84,10 @@ export default function DetalleFicha({ ficha }) {
       fichas: d.fichas.map((f) => (f.id === ficha.id ? fn(f) : f)),
     }));
 
-  const cambiarDato = (campo) => (e) =>
+  const cambiarDato = (campo) => (e) => {
     setDatosForm({ ...datosForm, [campo]: e.target.value });
+    if (campo === "numeroSerie") setConfirmarReingreso(false);
+  };
 
   const guardarDatos = (e) => {
     e.preventDefault();
@@ -82,15 +101,9 @@ export default function DetalleFicha({ ficha }) {
       return setErrorDatos("Completa marca, modelo y número de serie.");
     if (!diagnostico || !trabajo)
       return setErrorDatos("Completa el diagnóstico y el trabajo a realizar.");
-    if (
-      datos.equipos.some(
-        (x) =>
-          x.id !== equipo.id &&
-          normalizar(x.numeroSerie) === normalizar(numeroSerie),
-      )
-    )
+    if (reingresos.length > 0 && !confirmarReingreso)
       return setErrorDatos(
-        "Ese número de serie ya está registrado en otro equipo.",
+        "Este número de serie tiene atenciones anteriores. Revisa el historial y marca la confirmación de reingreso.",
       );
 
     setErrorDatos("");
@@ -105,6 +118,7 @@ export default function DetalleFicha({ ficha }) {
       ),
     }));
     setAviso("Datos técnicos guardados.");
+    setConfirmarReingreso(false);
     setPestana("checklist");
   };
 
@@ -298,6 +312,37 @@ export default function DetalleFicha({ ficha }) {
                   />
                 </label>
               </div>
+              {reingresos.length > 0 && (
+                <div className="border border-amber-300 bg-amber-50 rounded-lg p-3 space-y-2">
+                  <p className="font-semibold text-amber-900">
+                    Posible reingreso: este número de serie ya fue atendido
+                  </p>
+                  <p className="text-amber-900">
+                    Se encontraron {reingresos.length} atención(es) anterior(es)
+                    con la serie {datosForm.numeroSerie.trim()}. Revisa qué se
+                    hizo antes y por qué podría haber vuelto.
+                  </p>
+
+                  {reingresos.map((f) => (
+                    <AtencionAnterior key={f.id} ficha={f} />
+                  ))}
+
+                  <label className="flex items-start gap-2">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={confirmarReingreso}
+                      onChange={(e) =>
+                        setConfirmarReingreso(e.target.checked)
+                      }
+                    />
+                    <span>
+                      Confirmo que es el mismo equipo y que revisé el historial
+                      anterior.
+                    </span>
+                  </label>
+                </div>
+              )}
               <label className="block">
                 Diagnóstico
                 <textarea
