@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
-
+import AjustesClinica from "../components/AjustesClinica.jsx";
 
 const FORMULARIO_VACIO = { nombre: "", sede: "", plantillaId: "" };
 

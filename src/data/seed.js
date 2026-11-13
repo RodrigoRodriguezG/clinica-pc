@@ -70,6 +70,8 @@ export const crearDatosIniciales = () => ({
       sede: "Sede San Pedro de la Paz",
       dias: ["2025-07-09"],
       plantillaId: "pl1",
+      activa: false,
+      personalIds: ["u3", "u4", "u5"],
     },
     {
       id: "c1",
@@ -77,6 +79,8 @@ export const crearDatosIniciales = () => ({
       sede: "Sede San Pedro de la Paz",
       dias: ["2026-07-09", "2026-07-10"],
       plantillaId: "pl1",
+      activa: true,
+      personalIds: ["u3", "u4", "u5"],
     },
   ],
   propietarios: [
@@ -259,7 +263,7 @@ export const crearDatosIniciales = () => ({
       creada: "2026-11-10T10:00:00.000Z",
       cerrada: null,
     },
-        {
+    {
       id: "f3",
       numero: "FT-003",
       clinicaId: "c1",
