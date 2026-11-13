@@ -71,3 +71,10 @@ export const ESTADOS_TECNICO = [
   "En reparación",
   "Listo",
 ];
+
+// Estados en los que los técnicos están trabajando en la ficha. "Listo" los libera
+export const ESTADOS_EN_TRABAJO = [
+  "Recibido",
+  "En diagnóstico",
+  "En reparación",
+];

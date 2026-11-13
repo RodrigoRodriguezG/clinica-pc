@@ -6,6 +6,8 @@ import {
   PERMISOS_POR_ROL,
   PERMISOS,
 } from "../constantes.js";
+import { normalizar } from "../lib/texto.js";
+import { aplicarRol, motivoBloqueoCambioRol } from "../lib/usuarios.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -14,33 +16,50 @@ import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
 import { cx } from "../components/ui/cx.js";
-import { IconoUsuarios } from "../components/ui/iconos.jsx";
+import { IconoChevronAbajo, IconoUsuarios } from "../components/ui/iconos.jsx";
 
 const FORMULARIO_VACIO = { nombre: "", correo: "", clave: "", rol: "tecnico" };
+const POR_PAGINA = 20;
 
 export default function Usuarios() {
   const { datos, actualizar, usuario: yo } = useApp();
   const [form, setForm] = useState(FORMULARIO_VACIO);
   const [error, setError] = useState("");
   const [filtro, setFiltro] = useState("");
+  const [filtroRol, setFiltroRol] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [limite, setLimite] = useState(POR_PAGINA);
+  const [cambioRol, setCambioRol] = useState(null); // { id, rol } pendiente de confirmar
 
-  // Normaliza texto para buscar sin distinguir mayúsculas ni acentos
-  const normalizar = (texto) =>
-    String(texto ?? "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
+  // Al cambiar un filtro se vuelve a la primera página
+  const conFiltro = (setter) => (valor) => {
+    setter(valor);
+    setLimite(POR_PAGINA);
+  };
 
   const busqueda = normalizar(filtro.trim());
-  const usuariosVisibles = datos.usuarios.filter((u) => {
-    if (!busqueda) return true;
-    return (
-      normalizar(u.nombre).includes(busqueda) ||
-      normalizar(u.correo).includes(busqueda) ||
-      normalizar(u.rol).includes(busqueda) ||
-      normalizar(NOMBRE_ROL[u.rol]).includes(busqueda)
-    );
-  });
+  const usuariosFiltrados = datos.usuarios
+    .filter((u) => {
+      if (filtroRol && u.rol !== filtroRol) return false;
+      if (filtroEstado === "activos" && !u.activo) return false;
+      if (filtroEstado === "inactivos" && u.activo) return false;
+      if (!busqueda) return true;
+      return (
+        normalizar(u.nombre).includes(busqueda) ||
+        normalizar(u.correo).includes(busqueda)
+      );
+    })
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  const usuariosMostrados = usuariosFiltrados.slice(0, limite);
+  const hayFiltros = Boolean(filtro.trim() || filtroRol || filtroEstado);
+
+  const limpiarFiltros = () => {
+    setFiltro("");
+    setFiltroRol("");
+    setFiltroEstado("");
+    setLimite(POR_PAGINA);
+  };
 
   // Actualiza un solo campo del formulario sin perder los demás
   const cambiar = (campo) => (e) =>
@@ -94,11 +113,24 @@ export default function Usuarios() {
       ),
     }));
 
+  // Cambio de rol con confirmación; se vuelve a validar al aplicarlo
+  const confirmarRol = () => {
+    const u = datos.usuarios.find((x) => x.id === cambioRol.id);
+    if (!u || motivoBloqueoCambioRol(datos, u, yo)) return setCambioRol(null);
+    actualizar((d) => ({
+      ...d,
+      usuarios: d.usuarios.map((x) =>
+        x.id === u.id ? aplicarRol(x, cambioRol.rol) : x,
+      ),
+    }));
+    setCambioRol(null);
+  };
+
   return (
     <div className="space-y-6">
       <Encabezado
         titulo="Usuarios y permisos"
-        descripcion="Crea cuentas y ajusta qué puede hacer cada persona en el sistema."
+        descripcion="Los técnicos se registran solos desde el login. Aquí puedes cambiar el rol de una cuenta, ajustar permisos o dar de baja."
       />
 
       <Tarjeta className="p-4 sm:p-5">
@@ -171,48 +203,86 @@ export default function Usuarios() {
       </Tarjeta>
 
       <Tarjeta className="p-4 sm:p-5">
-        <Campo
-          etiqueta="Buscar usuario"
-          type="search"
-          placeholder="Filtrar por nombre, correo o rol"
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          aria-label="Filtrar usuarios"
-          autoComplete="off"
-        />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Campo
+            etiqueta="Buscar usuario"
+            type="search"
+            placeholder="Nombre o correo"
+            value={filtro}
+            onChange={(e) => conFiltro(setFiltro)(e.target.value)}
+            autoComplete="off"
+          />
+          <Campo
+            as="select"
+            etiqueta="Rol"
+            value={filtroRol}
+            onChange={(e) => conFiltro(setFiltroRol)(e.target.value)}
+          >
+            <option value="">Todos los roles</option>
+            {Object.keys(NOMBRE_ROL).map((r) => (
+              <option key={r} value={r}>
+                {NOMBRE_ROL[r]}
+              </option>
+            ))}
+          </Campo>
+          <Campo
+            as="select"
+            etiqueta="Estado"
+            value={filtroEstado}
+            onChange={(e) => conFiltro(setFiltroEstado)(e.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="activos">Activos</option>
+            <option value="inactivos">Inactivos</option>
+          </Campo>
+        </div>
       </Tarjeta>
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-neutral-700">
           Usuarios registrados
         </h2>
-        <p className="text-sm text-neutral-600" aria-live="polite">
-          {usuariosVisibles.length}{" "}
-          {usuariosVisibles.length === 1 ? "usuario" : "usuarios"}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-neutral-600" aria-live="polite">
+            {usuariosFiltrados.length} de {datos.usuarios.length}
+          </p>
+          {hayFiltros && (
+            <button
+              type="button"
+              onClick={limpiarFiltros}
+              className="text-sm font-medium text-inacap underline"
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
       </div>
 
-      {usuariosVisibles.length === 0 ? (
+      {usuariosFiltrados.length === 0 ? (
         <EstadoVacio
           icono={<IconoUsuarios className="h-6 w-6" />}
           titulo="No hay usuarios que coincidan"
           descripcion={
-            filtro.trim()
-              ? `No encontramos usuarios para “${filtro.trim()}”.`
+            hayFiltros
+              ? "Prueba con otros filtros."
               : "Aún no hay usuarios registrados."
           }
           accion={
-            filtro ? (
-              <Boton variante="secundario" onClick={() => setFiltro("")}>
-                Limpiar búsqueda
+            hayFiltros ? (
+              <Boton variante="secundario" onClick={limpiarFiltros}>
+                Limpiar filtros
               </Boton>
             ) : null
           }
         />
       ) : (
         <div className="space-y-4">
-          {usuariosVisibles.map((u) => {
+          {usuariosMostrados.map((u) => {
             const esYo = u.id === yo.id;
+            const bloqueoRol = motivoBloqueoCambioRol(datos, u, yo);
+            const pendiente = cambioRol?.id === u.id ? cambioRol : null;
+            const permisosActivos = u.permisos.length;
+
             return (
               <Tarjeta
                 key={u.id}
@@ -236,7 +306,7 @@ export default function Usuarios() {
                         </Insignia>
                       </div>
                       <p className="break-all text-sm text-neutral-600">
-                        {u.correo} · {NOMBRE_ROL[u.rol]}
+                        {u.correo}
                       </p>
                     </div>
                   </div>
@@ -250,11 +320,59 @@ export default function Usuarios() {
                   )}
                 </div>
 
-                <fieldset className="mt-4 border-t border-neutral-200 pt-4">
-                  <legend className="text-sm font-semibold text-neutral-700">
-                    Permisos
-                  </legend>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {/* Rol */}
+                <div className="mt-4 space-y-3 border-t border-neutral-200 pt-4">
+                  <Campo
+                    as="select"
+                    etiqueta="Rol"
+                    className="sm:max-w-xs"
+                    value={pendiente ? pendiente.rol : u.rol}
+                    disabled={Boolean(bloqueoRol)}
+                    ayuda={bloqueoRol ?? undefined}
+                    onChange={(e) =>
+                      e.target.value === u.rol
+                        ? setCambioRol(null)
+                        : setCambioRol({ id: u.id, rol: e.target.value })
+                    }
+                  >
+                    {Object.keys(NOMBRE_ROL).map((r) => (
+                      <option key={r} value={r}>
+                        {NOMBRE_ROL[r]}
+                      </option>
+                    ))}
+                  </Campo>
+
+                  {pendiente && (
+                    <div
+                      role="alert"
+                      className="space-y-3 rounded-control border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+                    >
+                      <p>
+                        ¿Cambiar a {u.nombre} de {NOMBRE_ROL[u.rol]} a{" "}
+                        <strong>{NOMBRE_ROL[pendiente.rol]}</strong>? Sus
+                        permisos se reemplazarán por los del nuevo rol.
+                      </p>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <Boton onClick={confirmarRol}>Sí, cambiar rol</Boton>
+                        <Boton
+                          variante="secundario"
+                          onClick={() => setCambioRol(null)}
+                        >
+                          Cancelar
+                        </Boton>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Permisos, plegados para que la lista sea manejable */}
+                <details className="group mt-4 rounded-control border border-neutral-200 bg-neutral-50">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden">
+                    Permisos ({permisosActivos} de{" "}
+                    {Object.keys(ETIQUETA_PERMISO).length} activos)
+                    <IconoChevronAbajo className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" />
+                  </summary>
+                  <div className="grid gap-2 border-t border-neutral-200 p-3 sm:grid-cols-2">
                     {Object.entries(ETIQUETA_PERMISO).map(
                       ([permiso, etiqueta]) => {
                         const deshabilitado =
@@ -288,10 +406,22 @@ export default function Usuarios() {
                       },
                     )}
                   </div>
-                </fieldset>
+                </details>
               </Tarjeta>
             );
           })}
+
+          {usuariosFiltrados.length > usuariosMostrados.length && (
+            <div className="text-center">
+              <Boton
+                variante="secundario"
+                onClick={() => setLimite(limite + POR_PAGINA)}
+              >
+                Mostrar más (
+                {usuariosFiltrados.length - usuariosMostrados.length} restantes)
+              </Boton>
+            </div>
+          )}
         </div>
       )}
     </div>

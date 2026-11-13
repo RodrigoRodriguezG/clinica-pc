@@ -1,4 +1,8 @@
-import { ESTADOS_CERRADOS, PERMISOS } from "../constantes.js";
+import {
+  ESTADOS_CERRADOS,
+  ESTADOS_EN_TRABAJO,
+  PERMISOS,
+} from "../constantes.js";
 import { puede } from "./permisos.js";
 
 export const estaAbierta = (ficha) => !ESTADOS_CERRADOS.includes(ficha.estado);
@@ -8,6 +12,14 @@ export const fichasDeEquipo = (datos, equipoId) =>
   datos.fichas
     .filter((f) => f.equipoId === equipoId)
     .sort((a, b) => b.creada.localeCompare(a.creada));
+
+// Ficha en la que el técnico está trabajando ahora (null si está libre)
+export const fichaEnCursoDe = (datos, usuarioId) =>
+  datos.fichas.find(
+    (f) =>
+      ESTADOS_EN_TRABAJO.includes(f.estado) &&
+      f.tecnicosIds.includes(usuarioId),
+  ) ?? null;
 
 // El propietario dueño de una ficha (ficha -> equipo -> propietario)
 export function propietarioDeFicha(datos, ficha) {
