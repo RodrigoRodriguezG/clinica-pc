@@ -6,39 +6,34 @@ import { siguienteCodigo } from "../lib/codigos.js";
 
 const ESTILO_INPUT = "border rounded-lg px-3 py-2 w-full bg-white";
 
-export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
+export default function FormularioFicha({
+  equipo,
+  clinica,
+  onCancelar,
+  onCreada,
+}) {
   const { datos, actualizar, usuario } = useApp();
 
-  const [form, setForm] = useState({
-    accesorios: equipo.accesorios ?? "",
-    clinicaId: datos.clinicas[0]?.id ?? "",
-    tecnicosIds: [],
-  });
+  const [accesorios, setAccesorios] = useState(equipo.accesorios ?? "");
+  const [tecnicosIds, setTecnicosIds] = useState([]);
   const [error, setError] = useState("");
 
-  const cambiar = (campo) => (e) =>
-    setForm({ ...form, [campo]: e.target.value });
-
-  // Técnicos activos que pueden revisar equipos
-  const tecnicos = datos.usuarios.filter((u) =>
-    puede(u, PERMISOS.REVISAR_EQUIPOS),
+  // Solo técnicos activos asignados a esta clínica
+  const tecnicos = datos.usuarios.filter(
+    (u) =>
+      puede(u, PERMISOS.REVISAR_EQUIPOS) &&
+      (clinica.personalIds ?? []).includes(u.id),
   );
 
   // Una pareja como máximo: 1 o 2 técnicos
   const alternarTecnico = (id) =>
-    setForm((prev) => ({
-      ...prev,
-      tecnicosIds: prev.tecnicosIds.includes(id)
-        ? prev.tecnicosIds.filter((t) => t !== id)
-        : [...prev.tecnicosIds, id],
-    }));
+    setTecnicosIds((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
+    );
 
   const crear = (e) => {
     e.preventDefault();
-    const clinica = datos.clinicas.find((c) => c.id === form.clinicaId);
-
-    if (!clinica) return setError("Selecciona una clínica.");
-    if (form.tecnicosIds.length < 1 || form.tecnicosIds.length > 2)
+    if (tecnicosIds.length < 1 || tecnicosIds.length > 2)
       return setError("Asigna uno o dos técnicos al equipo.");
     setError("");
 
@@ -52,7 +47,7 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
       clinicaId: clinica.id,
       equipoId: equipo.id,
       recepcionistaId: usuario.id,
-      tecnicosIds: form.tecnicosIds,
+      tecnicosIds,
       diagnostico: "", // lo registra el técnico
       trabajo: "", // lo registra el técnico
       estado: "Recibido",
@@ -69,7 +64,7 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
     actualizar((d) => ({
       ...d,
       equipos: d.equipos.map((x) =>
-        x.id === equipo.id ? { ...x, accesorios: form.accesorios.trim() } : x,
+        x.id === equipo.id ? { ...x, accesorios: accesorios.trim() } : x,
       ),
       fichas: [...d.fichas, ficha],
     }));
@@ -81,52 +76,41 @@ export default function FormularioFicha({ equipo, onCancelar, onCreada }) {
       <h3 className="font-semibold">
         Recepción de {equipo.numeroEquipo} · {equipo.tipo}
       </h3>
+      <p className="text-sm text-neutral-600">Clínica: {clinica.nombre}</p>
 
       <label className="block text-sm">
         Accesorios que deja el propietario
         <input
           className={ESTILO_INPUT}
-          value={form.accesorios}
-          onChange={cambiar("accesorios")}
+          value={accesorios}
+          onChange={(e) => setAccesorios(e.target.value)}
           maxLength={120}
           placeholder="Ej. cargador, mouse"
         />
-      </label>
-
-      <label className="block text-sm">
-        Clínica
-        <select
-          className={ESTILO_INPUT}
-          value={form.clinicaId}
-          onChange={cambiar("clinicaId")}
-        >
-          {datos.clinicas.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
-        </select>
       </label>
 
       <fieldset className="text-sm">
         <legend>Técnicos que revisarán el equipo (1 o 2)</legend>
         <div className="mt-1 grid sm:grid-cols-2 gap-1">
           {tecnicos.map((t) => {
-            const marcado = form.tecnicosIds.includes(t.id);
+            const marcado = tecnicosIds.includes(t.id);
             return (
               <label key={t.id} className="flex gap-2">
                 <input
                   type="checkbox"
                   checked={marcado}
                   onChange={() => alternarTecnico(t.id)}
-                  disabled={!marcado && form.tecnicosIds.length >= 2}
+                  disabled={!marcado && tecnicosIds.length >= 2}
                 />
                 {t.nombre}
               </label>
             );
           })}
           {tecnicos.length === 0 && (
-            <p className="text-neutral-600">No hay técnicos activos.</p>
+            <p className="text-neutral-600">
+              Esta clínica no tiene técnicos asignados. Pídele al encargado que
+              los asigne.
+            </p>
           )}
         </div>
       </fieldset>

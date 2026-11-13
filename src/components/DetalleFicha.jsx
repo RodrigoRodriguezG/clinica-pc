@@ -17,19 +17,8 @@ const ESTILO_INPUT = "border rounded px-3 py-2 w-full bg-white";
 
 export default function DetalleFicha({ ficha }) {
   const { datos, actualizar, usuario } = useApp();
-  const [texto, setTexto] = useState("");
-  const [verAnterior, setVerAnterior] = useState(false);
 
   const equipo = datos.equipos.find((e) => e.id === ficha.equipoId);
-  const [datosForm, setDatosForm] = useState({
-    marca: equipo?.marca ?? "",
-    modelo: equipo?.modelo ?? "",
-    numeroSerie: equipo?.numeroSerie ?? "",
-    diagnostico: ficha.diagnostico ?? "",
-    trabajo: ficha.trabajo ?? "",
-  });
-  const [errorDatos, setErrorDatos] = useState("");
-  const [aviso, setAviso] = useState("");
   const propietario = propietarioDeFicha(datos, ficha);
   const editable = puedeEditarFicha(usuario, ficha);
   const anterior = fichasDeEquipo(datos, ficha.equipoId).find(
@@ -37,7 +26,6 @@ export default function DetalleFicha({ ficha }) {
   );
   const nombreUsuario = (id) =>
     datos.usuarios.find((u) => u.id === id)?.nombre ?? "Usuario no disponible";
-  const revisados = ficha.checklist.filter((i) => i.ok !== null).length;
 
   // Se calcula con lo ya guardado, no con lo que se está escribiendo
   const datosCompletos = Boolean(
@@ -47,11 +35,40 @@ export default function DetalleFicha({ ficha }) {
     ficha.diagnostico &&
     ficha.trabajo,
   );
+  // El técnico no avanza a checklist y observaciones hasta guardar los datos técnicos
+  const bloqueado = editable && !datosCompletos;
 
-  const cambiarDato = (campo) => (e) => {
-    setDatosForm({ ...datosForm, [campo]: e.target.value });
+  const [pestana, setPestana] = useState(
+    datosCompletos ? "checklist" : "datos",
+  );
+  const [verAnterior, setVerAnterior] = useState(false);
+  const [texto, setTexto] = useState("");
+  const [aviso, setAviso] = useState("");
+  const [errorDatos, setErrorDatos] = useState("");
+  const [datosForm, setDatosForm] = useState({
+    marca: equipo?.marca ?? "",
+    modelo: equipo?.modelo ?? "",
+    numeroSerie: equipo?.numeroSerie ?? "",
+    diagnostico: ficha.diagnostico ?? "",
+    trabajo: ficha.trabajo ?? "",
+  });
+
+  const revisados = ficha.checklist.filter((i) => i.ok !== null).length;
+
+  const irA = (id) => {
+    setPestana(id);
     setAviso("");
   };
+
+  // Aplica un cambio a esta ficha
+  const modificar = (fn) =>
+    actualizar((d) => ({
+      ...d,
+      fichas: d.fichas.map((f) => (f.id === ficha.id ? fn(f) : f)),
+    }));
+
+  const cambiarDato = (campo) => (e) =>
+    setDatosForm({ ...datosForm, [campo]: e.target.value });
 
   const guardarDatos = (e) => {
     e.preventDefault();
@@ -88,14 +105,8 @@ export default function DetalleFicha({ ficha }) {
       ),
     }));
     setAviso("Datos técnicos guardados.");
+    setPestana("checklist");
   };
-
-  // Aplica un cambio a esta ficha
-  const modificar = (fn) =>
-    actualizar((d) => ({
-      ...d,
-      fichas: d.fichas.map((f) => (f.id === ficha.id ? fn(f) : f)),
-    }));
 
   const cambiarItem = (itemId, clave) =>
     modificar((f) => ({
@@ -126,8 +137,14 @@ export default function DetalleFicha({ ficha }) {
     setTexto("");
   };
 
+  const PESTANAS = [
+    ["datos", "Datos técnicos"],
+    ["checklist", `Checklist (${revisados}/${ficha.checklist.length})`],
+    ["observaciones", `Observaciones (${ficha.observaciones.length})`],
+  ];
+
   return (
-    <div className="mt-3 border-t pt-4 space-y-5 text-sm">
+    <div className="mt-3 border-t pt-4 space-y-4 text-sm">
       {!editable && (
         <p className="bg-neutral-100 rounded p-2">
           Solo lectura:{" "}
@@ -137,10 +154,12 @@ export default function DetalleFicha({ ficha }) {
         </p>
       )}
 
+      {/* Resumen siempre visible */}
       <section className="space-y-1">
         <p>
           <span className="text-neutral-600">Equipo:</span>{" "}
           {equipo?.numeroEquipo} · {equipo?.tipo}
+          {equipo?.marca && ` · ${equipo.marca} ${equipo.modelo}`}
         </p>
         {equipo?.accesorios && (
           <p>
@@ -152,99 +171,29 @@ export default function DetalleFicha({ ficha }) {
           <span className="text-neutral-600">Técnicos:</span>{" "}
           {ficha.tecnicosIds.map(nombreUsuario).join(" y ")}
         </p>
-      </section>
-
-      <section className="space-y-2">
-        <h3 className="font-semibold">Datos técnicos del equipo</h3>
-        {editable ? (
-          <form onSubmit={guardarDatos} className="space-y-3">
-            {!datosCompletos && (
-              <p className="bg-amber-50 border border-amber-300 rounded p-2">
-                Faltan datos técnicos. Complétalos para poder cambiar el estado.
-              </p>
-            )}
-            <div className="grid sm:grid-cols-3 gap-3">
-              <label>
-                Marca
-                <input
-                  className={ESTILO_INPUT}
-                  value={datosForm.marca}
-                  onChange={cambiarDato("marca")}
-                  maxLength={40}
-                />
-              </label>
-              <label>
-                Modelo
-                <input
-                  className={ESTILO_INPUT}
-                  value={datosForm.modelo}
-                  onChange={cambiarDato("modelo")}
-                  maxLength={60}
-                />
-              </label>
-              <label>
-                Número de serie
-                <input
-                  className={ESTILO_INPUT}
-                  value={datosForm.numeroSerie}
-                  onChange={cambiarDato("numeroSerie")}
-                  maxLength={40}
-                />
-              </label>
-            </div>
-            <label className="block">
-              Diagnóstico
-              <textarea
-                className={ESTILO_INPUT}
-                rows={2}
-                value={datosForm.diagnostico}
-                onChange={cambiarDato("diagnostico")}
-                maxLength={500}
-              />
-            </label>
-            <label className="block">
-              Trabajo a realizar
-              <textarea
-                className={ESTILO_INPUT}
-                rows={2}
-                value={datosForm.trabajo}
-                onChange={cambiarDato("trabajo")}
-                maxLength={500}
-              />
-            </label>
-            {errorDatos && (
-              <p role="alert" className="text-red-700">
-                {errorDatos}
-              </p>
-            )}
-            {aviso && (
-              <p role="status" className="text-green-800">
-                {aviso}
-              </p>
-            )}
-            <button className="bg-[#EE0000] text-white rounded px-3 py-2">
-              Guardar datos técnicos
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-1">
-            <p>
-              <span className="text-neutral-600">Marca y modelo:</span>{" "}
-              {equipo?.marca ? `${equipo.marca} ${equipo.modelo}` : "Pendiente"}
-            </p>
-            <p>
-              <span className="text-neutral-600">Número de serie:</span>{" "}
-              {equipo?.numeroSerie || "Pendiente"}
-            </p>
-            <p>
-              <span className="text-neutral-600">Diagnóstico:</span>{" "}
-              {ficha.diagnostico || "Pendiente"}
-            </p>
-            <p>
-              <span className="text-neutral-600">Trabajo a realizar:</span>{" "}
-              {ficha.trabajo || "Pendiente"}
-            </p>
-          </div>
+        <label className="block">
+          <span className="text-neutral-600">Estado: </span>
+          {editable ? (
+            <select
+              className="border rounded px-2 py-1 disabled:opacity-50"
+              value={ficha.estado}
+              disabled={!datosCompletos}
+              onChange={(e) => cambiarEstado(e.target.value)}
+            >
+              {ESTADOS_TECNICO.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span>{ficha.estado}</span>
+          )}
+        </label>
+        {bloqueado && (
+          <p className="text-neutral-600">
+            Registra los datos técnicos para poder cambiar el estado.
+          </p>
         )}
       </section>
 
@@ -284,95 +233,190 @@ export default function DetalleFicha({ ficha }) {
         </div>
       )}
 
-      <section className="space-y-1">
-        <label className="block">
-          <span className="font-semibold">Estado </span>
+      {aviso && (
+        <p role="status" className="text-green-800">
+          {aviso}
+        </p>
+      )}
+
+      {/* Pestañas */}
+      <div role="tablist" className="flex gap-1 border-b">
+        {PESTANAS.map(([id, etiqueta]) => (
+          <button
+            key={id}
+            role="tab"
+            aria-selected={pestana === id}
+            disabled={bloqueado && id !== "datos"}
+            onClick={() => irA(id)}
+            className={`px-3 py-2 -mb-px border-b-2 disabled:opacity-40 ${
+              pestana === id
+                ? "border-[#EE0000] font-semibold"
+                : "border-transparent"
+            }`}
+          >
+            {etiqueta}
+          </button>
+        ))}
+      </div>
+
+      {pestana === "datos" && (
+        <section role="tabpanel" className="space-y-3">
           {editable ? (
-            <select
-              className="border rounded px-2 py-1 disabled:opacity-50"
-              value={ficha.estado}
-              disabled={!datosCompletos}
-              onChange={(e) => cambiarEstado(e.target.value)}
-            >
-              {ESTADOS_TECNICO.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+            <form onSubmit={guardarDatos} className="space-y-3">
+              {!datosCompletos && (
+                <p className="bg-amber-50 border border-amber-300 rounded p-2">
+                  Completa estos datos para habilitar el checklist y las
+                  observaciones.
+                </p>
+              )}
+              <div className="grid sm:grid-cols-3 gap-3">
+                <label>
+                  Marca
+                  <input
+                    className={ESTILO_INPUT}
+                    value={datosForm.marca}
+                    onChange={cambiarDato("marca")}
+                    maxLength={40}
+                  />
+                </label>
+                <label>
+                  Modelo
+                  <input
+                    className={ESTILO_INPUT}
+                    value={datosForm.modelo}
+                    onChange={cambiarDato("modelo")}
+                    maxLength={60}
+                  />
+                </label>
+                <label>
+                  Número de serie
+                  <input
+                    className={ESTILO_INPUT}
+                    value={datosForm.numeroSerie}
+                    onChange={cambiarDato("numeroSerie")}
+                    maxLength={40}
+                  />
+                </label>
+              </div>
+              <label className="block">
+                Diagnóstico
+                <textarea
+                  className={ESTILO_INPUT}
+                  rows={2}
+                  value={datosForm.diagnostico}
+                  onChange={cambiarDato("diagnostico")}
+                  maxLength={500}
+                />
+              </label>
+              <label className="block">
+                Trabajo a realizar
+                <textarea
+                  className={ESTILO_INPUT}
+                  rows={2}
+                  value={datosForm.trabajo}
+                  onChange={cambiarDato("trabajo")}
+                  maxLength={500}
+                />
+              </label>
+              {errorDatos && (
+                <p role="alert" className="text-red-700">
+                  {errorDatos}
+                </p>
+              )}
+              <button className="bg-[#EE0000] text-white rounded px-3 py-2">
+                Guardar datos técnicos
+              </button>
+            </form>
           ) : (
-            <span>{ficha.estado}</span>
+            <div className="space-y-1">
+              <p>
+                <span className="text-neutral-600">Marca y modelo:</span>{" "}
+                {equipo?.marca
+                  ? `${equipo.marca} ${equipo.modelo}`
+                  : "Pendiente"}
+              </p>
+              <p>
+                <span className="text-neutral-600">Número de serie:</span>{" "}
+                {equipo?.numeroSerie || "Pendiente"}
+              </p>
+              <p>
+                <span className="text-neutral-600">Diagnóstico:</span>{" "}
+                {ficha.diagnostico || "Pendiente"}
+              </p>
+              <p>
+                <span className="text-neutral-600">Trabajo a realizar:</span>{" "}
+                {ficha.trabajo || "Pendiente"}
+              </p>
+            </div>
           )}
-        </label>
-        {editable && !datosCompletos && (
-          <p className="text-neutral-600">
-            Registra los datos técnicos para poder cambiar el estado.
-          </p>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section className="space-y-2">
-        <h3 className="font-semibold">
-          Checklist ({revisados} de {ficha.checklist.length} revisados)
-        </h3>
-        <ul className="space-y-1">
-          {ficha.checklist.map((i) => (
-            <li key={i.itemId} className="flex flex-wrap justify-between gap-2">
-              <span>{i.texto}</span>
-              <select
-                className="border rounded px-2 py-1"
-                value={CLAVE(i.ok)}
-                disabled={!editable}
-                onChange={(e) => cambiarItem(i.itemId, e.target.value)}
-                aria-label={`Resultado: ${i.texto}`}
+      {pestana === "checklist" && (
+        <section role="tabpanel" className="space-y-2">
+          <ul className="space-y-1">
+            {ficha.checklist.map((i) => (
+              <li
+                key={i.itemId}
+                className="flex flex-wrap justify-between gap-2"
               >
-                <option value="pendiente">Sin revisar</option>
-                <option value="ok">Correcto</option>
-                <option value="falla">Con falla</option>
-              </select>
-            </li>
-          ))}
-          {ficha.checklist.length === 0 && (
-            <li className="text-neutral-600">
-              Esta ficha no tiene ítems de checklist.
-            </li>
-          )}
-        </ul>
-      </section>
+                <span>{i.texto}</span>
+                <select
+                  className="border rounded px-2 py-1"
+                  value={CLAVE(i.ok)}
+                  disabled={!editable}
+                  onChange={(e) => cambiarItem(i.itemId, e.target.value)}
+                  aria-label={`Resultado: ${i.texto}`}
+                >
+                  <option value="pendiente">Sin revisar</option>
+                  <option value="ok">Correcto</option>
+                  <option value="falla">Con falla</option>
+                </select>
+              </li>
+            ))}
+            {ficha.checklist.length === 0 && (
+              <li className="text-neutral-600">
+                Esta ficha no tiene ítems de checklist.
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
 
-      <section className="space-y-2">
-        <h3 className="font-semibold">Observaciones</h3>
-        <ul className="space-y-1">
-          {ficha.observaciones.map((o) => (
-            <li key={o.id}>
-              {o.texto}{" "}
-              <span className="text-neutral-600">
-                ({nombreUsuario(o.autorId)},{" "}
-                {new Date(o.fecha).toLocaleString("es-CL")})
-              </span>
-            </li>
-          ))}
-          {ficha.observaciones.length === 0 && (
-            <li className="text-neutral-600">Sin observaciones.</li>
+      {pestana === "observaciones" && (
+        <section role="tabpanel" className="space-y-2">
+          <ul className="space-y-1">
+            {ficha.observaciones.map((o) => (
+              <li key={o.id}>
+                {o.texto}{" "}
+                <span className="text-neutral-600">
+                  ({nombreUsuario(o.autorId)},{" "}
+                  {new Date(o.fecha).toLocaleString("es-CL")})
+                </span>
+              </li>
+            ))}
+            {ficha.observaciones.length === 0 && (
+              <li className="text-neutral-600">Sin observaciones.</li>
+            )}
+          </ul>
+          {editable && (
+            <form onSubmit={agregarObservacion} className="flex gap-2">
+              <textarea
+                className="flex-1 border rounded px-3 py-2"
+                rows={2}
+                maxLength={500}
+                placeholder="Escribe una observación"
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                aria-label="Nueva observación"
+              />
+              <button className="bg-[#EE0000] text-white rounded px-3 self-start py-2">
+                Agregar
+              </button>
+            </form>
           )}
-        </ul>
-        {editable && (
-          <form onSubmit={agregarObservacion} className="flex gap-2">
-            <textarea
-              className="flex-1 border rounded px-3 py-2"
-              rows={2}
-              maxLength={500}
-              placeholder="Escribe una observación"
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              aria-label="Nueva observación"
-            />
-            <button className="bg-[#EE0000] text-white rounded px-3 self-start py-2">
-              Agregar
-            </button>
-          </form>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   );
 }

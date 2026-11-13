@@ -12,15 +12,12 @@ import Fichas from "./pages/Fichas.jsx";
 import ClinicaDetalle from "./pages/ClinicaDetalle.jsx";
 
 const MENU = [
+  { ruta: "/clinicas", texto: "Clínicas", permiso: PERMISOS.CREAR_CLINICAS },
+  { ruta: "/recepcion", texto: "Recepción", permiso: PERMISOS.RECEPCIONAR },
   {
-    ruta: "/usuarios",
-    texto: "Usuarios y permisos",
-    permiso: PERMISOS.GESTIONAR_USUARIOS,
-  },
-  {
-    ruta: "/clinicas",
-    texto: "Clínicas",
-    permiso: PERMISOS.CREAR_CLINICAS,
+    ruta: "/fichas",
+    texto: "Fichas",
+    permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
   },
   {
     ruta: "/checklists",
@@ -28,11 +25,15 @@ const MENU = [
     permiso: PERMISOS.EDITAR_CHECKLISTS,
   },
   {
+    ruta: "/usuarios",
+    texto: "Usuarios y permisos",
+    permiso: PERMISOS.GESTIONAR_USUARIOS,
+  },
+  {
     ruta: "/inscripcion",
     texto: "Inscribir propietario",
     permiso: PERMISOS.RECEPCIONAR,
   },
-  { ruta: "/recepcion", texto: "Recepción", permiso: PERMISOS.RECEPCIONAR },
 ];
 
 function Protegida({ permiso, children }) {
@@ -49,6 +50,9 @@ function Panel() {
   const opciones = MENU.filter((m) =>
     [].concat(m.permiso).some((p) => puede(usuario, p)),
   );
+
+  // La inscripción es una página pública sin menú lateral: nunca puede ser la vista de inicio
+  const inicio = opciones.find((m) => m.ruta !== "/inscripcion")?.ruta;
 
   return (
     <div className="min-h-screen md:flex">
@@ -93,9 +97,14 @@ function Panel() {
           <Route
             path="/"
             element={
-              <p className="text-neutral-600">
-                Selecciona una opción del menú.
-              </p>
+              inicio ? (
+                <Navigate to={inicio} replace />
+              ) : (
+                <p className="text-neutral-600">
+                  Tu cuenta no tiene secciones habilitadas. Contacta al
+                  administrador.
+                </p>
+              )
             }
           />
           <Route path="*" element={<Navigate to="/" replace />} />
