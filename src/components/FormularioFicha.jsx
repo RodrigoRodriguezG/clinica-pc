@@ -3,8 +3,10 @@ import { useApp } from "../store.jsx";
 import { PERMISOS } from "../constantes.js";
 import { puede } from "../lib/permisos.js";
 import { siguienteCodigo } from "../lib/codigos.js";
-
-const ESTILO_INPUT = "border rounded-lg px-3 py-2 w-full bg-white";
+import Alerta from "./ui/Alerta.jsx";
+import Boton from "./ui/Boton.jsx";
+import Campo from "./ui/Campo.jsx";
+import { IconoMonitor } from "./ui/iconos.jsx";
 
 export default function FormularioFicha({
   equipo,
@@ -72,32 +74,49 @@ export default function FormularioFicha({
   };
 
   return (
-    <form onSubmit={crear} className="border rounded-lg p-4 space-y-4 mt-3">
-      <h3 className="font-semibold">
-        Recepción de {equipo.numeroEquipo} · {equipo.tipo}
-      </h3>
-      <p className="text-sm text-neutral-600">Clínica: {clinica.nombre}</p>
+    <form
+      onSubmit={crear}
+      className="mt-4 space-y-4 rounded-control border border-neutral-200 bg-neutral-50 p-4 sm:p-5"
+    >
+      <header className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-white text-inacap shadow-sm ring-1 ring-neutral-200"
+        >
+          <IconoMonitor className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-semibold text-tinta">
+            Recepción de {equipo.numeroEquipo} · {equipo.tipo}
+          </h3>
+          <p className="text-sm text-neutral-600">Clínica: {clinica.nombre}</p>
+        </div>
+      </header>
 
-      <label className="block text-sm">
-        Accesorios que deja el propietario
-        <input
-          className={ESTILO_INPUT}
-          value={accesorios}
-          onChange={(e) => setAccesorios(e.target.value)}
-          maxLength={120}
-          placeholder="Ej. cargador, mouse"
-        />
-      </label>
+      <Campo
+        etiqueta="Accesorios que deja el propietario"
+        value={accesorios}
+        onChange={(e) => setAccesorios(e.target.value)}
+        maxLength={120}
+        placeholder="Ej. cargador, mouse"
+        ayuda="Opcional. Registra cargador, mouse, maletín u otros accesorios."
+      />
 
-      <fieldset className="text-sm">
-        <legend>Técnicos que revisarán el equipo (1 o 2)</legend>
-        <div className="mt-1 grid sm:grid-cols-2 gap-1">
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-semibold text-tinta">
+          Técnicos que revisarán el equipo (1 o 2)
+        </legend>
+        <div className="grid gap-2 sm:grid-cols-2">
           {tecnicos.map((t) => {
             const marcado = tecnicosIds.includes(t.id);
             return (
-              <label key={t.id} className="flex gap-2">
+              <label
+                key={t.id}
+                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:border-neutral-300 hover:bg-neutral-50 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
+              >
                 <input
                   type="checkbox"
+                  className="h-4 w-4 shrink-0"
                   checked={marcado}
                   onChange={() => alternarTecnico(t.id)}
                   disabled={!marcado && tecnicosIds.length >= 2}
@@ -107,7 +126,7 @@ export default function FormularioFicha({
             );
           })}
           {tecnicos.length === 0 && (
-            <p className="text-neutral-600">
+            <p className="text-sm text-neutral-600">
               Esta clínica no tiene técnicos asignados. Pídele al encargado que
               los asigne.
             </p>
@@ -116,22 +135,18 @@ export default function FormularioFicha({
       </fieldset>
 
       {error && (
-        <p role="alert" className="text-sm text-red-700">
+        <Alerta variante="error" role="alert">
           {error}
-        </p>
+        </Alerta>
       )}
 
-      <div className="flex gap-2">
-        <button className="bg-[#EE0000] text-white rounded-lg py-2 px-4">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Boton type="submit" bloque className="sm:w-auto">
           Crear ficha
-        </button>
-        <button
-          type="button"
-          onClick={onCancelar}
-          className="border rounded-lg py-2 px-4"
-        >
+        </Boton>
+        <Boton variante="secundario" onClick={onCancelar}>
           Cancelar
-        </button>
+        </Boton>
       </div>
     </form>
   );

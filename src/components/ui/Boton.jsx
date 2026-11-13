@@ -12,6 +12,8 @@ const VARIANTES = {
     "bg-error text-white shadow-sm hover:bg-red-800 active:bg-red-900",
   enlace:
     "min-h-11 bg-transparent px-1 text-inacap underline underline-offset-4 hover:text-inacap-oscuro",
+  "peligro-enlace":
+    "min-h-11 bg-transparent px-1 text-error underline underline-offset-4 hover:text-red-800",
 };
 
 const TAMANOS = {
@@ -32,7 +34,7 @@ export default function Boton({
   ...props
 }) {
   const esBoton = Componente === "button";
-  const esEnlace = variante === "enlace";
+  const esEnlace = variante === "enlace" || variante === "peligro-enlace";
   const claseTamano = esEnlace
     ? "min-h-11 px-1 text-sm"
     : cx(TAMANOS[tamano] ?? TAMANOS.md, bloque && "w-full");

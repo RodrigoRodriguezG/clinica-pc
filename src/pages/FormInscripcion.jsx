@@ -3,6 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { validarRut, formatearRut } from "../lib/rut.js";
 import { normalizar, normalizarTelefono } from "../lib/texto.js";
+import Alerta from "../components/ui/Alerta.jsx";
+import Boton from "../components/ui/Boton.jsx";
+import Campo from "../components/ui/Campo.jsx";
+import Insignia from "../components/ui/Insignia.jsx";
+import Tarjeta from "../components/ui/Tarjeta.jsx";
+import {
+  IconoCheckCircle,
+  IconoDocumento,
+  IconoMas,
+  IconoMonitor,
+  IconoUsuarios,
+} from "../components/ui/iconos.jsx";
 
 // Comunas de la Región del Biobío (33)
 const COMUNAS_BIOBIO = [
@@ -58,7 +70,7 @@ const FORMULARIO_VACIO = {
 const EQUIPO_VACIO = { tipo: "" };
 
 const ESTILO_INPUT =
-  "border rounded-lg px-3 py-2 w-full bg-white focus:outline-none focus:ring-2 focus:ring-[#EE0000]/30 focus:border-[#EE0000]";
+  "block w-full min-h-11 rounded-control border border-neutral-300 bg-white px-3 py-2.5 text-base text-tinta placeholder:text-neutral-400 transition-[border-color,box-shadow,background-color] duration-150 hover:border-neutral-400 focus:border-inacap focus:outline-none focus:ring-4 focus:ring-inacap/15";
 
 // Selector con escritura para filtrar la lista de comunas
 function SelectorComuna({ valor, onChange, error }) {
@@ -112,11 +124,21 @@ function SelectorComuna({ valor, onChange, error }) {
   };
 
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      <span>Comuna</span>
+    <label className="flex flex-col gap-1.5 text-sm">
+      <span className="font-semibold text-tinta">
+        Comuna
+        <span aria-hidden="true" className="ml-0.5 text-inacap">
+          *
+        </span>
+        <span className="sr-only"> (obligatorio)</span>
+      </span>
       <div ref={contenedor} className="relative" onBlur={alSalir}>
         <input
-          className={`${ESTILO_INPUT} ${error ? "border-red-600" : ""}`}
+          className={`${ESTILO_INPUT} ${
+            error
+              ? "border-error hover:border-error focus:border-error focus:ring-error/15"
+              : ""
+          }`}
           placeholder="Escribe para filtrar (ej. Concepción)"
           value={valor}
           onChange={alTeclear}
@@ -127,6 +149,7 @@ function SelectorComuna({ valor, onChange, error }) {
           aria-controls="lista-comunas"
           aria-autocomplete="list"
           aria-label="Comuna"
+          aria-invalid={error ? true : undefined}
           autoComplete="off"
           required
         />
@@ -135,7 +158,7 @@ function SelectorComuna({ valor, onChange, error }) {
           <ul
             id="lista-comunas"
             role="listbox"
-            className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto border rounded-lg bg-white shadow-lg"
+            className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-control border border-neutral-200 bg-white py-1 shadow-elevada"
           >
             {filtradas.length === 0 && (
               <li className="px-3 py-2 text-sm text-neutral-600">
@@ -147,7 +170,7 @@ function SelectorComuna({ valor, onChange, error }) {
                 <button
                   type="button"
                   onClick={() => seleccionar(comuna)}
-                  className={`block w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 ${
+                  className={`block min-h-11 w-full px-3 py-2 text-left text-sm transition-colors duration-150 hover:bg-neutral-100 ${
                     i === indice ? "bg-neutral-100" : ""
                   }`}
                 >
@@ -158,7 +181,45 @@ function SelectorComuna({ valor, onChange, error }) {
           </ul>
         )}
       </div>
+      {error && (
+        <span className="text-sm font-medium text-error">
+          Selecciona una comuna de la lista.
+        </span>
+      )}
     </label>
+  );
+}
+
+function MarcoInscripcion({ children }) {
+  return (
+    <div className="min-h-screen bg-neutral-100">
+      <header className="border-b border-neutral-200 bg-white">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-inacap text-white"
+            >
+              <IconoMonitor className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-base font-bold leading-tight text-tinta">
+                Clínica del PC
+              </p>
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+                INACAP
+              </p>
+            </div>
+          </div>
+          <span className="hidden text-xs font-medium text-neutral-500 sm:block">
+            Inscripción en línea
+          </span>
+        </div>
+      </header>
+      <main className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
+        {children}
+      </main>
+    </div>
   );
 }
 
@@ -282,94 +343,152 @@ export default function FormInscripcion() {
 
   if (inscrito) {
     return (
-      <div className="mx-auto w-full max-w-xl py-6">
-        <div className="border border-neutral-200 rounded-xl bg-white shadow-sm p-6 space-y-5">
-          <header className="text-center space-y-1">
-            <h1 className="text-2xl font-semibold">Inscripción registrada</h1>
-            <p className="text-sm text-neutral-600">
-              Gracias, {inscrito.propietario.nombre}{" "}
-              {inscrito.propietario.apellidoPaterno}.
-            </p>
-          </header>
+      <MarcoInscripcion>
+        <div className="mx-auto w-full max-w-2xl">
+          <Tarjeta className="overflow-hidden">
+            <div className="border-b border-green-200 bg-exito-tenue px-5 py-7 text-center sm:px-8">
+              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-exito shadow-sm ring-1 ring-green-200">
+                <IconoCheckCircle className="h-8 w-8" />
+              </span>
+              <h1 className="mt-4 text-2xl font-bold tracking-tight text-tinta">
+                Inscripción registrada
+              </h1>
+              <p className="mt-1 text-sm text-neutral-600">
+                Gracias, {inscrito.propietario.nombre}{" "}
+                {inscrito.propietario.apellidoPaterno}.
+              </p>
+            </div>
 
-          <div className="text-sm bg-neutral-50 border rounded-lg p-4 space-y-1">
-            <p>
-              <span className="text-neutral-600">RUT:</span>{" "}
-              {inscrito.propietario.rut}
-            </p>
-            <p>
-              <span className="text-neutral-600">Comuna:</span>{" "}
-              {inscrito.propietario.comuna}
-            </p>
-            <p>
-              <span className="text-neutral-600">Origen:</span>{" "}
-              {inscrito.propietario.origen}
-            </p>
-          </div>
+            <div className="space-y-5 p-5 sm:p-7">
+              <Alerta variante="exito" titulo="Comprobante de inscripción">
+                Tu registro quedó guardado. Guarda este comprobante para
+                presentarlo cuando llegues con tu equipo.
+              </Alerta>
 
-          <div className="space-y-2">
-            <h2 className="font-semibold">Equipos registrados</h2>
-            <ul className="space-y-2">
-              {inscrito.equipos.map((e) => (
-                <li key={e.id} className="border rounded-lg p-3 text-sm">
-                  <p className="font-semibold">
-                    {e.numeroEquipo} · {e.tipo}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
+              <dl className="grid gap-4 rounded-control bg-neutral-50 p-4 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-neutral-500">RUT</dt>
+                  <dd className="mt-0.5 font-semibold text-tinta">
+                    {inscrito.propietario.rut}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-neutral-500">Comuna</dt>
+                  <dd className="mt-0.5 font-semibold text-tinta">
+                    {inscrito.propietario.comuna}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-neutral-500">Origen</dt>
+                  <dd className="mt-1">
+                    <Insignia tono="neutral">
+                      {inscrito.propietario.origen}
+                    </Insignia>
+                  </dd>
+                </div>
+              </dl>
 
-          <p className="text-sm text-neutral-600">
-            Guarda este comprobante. Cuando llegues con tu equipo, servicio al
-            cliente usará tu RUT para continuar.
-          </p>
+              <section className="space-y-2">
+                <h2 className="text-lg font-semibold text-tinta">
+                  Equipos registrados
+                </h2>
+                <ul className="space-y-2">
+                  {inscrito.equipos.map((e) => (
+                    <li
+                      key={e.id}
+                      className="flex items-center gap-3 rounded-control border border-neutral-200 bg-white p-3 text-sm"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600"
+                      >
+                        <IconoMonitor className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <p className="font-semibold text-tinta">
+                          {e.numeroEquipo} · {e.tipo}
+                        </p>
+                        <p className="text-xs text-neutral-500">
+                          Datos técnicos por registrar en recepción
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setInscrito(null)}
-              className="bg-[#EE0000] text-white rounded-lg py-2 px-4 hover:bg-[#c90000]"
-            >
-              Inscribir a otra persona
-            </button>
-            {usuario && (
-              <button
-                type="button"
-                onClick={() => navegar("/")}
-                className="border rounded-lg py-2 px-4 hover:bg-neutral-50"
-              >
-                Volver al panel
-              </button>
-            )}
-          </div>
+              <p className="text-sm leading-relaxed text-neutral-600">
+                Guarda este comprobante. Cuando llegues con tu equipo, servicio
+                al cliente usará tu RUT para continuar.
+              </p>
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Boton
+                  onClick={() => setInscrito(null)}
+                  bloque
+                  className="sm:w-auto"
+                >
+                  Inscribir a otra persona
+                </Boton>
+                {usuario && (
+                  <Boton
+                    variante="secundario"
+                    onClick={() => navegar("/")}
+                  >
+                    Volver al panel
+                  </Boton>
+                )}
+              </div>
+            </div>
+          </Tarjeta>
         </div>
-      </div>
+      </MarcoInscripcion>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl py-6">
-      <div className="border border-neutral-200 rounded-xl bg-white shadow-sm p-6 sm:p-8 space-y-6">
-        <header className="text-center space-y-1">
-          <h1 className="text-2xl font-semibold">
-            Inscripción a la Clínica del PC
-          </h1>
-          <p className="text-sm text-neutral-600">
-            Completa tus datos y registra los PC que traerás.
-            {usuario
-              ? " Registro presencial."
-              : " Luego servicio al cliente continuará con la recepción."}
-          </p>
-        </header>
+    <MarcoInscripcion>
+      <Tarjeta className="overflow-hidden">
+        <div className="border-b border-neutral-200 bg-white p-5 sm:p-7">
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden="true"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-inacap-tenue text-inacap-oscuro"
+            >
+              <IconoUsuarios className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight text-tinta">
+                Inscripción a la Clínica del PC
+              </h1>
+              <p className="text-sm leading-relaxed text-neutral-600">
+                Completa tus datos y registra los PC que traerás.
+                {usuario
+                  ? " Registro presencial."
+                  : " Luego servicio al cliente continuará con la recepción."}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <form onSubmit={inscribir} className="space-y-6">
+        <form onSubmit={inscribir} className="space-y-6 p-5 sm:p-7">
           {/* Datos del propietario */}
-          <div className="grid sm:grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span>RUT</span>
-              <input
-                className={ESTILO_INPUT}
+          <section className="space-y-4" aria-labelledby="datos-propietario">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tinta text-xs font-bold text-white">
+                1
+              </span>
+              <h2
+                id="datos-propietario"
+                className="text-lg font-semibold text-tinta"
+              >
+                Tus datos
+              </h2>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo
+                etiqueta="RUT"
                 placeholder="12.345.678-9"
                 value={form.rut}
                 onChange={cambiar("rut")}
@@ -377,96 +496,108 @@ export default function FormInscripcion() {
                   setForm((prev) => ({ ...prev, rut: formatearRut(prev.rut) }))
                 }
                 required
+                inputMode="text"
+                autoComplete="off"
+                autoCapitalize="characters"
               />
-            </label>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span>Nombre</span>
-              <input
-                className={ESTILO_INPUT}
+              <Campo
+                etiqueta="Nombre"
                 placeholder="Nombre"
                 value={form.nombre}
                 onChange={cambiar("nombre")}
                 required
+                autoComplete="given-name"
               />
-            </label>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span>Apellido paterno</span>
-              <input
-                className={ESTILO_INPUT}
+              <Campo
+                etiqueta="Apellido paterno"
                 placeholder="Apellido paterno"
                 value={form.apellidoPaterno}
                 onChange={cambiar("apellidoPaterno")}
                 required
+                autoComplete="family-name"
               />
-            </label>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span>Apellido materno</span>
-              <input
-                className={ESTILO_INPUT}
+              <Campo
+                etiqueta="Apellido materno"
                 placeholder="Apellido materno"
                 value={form.apellidoMaterno}
                 onChange={cambiar("apellidoMaterno")}
                 required
+                autoComplete="family-name"
               />
-            </label>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span>Correo</span>
-              <input
+              <Campo
+                etiqueta="Correo"
                 type="email"
-                className={ESTILO_INPUT}
                 placeholder="correo@ejemplo.cl"
                 value={form.correo}
                 onChange={cambiar("correo")}
                 required
+                inputMode="email"
+                autoComplete="email"
               />
-            </label>
 
-            <label className="flex flex-col gap-1 text-sm">
-              <span>Teléfono</span>
-              <input
+              <Campo
+                etiqueta="Teléfono"
                 type="tel"
-                className={ESTILO_INPUT}
                 placeholder="+56 9 1234 5678"
                 value={form.telefono}
                 onChange={cambiar("telefono")}
                 required
+                inputMode="tel"
+                autoComplete="tel"
+                ayuda="Celular chileno de 8 o 9 dígitos."
               />
-            </label>
 
-            <div className="sm:col-span-2">
-              <SelectorComuna
-                valor={form.comuna}
-                onChange={(comuna) => setForm((prev) => ({ ...prev, comuna }))}
-                error={Boolean(error) && !COMUNAS_BIOBIO.includes(form.comuna)}
-              />
+              <div className="sm:col-span-2">
+                <SelectorComuna
+                  valor={form.comuna}
+                  onChange={(comuna) =>
+                    setForm((prev) => ({ ...prev, comuna }))
+                  }
+                  error={Boolean(error) && !COMUNAS_BIOBIO.includes(form.comuna)}
+                />
+              </div>
             </div>
-          </div>
+          </section>
 
           {/* Equipos */}
-          <section className="space-y-3 border-t pt-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold">Equipos</h2>
-                <p className="text-xs text-neutral-600">
-                  Solo se reciben computadores: notebook, AIO o escritorio.
-                </p>
+          <section
+            className="space-y-3 border-t border-neutral-200 pt-6"
+            aria-labelledby="datos-equipos"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tinta text-xs font-bold text-white">
+                  2
+                </span>
+                <div>
+                  <h2
+                    id="datos-equipos"
+                    className="text-lg font-semibold text-tinta"
+                  >
+                    Tus equipos
+                  </h2>
+                  <p className="text-xs leading-relaxed text-neutral-600">
+                    Solo se reciben computadores: notebook, AIO o escritorio.
+                  </p>
+                </div>
               </div>
-              <span className="text-sm text-neutral-600">
+              <Insignia tono={equipos.length ? "inacap" : "neutral"}>
                 {equipos.length === 0
                   ? "Sin PC agregados"
                   : `${equipos.length} PC agregado(s)`}
-              </span>
+              </Insignia>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-end gap-2">
-              <label className="flex flex-col gap-1 text-sm flex-1">
-                <span>Tipo de PC</span>
-                <select
-                  className={ESTILO_INPUT}
+            <div className="rounded-control border border-neutral-200 bg-neutral-50 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <Campo
+                  as="select"
+                  etiqueta="Tipo de PC"
+                  className="flex-1"
                   value={equipo.tipo}
                   onChange={(e) => setEquipo({ tipo: e.target.value })}
                 >
@@ -476,52 +607,63 @@ export default function FormInscripcion() {
                       {tipo}
                     </option>
                   ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                onClick={agregarEquipo}
-                className="border rounded-lg py-2 px-4 hover:bg-neutral-50"
-              >
-                Agregar equipo
-              </button>
-            </div>
+                </Campo>
+                <Boton
+                  type="button"
+                  variante="secundario"
+                  onClick={agregarEquipo}
+                >
+                  <IconoMas className="h-4 w-4" />
+                  Agregar equipo
+                </Boton>
+              </div>
 
-            {errorEquipo && (
-              <p role="alert" className="text-sm text-red-700">
-                {errorEquipo}
-              </p>
-            )}
+              {errorEquipo && (
+                <Alerta variante="error" role="alert" className="mt-3">
+                  {errorEquipo}
+                </Alerta>
+              )}
 
-            {equipos.length > 0 && (
-              <ul className="space-y-2">
-                {equipos.map((e) => (
-                  <li
-                    key={e.id}
-                    className="border rounded-lg p-3 flex justify-between items-center gap-3 bg-neutral-50"
-                  >
-                    <p className="text-sm">
-                      <span className="font-semibold">{e.numeroEquipo}</span> ·{" "}
-                      {e.tipo}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => quitarEquipo(e.id)}
-                      className="text-sm underline"
+              {equipos.length > 0 && (
+                <ul className="mt-4 space-y-2">
+                  {equipos.map((e) => (
+                    <li
+                      key={e.id}
+                      className="flex flex-col gap-2 rounded-control border border-neutral-200 bg-white p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                     >
-                      Quitar
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      <div className="flex items-center gap-3">
+                        <span
+                          aria-hidden="true"
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600"
+                        >
+                          <IconoMonitor className="h-5 w-5" />
+                        </span>
+                        <p>
+                          <span className="font-semibold text-tinta">
+                            {e.numeroEquipo}
+                          </span>{" "}
+                          · {e.tipo}
+                        </p>
+                      </div>
+                      <Boton
+                        type="button"
+                        variante="peligro-enlace"
+                        onClick={() => quitarEquipo(e.id)}
+                      >
+                        Quitar
+                      </Boton>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
 
           {/* Términos y condiciones */}
-          <label className="flex items-start gap-2 text-sm border-t pt-5">
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-neutral-200 bg-neutral-50 p-3.5 text-sm leading-relaxed text-neutral-700 transition-colors duration-150 hover:border-neutral-300">
             <input
               type="checkbox"
-              className="mt-1"
+              className="mt-0.5 h-4 w-4 shrink-0"
               checked={form.aceptaTerminos}
               onChange={cambiar("aceptaTerminos")}
               required
@@ -534,27 +676,24 @@ export default function FormInscripcion() {
           </label>
 
           {error && (
-            <p role="alert" className="text-sm text-red-700">
+            <Alerta variante="error" role="alert" titulo="Revisa el formulario">
               {error}
-            </p>
+            </Alerta>
           )}
 
-          <div className="flex flex-wrap gap-2">
-            <button className="bg-[#EE0000] text-white rounded-lg py-2 px-5 hover:bg-[#c90000]">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Boton type="submit" tamano="lg" bloque className="sm:w-auto">
+              <IconoDocumento className="h-5 w-5" />
               Inscribirme
-            </button>
+            </Boton>
             {usuario && (
-              <button
-                type="button"
-                onClick={() => navegar("/")}
-                className="border rounded-lg py-2 px-5 hover:bg-neutral-50"
-              >
+              <Boton variante="secundario" onClick={() => navegar("/")}>
                 Cancelar
-              </button>
+              </Boton>
             )}
           </div>
         </form>
-      </div>
-    </div>
+      </Tarjeta>
+    </MarcoInscripcion>
   );
 }

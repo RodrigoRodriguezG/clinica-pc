@@ -7,6 +7,19 @@ import { estaAbierta, fichasDeEquipo } from "../lib/fichas.js";
 import { clinicaActivaDe } from "../lib/clinicas.js";
 import AtencionAnterior from "../components/AtencionAnterior.jsx";
 import FormularioFicha from "../components/FormularioFicha.jsx";
+import Alerta from "../components/ui/Alerta.jsx";
+import Boton from "../components/ui/Boton.jsx";
+import Campo from "../components/ui/Campo.jsx";
+import Encabezado from "../components/ui/Encabezado.jsx";
+import EstadoVacio from "../components/ui/EstadoVacio.jsx";
+import Insignia from "../components/ui/Insignia.jsx";
+import Tarjeta from "../components/ui/Tarjeta.jsx";
+import {
+  IconoFlechaIzquierda,
+  IconoInscripcion,
+  IconoMonitor,
+  IconoUsuarios,
+} from "../components/ui/iconos.jsx";
 
 export default function Recepcion() {
   const { datos, actualizar, usuario } = useApp();
@@ -74,288 +87,387 @@ export default function Recepcion() {
   // Confirmación tras crear la ficha
   if (creada) {
     return (
-      <div className="max-w-xl space-y-4">
-        <h1 className="text-2xl font-semibold">Ficha {creada.numero} creada</h1>
-        <p>
-          El equipo quedó en estado <strong>{creada.estado}</strong> y asignado
-          a{" "}
-          {creada.tecnicosIds.length === 1
-            ? "un técnico"
-            : "una pareja de técnicos"}
-          , que registrará sus datos técnicos.
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => {
-              setCreada(null);
-              setEquipoElegido(null);
-            }}
-            className="bg-[#EE0000] text-white rounded-lg py-2 px-4"
-          >
-            Recibir otro equipo de este propietario
-          </button>
-          <button onClick={reiniciar} className="border rounded-lg py-2 px-4">
-            Volver a la lista
-          </button>
-        </div>
+      <div className="mx-auto max-w-2xl space-y-6">
+        <Encabezado
+          titulo={`Ficha ${creada.numero} creada`}
+          descripcion="La recepción quedó registrada y el equipo ya tiene técnicos asignados."
+        />
+
+        <Tarjeta className="space-y-5 p-5 sm:p-6">
+          <Alerta variante="exito" titulo="Recepción completada">
+            El equipo quedó en estado <strong>{creada.estado}</strong> y asignado
+            a{" "}
+            {creada.tecnicosIds.length === 1
+              ? "un técnico"
+              : "una pareja de técnicos"}
+            , que registrará sus datos técnicos.
+          </Alerta>
+
+          <dl className="grid gap-3 rounded-control bg-neutral-50 p-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-neutral-500">N° de ficha</dt>
+              <dd className="font-semibold text-tinta">{creada.numero}</dd>
+            </div>
+            <div>
+              <dt className="text-neutral-500">Estado inicial</dt>
+              <dd className="mt-1">
+                <Insignia estado={creada.estado} />
+              </dd>
+            </div>
+          </dl>
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Boton
+              onClick={() => {
+                setCreada(null);
+                setEquipoElegido(null);
+              }}
+              bloque
+              className="sm:w-auto"
+            >
+              Recibir otro equipo de este propietario
+            </Boton>
+            <Boton variante="secundario" onClick={reiniciar}>
+              Volver a la lista
+            </Boton>
+          </div>
+        </Tarjeta>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-3xl">
-      <h1 className="text-2xl font-semibold">Recepción de equipos</h1>
+    <div className="space-y-6">
+      <Encabezado
+        titulo="Recepción de equipos"
+        descripcion="Busca al propietario, revisa sus equipos y crea la ficha de atención."
+        acciones={
+          <Boton as={Link} to="/inscripcion" variante="secundario">
+            <IconoInscripcion className="h-4 w-4" />
+            Inscribir propietario
+          </Boton>
+        }
+      />
 
       {clinica ? (
-        <p className="text-sm text-neutral-600">
+        <Alerta variante="info">
           Clínica activa: <strong>{clinica.nombre}</strong>
-        </p>
+        </Alerta>
       ) : (
-        <p
-          role="alert"
-          className="border border-amber-300 bg-amber-50 rounded-lg p-3 text-sm"
-        >
+        <Alerta variante="aviso" role="alert">
           No tienes una clínica activa. Pídele al encargado que active una
           clínica y te asigne a ella.
-        </p>
+        </Alerta>
       )}
 
       {!propietario && (
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <input
-              type="search"
-              className="border rounded-lg px-3 py-2 w-full sm:max-w-sm"
-              placeholder="Buscar por nombre, RUT o N° de equipo"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              aria-label="Buscar propietario"
-            />
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={soloPendientes}
-                onChange={(e) => setSoloPendientes(e.target.checked)}
+        <section className="space-y-4" aria-labelledby="lista-propietarios">
+          <Tarjeta className="p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              <Campo
+                etiqueta="Buscar propietario"
+                type="search"
+                className="flex-1"
+                placeholder="Buscar por nombre, RUT o N° de equipo"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                aria-label="Buscar propietario"
+                ayuda="Puedes buscar por nombre, RUT o número de equipo."
+                autoComplete="off"
               />
-              Solo con equipos pendientes de recibir
-            </label>
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:border-neutral-300 hover:bg-neutral-100 sm:mb-5">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 shrink-0"
+                  checked={soloPendientes}
+                  onChange={(e) => setSoloPendientes(e.target.checked)}
+                />
+                Solo con equipos pendientes de recibir
+              </label>
+            </div>
+          </Tarjeta>
+
+          <div className="flex items-center justify-between gap-3">
+            <h2
+              id="lista-propietarios"
+              className="text-sm font-semibold text-neutral-700"
+            >
+              Propietarios inscritos
+            </h2>
+            <p className="text-sm text-neutral-600" aria-live="polite">
+              {lista.length}{" "}
+              {lista.length === 1 ? "propietario" : "propietarios"}
+            </p>
           </div>
 
-          <p className="text-sm text-neutral-600">
-            {lista.length} {lista.length === 1 ? "propietario" : "propietarios"}
-          </p>
+          {lista.length === 0 ? (
+            <EstadoVacio
+              icono={<IconoUsuarios className="h-6 w-6" />}
+              titulo="No hay propietarios que coincidan"
+              descripcion="Prueba con otro nombre, RUT o número de equipo, o inscribe a la persona en el sistema."
+              accion={
+                <Boton as={Link} to="/inscripcion" variante="secundario">
+                  Inscribir a una persona presencialmente
+                </Boton>
+              }
+            />
+          ) : (
+            <ul className="space-y-3">
+              {lista.map((p) => {
+                const pendientes = pendientesDe(p.id);
+                const bloqueado = propietarioConFichas(p.id);
+                return (
+                  <Tarjeta as="li" key={p.id} className="p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0 space-y-1.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-tinta">
+                            {nombreCompleto(p)}
+                          </p>
+                          {pendientes > 0 ? (
+                            <Insignia tono="aviso">
+                              {pendientes} por recibir
+                            </Insignia>
+                          ) : (
+                            <Insignia tono="neutral">Sin pendientes</Insignia>
+                          )}
+                        </div>
+                        <p className="text-sm leading-relaxed text-neutral-600">
+                          RUT {enmascararRut(p.rut)} · {p.comuna} ·{" "}
+                          {equiposDe(p.id).length}{" "}
+                          {equiposDe(p.id).length === 1 ? "equipo" : "equipos"}
+                        </p>
+                      </div>
 
-          <ul className="space-y-2">
-            {lista.map((p) => {
-              const pendientes = pendientesDe(p.id);
-              const bloqueado = propietarioConFichas(p.id);
-              return (
-                <li key={p.id} className="border rounded-lg p-3">
-                  <div className="flex flex-wrap justify-between items-center gap-2">
-                    <div>
-                      <p className="font-semibold">{nombreCompleto(p)}</p>
-                      <p className="text-sm text-neutral-600">
-                        RUT {enmascararRut(p.rut)} · {p.comuna} ·{" "}
-                        {equiposDe(p.id).length}{" "}
-                        {equiposDe(p.id).length === 1 ? "equipo" : "equipos"}
-                        {pendientes > 0 && ` · ${pendientes} por recibir`}
-                      </p>
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                        <Boton
+                          variante="peligro-enlace"
+                          onClick={() => setPorEliminar(`p:${p.id}`)}
+                          disabled={bloqueado}
+                          title={
+                            bloqueado
+                              ? "No se puede eliminar: tiene equipos con fichas"
+                              : ""
+                          }
+                        >
+                          Eliminar inscripción
+                        </Boton>
+                        <Boton onClick={() => setPropietarioId(p.id)}>
+                          Seleccionar
+                        </Boton>
+                      </div>
                     </div>
-                    <div className="flex gap-3 items-center text-sm">
-                      <button
-                        onClick={() => setPorEliminar(`p:${p.id}`)}
-                        disabled={bloqueado}
-                        title={
-                          bloqueado
-                            ? "No se puede eliminar: tiene equipos con fichas"
-                            : ""
+
+                    {porEliminar === `p:${p.id}` && (
+                      <Alerta
+                        variante="error"
+                        role="alert"
+                        titulo="Eliminar inscripción"
+                        className="mt-4"
+                        acciones={
+                          <>
+                            <Boton
+                              variante="peligro"
+                              tamano="sm"
+                              onClick={() => eliminarPropietario(p.id)}
+                            >
+                              Sí, eliminar
+                            </Boton>
+                            <Boton
+                              variante="secundario"
+                              tamano="sm"
+                              onClick={() => setPorEliminar(null)}
+                            >
+                              Cancelar
+                            </Boton>
+                          </>
                         }
-                        className="underline text-red-700 disabled:opacity-40 disabled:no-underline"
                       >
-                        Eliminar inscripción
-                      </button>
-                      <button
-                        onClick={() => setPropietarioId(p.id)}
-                        className="bg-[#EE0000] text-white rounded-lg py-1 px-3"
-                      >
-                        Seleccionar
-                      </button>
-                    </div>
-                  </div>
-
-                  {porEliminar === `p:${p.id}` && (
-                    <div
-                      role="alert"
-                      className="mt-3 border border-red-300 bg-red-50 rounded p-3 text-sm space-y-2"
-                    >
-                      <p>
                         ¿Eliminar la inscripción de {nombreCompleto(p)} y sus{" "}
                         {equiposDe(p.id).length}{" "}
                         {equiposDe(p.id).length === 1 ? "equipo" : "equipos"}?
                         Esta acción no se puede deshacer.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => eliminarPropietario(p.id)}
-                          className="bg-red-700 text-white rounded px-3 py-1"
-                        >
-                          Sí, eliminar
-                        </button>
-                        <button
-                          onClick={() => setPorEliminar(null)}
-                          className="border rounded px-3 py-1"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-            {lista.length === 0 && (
-              <li className="text-neutral-600">
-                No hay propietarios que coincidan.{" "}
-                <Link to="/inscripcion" className="underline">
-                  Inscribir a una persona presencialmente
-                </Link>
-              </li>
-            )}
-          </ul>
+                      </Alerta>
+                    )}
+                  </Tarjeta>
+                );
+              })}
+            </ul>
+          )}
         </section>
       )}
 
       {propietario && (
-        <section className="space-y-4">
-          <header className="border rounded-lg p-4 bg-neutral-50 flex justify-between items-start gap-3">
-            <div>
-              <h2 className="font-semibold">{nombreCompleto(propietario)}</h2>
-              <p className="text-sm text-neutral-600">
-                RUT {enmascararRut(propietario.rut)} · {propietario.comuna}
-              </p>
+        <section className="space-y-5">
+          <Tarjeta className="p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <span
+                  aria-hidden="true"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-inacap-tenue text-inacap-oscuro"
+                >
+                  <IconoUsuarios className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 space-y-1">
+                  <h2 className="text-lg font-semibold text-tinta">
+                    {nombreCompleto(propietario)}
+                  </h2>
+                  <p className="text-sm text-neutral-600">
+                    RUT {enmascararRut(propietario.rut)} · {propietario.comuna}
+                  </p>
+                </div>
+              </div>
+              <Boton variante="secundario" onClick={reiniciar}>
+                <IconoFlechaIzquierda className="h-4 w-4" />
+                Volver a la lista
+              </Boton>
             </div>
-            <button onClick={reiniciar} className="text-sm underline">
-              Volver a la lista
-            </button>
-          </header>
+          </Tarjeta>
 
-          <h2 className="font-semibold">
-            {equiposDe(propietario.id).length > 1
-              ? "Selecciona el equipo que trae"
-              : "Equipo inscrito"}
-          </h2>
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-tinta">
+              {equiposDe(propietario.id).length > 1
+                ? "Selecciona el equipo que trae"
+                : "Equipo inscrito"}
+            </h2>
 
-          <ul className="space-y-3">
-            {equiposDe(propietario.id).map((e) => {
-              const fichas = fichasDeEquipo(datos, e.id);
-              const abierta = fichas.find(estaAbierta);
-              const anterior = fichas.find((f) => !estaAbierta(f));
-              return (
-                <li key={e.id} className="border rounded-lg p-4">
-                  <div className="flex flex-wrap justify-between items-center gap-2">
-                    <div>
-                      <p className="font-semibold">
-                        {e.numeroEquipo} · {e.tipo}
-                      </p>
-                      <p className="text-sm text-neutral-600">
-                        {e.marca
-                          ? `${e.marca} ${e.modelo}`
-                          : "Datos técnicos pendientes"}
-                        {fichas.length > 0 &&
-                          ` · Reingreso (${fichas.length} ${fichas.length === 1 ? "atención" : "atenciones"})`}
-                      </p>
-                    </div>
-                    <div className="flex gap-3 items-center text-sm">
-                      {anterior && (
-                        <button
-                          onClick={() =>
-                            setVerAnterior(verAnterior === e.id ? null : e.id)
-                          }
-                          className="underline"
-                        >
-                          {verAnterior === e.id
-                            ? "Ocultar atención anterior"
-                            : "Ver atención anterior"}
-                        </button>
-                      )}
-                      {fichas.length === 0 && (
-                        <button
-                          onClick={() => setPorEliminar(`e:${e.id}`)}
-                          className="underline text-red-700"
-                        >
-                          Quitar equipo
-                        </button>
-                      )}
-                      {!abierta && (
-                        <button
-                          onClick={() => setEquipoElegido(e.id)}
-                          disabled={!clinica}
-                          title={!clinica ? "Necesitas una clínica activa" : ""}
-                          className="bg-[#EE0000] text-white rounded-lg py-1 px-3 disabled:opacity-40"
-                        >
-                          Recibir
-                        </button>
-                      )}
-                    </div>
-                  </div>
+            {equiposDe(propietario.id).length === 0 ? (
+              <EstadoVacio
+                icono={<IconoMonitor className="h-6 w-6" />}
+                titulo="Este propietario no tiene equipos inscritos"
+                descripcion="Puedes volver a la lista o inscribir un equipo nuevo para esta persona."
+                accion={
+                  <Boton as={Link} to="/inscripcion" variante="secundario">
+                    Inscribir equipo
+                  </Boton>
+                }
+              />
+            ) : (
+              <ul className="space-y-3">
+                {equiposDe(propietario.id).map((e) => {
+                  const fichas = fichasDeEquipo(datos, e.id);
+                  const abierta = fichas.find(estaAbierta);
+                  const anterior = fichas.find((f) => !estaAbierta(f));
+                  return (
+                    <Tarjeta as="li" key={e.id} className="p-4 sm:p-5">
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 space-y-1.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-tinta">
+                              {e.numeroEquipo} · {e.tipo}
+                            </p>
+                            {abierta && <Insignia estado={abierta.estado} />}
+                            {fichas.length > 0 && (
+                              <Insignia tono="neutral">
+                                Reingreso · {fichas.length}{" "}
+                                {fichas.length === 1
+                                  ? "atención"
+                                  : "atenciones"}
+                              </Insignia>
+                            )}
+                          </div>
+                          <p className="text-sm leading-relaxed text-neutral-600">
+                            {e.marca
+                              ? `${e.marca} ${e.modelo}`
+                              : "Datos técnicos pendientes"}
+                          </p>
+                        </div>
 
-                  {porEliminar === `e:${e.id}` && (
-                    <div
-                      role="alert"
-                      className="mt-3 border border-red-300 bg-red-50 rounded p-3 text-sm space-y-2"
-                    >
-                      <p>
-                        ¿Quitar {e.numeroEquipo} ({e.tipo}) de la inscripción?
-                        El propietario no lo trajo.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => eliminarEquipo(e.id)}
-                          className="bg-red-700 text-white rounded px-3 py-1"
-                        >
-                          Sí, quitar
-                        </button>
-                        <button
-                          onClick={() => setPorEliminar(null)}
-                          className="border rounded px-3 py-1"
-                        >
-                          Cancelar
-                        </button>
+                        <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                          {anterior && (
+                            <Boton
+                              variante="enlace"
+                              onClick={() =>
+                                setVerAnterior(
+                                  verAnterior === e.id ? null : e.id,
+                                )
+                              }
+                            >
+                              {verAnterior === e.id
+                                ? "Ocultar atención anterior"
+                                : "Ver atención anterior"}
+                            </Boton>
+                          )}
+                          {fichas.length === 0 && (
+                            <Boton
+                              variante="peligro-enlace"
+                              onClick={() => setPorEliminar(`e:${e.id}`)}
+                            >
+                              Quitar equipo
+                            </Boton>
+                          )}
+                          {!abierta && (
+                            <Boton
+                              onClick={() => setEquipoElegido(e.id)}
+                              disabled={!clinica}
+                              title={
+                                !clinica ? "Necesitas una clínica activa" : ""
+                              }
+                            >
+                              Recibir
+                            </Boton>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  {abierta && (
-                    <p className="mt-2 text-sm text-amber-800">
-                      Ya tiene una ficha abierta: {abierta.numero} (
-                      {abierta.estado}).
-                    </p>
-                  )}
+                      {porEliminar === `e:${e.id}` && (
+                        <Alerta
+                          variante="error"
+                          role="alert"
+                          titulo="Quitar equipo de la inscripción"
+                          className="mt-4"
+                          acciones={
+                            <>
+                              <Boton
+                                variante="peligro"
+                                tamano="sm"
+                                onClick={() => eliminarEquipo(e.id)}
+                              >
+                                Sí, quitar
+                              </Boton>
+                              <Boton
+                                variante="secundario"
+                                tamano="sm"
+                                onClick={() => setPorEliminar(null)}
+                              >
+                                Cancelar
+                              </Boton>
+                            </>
+                          }
+                        >
+                          ¿Quitar {e.numeroEquipo} ({e.tipo}) de la inscripción?
+                          El propietario no lo trajo.
+                        </Alerta>
+                      )}
 
-                  {verAnterior === e.id && anterior && (
-                    <AtencionAnterior
-                      ficha={anterior}
-                      onCerrar={() => setVerAnterior(null)}
-                    />
-                  )}
+                      {abierta && (
+                        <Alerta variante="aviso" className="mt-4">
+                          Ya tiene una ficha abierta: {abierta.numero} (
+                          {abierta.estado}).
+                        </Alerta>
+                      )}
 
-                  {equipoElegido === e.id && clinica && (
-                    <FormularioFicha
-                      equipo={e}
-                      clinica={clinica}
-                      onCancelar={() => setEquipoElegido(null)}
-                      onCreada={setCreada}
-                    />
-                  )}
-                </li>
-              );
-            })}
-            {equiposDe(propietario.id).length === 0 && (
-              <li className="text-neutral-600">
-                Este propietario no tiene equipos inscritos.
-              </li>
+                      {verAnterior === e.id && anterior && (
+                        <AtencionAnterior
+                          ficha={anterior}
+                          onCerrar={() => setVerAnterior(null)}
+                        />
+                      )}
+
+                      {equipoElegido === e.id && clinica && (
+                        <FormularioFicha
+                          equipo={e}
+                          clinica={clinica}
+                          onCancelar={() => setEquipoElegido(null)}
+                          onCreada={setCreada}
+                        />
+                      )}
+                    </Tarjeta>
+                  );
+                })}
+              </ul>
             )}
-          </ul>
+          </div>
         </section>
       )}
     </div>
