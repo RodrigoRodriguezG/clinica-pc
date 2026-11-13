@@ -309,6 +309,7 @@ function Panel() {
           <button
             type="button"
             aria-label="Cerrar menú"
+            tabIndex={-1}
             onClick={cerrarMenu}
             className="animar-overlay absolute inset-0 h-full w-full cursor-default bg-black/55"
           />

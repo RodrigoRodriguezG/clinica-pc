@@ -193,7 +193,7 @@ export default function Clinicas() {
                       type="button"
                       onClick={() => quitarDia(fecha)}
                       aria-label={`Quitar ${fecha}`}
-                      className="flex h-9 w-9 items-center justify-center rounded-control text-lg leading-none text-neutral-500 transition-colors duration-150 hover:bg-neutral-100 hover:text-error"
+                      className="flex h-11 w-11 items-center justify-center rounded-control text-lg leading-none text-neutral-500 transition-colors duration-150 hover:bg-neutral-100 hover:text-error"
                     >
                       ×
                     </button>

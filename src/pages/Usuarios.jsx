@@ -113,7 +113,7 @@ export default function Usuarios() {
             <h2 className="text-lg font-semibold text-tinta">Nuevo usuario</h2>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Campo
               etiqueta="Nombre"
               placeholder="Nombre completo"
@@ -154,11 +154,12 @@ export default function Usuarios() {
                 </option>
               ))}
             </Campo>
-            <div className="flex items-end">
-              <Boton type="submit" bloque>
-                Crear usuario
-              </Boton>
-            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Boton type="submit" bloque className="sm:w-auto">
+              Crear usuario
+            </Boton>
           </div>
 
           {error && (
@@ -195,11 +196,17 @@ export default function Usuarios() {
         <EstadoVacio
           icono={<IconoUsuarios className="h-6 w-6" />}
           titulo="No hay usuarios que coincidan"
-          descripcion={`No encontramos usuarios para “${filtro.trim()}”.`}
+          descripcion={
+            filtro.trim()
+              ? `No encontramos usuarios para “${filtro.trim()}”.`
+              : "Aún no hay usuarios registrados."
+          }
           accion={
-            <Boton variante="secundario" onClick={() => setFiltro("")}>
-              Limpiar búsqueda
-            </Boton>
+            filtro ? (
+              <Boton variante="secundario" onClick={() => setFiltro("")}>
+                Limpiar búsqueda
+              </Boton>
+            ) : null
           }
         />
       ) : (
