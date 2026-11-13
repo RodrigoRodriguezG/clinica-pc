@@ -8,6 +8,7 @@ import Clinicas from "./pages/Clinicas.jsx";
 import Checklists from "./pages/Checklists.jsx";
 import FormInscripcion from "./pages/FormInscripcion.jsx";
 import Recepcion from "./pages/Recepcion.jsx";
+import Fichas from "./pages/Fichas.jsx";
 
 const MENU = [
   {
@@ -31,11 +32,17 @@ const MENU = [
     permiso: PERMISOS.RECEPCIONAR,
   },
   { ruta: "/recepcion", texto: "Recepción", permiso: PERMISOS.RECEPCIONAR },
+  {
+    ruta: "/fichas",
+    texto: "Fichas",
+    permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
+  },
 ];
 
 function Protegida({ permiso, children }) {
   const { usuario } = useApp();
-  return puede(usuario, permiso) ? children : <Navigate to="/" replace />;
+  const permitido = [].concat(permiso).some((p) => puede(usuario, p));
+  return permitido ? children : <Navigate to="/" replace />;
 }
 
 function Panel() {
@@ -43,7 +50,9 @@ function Panel() {
 
   if (!usuario) return <Login />;
 
-  const opciones = MENU.filter((m) => puede(usuario, m.permiso));
+  const opciones = MENU.filter((m) =>
+    [].concat(m.permiso).some((p) => puede(usuario, p)),
+  );
 
   return (
     <div className="min-h-screen md:flex">
@@ -123,6 +132,16 @@ function Panel() {
             element={
               <Protegida permiso={PERMISOS.RECEPCIONAR}>
                 <Recepcion />
+              </Protegida>
+            }
+          />
+          <Route
+            path="/fichas"
+            element={
+              <Protegida
+                permiso={[PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS]}
+              >
+                <Fichas />
               </Protegida>
             }
           />

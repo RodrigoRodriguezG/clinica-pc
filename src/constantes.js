@@ -63,3 +63,11 @@ export const SERVICIOS = ["Mantención lógica", "Mantención física", "Formate
 
 // Una ficha en estos estados ya terminó su atención
 export const ESTADOS_CERRADOS = ["Entregado", "No retirado"];
+
+// Estados que el técnico puede asignar. "Entregado" y "No retirado" son del cierre (Paso 8)
+export const ESTADOS_TECNICO = [
+  "Recibido",
+  "En diagnóstico",
+  "En reparación",
+  "Listo",
+];

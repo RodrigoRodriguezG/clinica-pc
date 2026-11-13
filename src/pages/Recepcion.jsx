@@ -62,7 +62,7 @@ export default function Recepcion() {
           {creada.tecnicosIds.length === 1
             ? "un técnico"
             : "una pareja de técnicos"}
-          .
+          , que registrará sus datos técnicos.
         </p>
         <div className="flex gap-2">
           <button
