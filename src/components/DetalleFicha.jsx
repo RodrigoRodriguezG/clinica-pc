@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createElement, useState } from "react";
 import { useApp } from "../store.jsx";
 import { ESTADOS_TECNICO } from "../constantes.js";
 import { nombreCompleto, mostrarTelefono, normalizar } from "../lib/texto.js";
@@ -9,11 +9,42 @@ import {
   fichasDeEquipo,
 } from "../lib/fichas.js";
 import AtencionAnterior from "./AtencionAnterior.jsx";
+import Alerta from "./ui/Alerta.jsx";
+import Boton from "./ui/Boton.jsx";
+import Campo from "./ui/Campo.jsx";
+import Insignia from "./ui/Insignia.jsx";
+import PestanasNav from "./ui/PestanasNav.jsx";
+import {
+  IconoAlerta,
+  IconoCheck,
+  IconoTelefono,
+  IconoXCircle,
+} from "./ui/iconos.jsx";
 
 // ok: true = correcto, false = con falla, null = sin revisar
 const VALOR = { pendiente: null, ok: true, falla: false };
 const CLAVE = (v) => (v === true ? "ok" : v === false ? "falla" : "pendiente");
-const ESTILO_INPUT = "border rounded px-3 py-2 w-full bg-white";
+
+const OPCIONES_CHECKLIST = [
+  {
+    clave: "ok",
+    texto: "Correcto",
+    Icono: IconoCheck,
+    activo: "border-exito bg-exito-tenue text-exito-fuerte",
+  },
+  {
+    clave: "falla",
+    texto: "Con falla",
+    Icono: IconoXCircle,
+    activo: "border-error bg-error-tenue text-error",
+  },
+  {
+    clave: "pendiente",
+    texto: "Sin revisar",
+    Icono: IconoAlerta,
+    activo: "border-neutral-400 bg-neutral-100 text-neutral-700",
+  },
+];
 
 export default function DetalleFicha({ ficha }) {
   const { datos, actualizar, usuario } = useApp();
@@ -30,10 +61,10 @@ export default function DetalleFicha({ ficha }) {
   // Se calcula con lo ya guardado, no con lo que se está escribiendo
   const datosCompletos = Boolean(
     equipo?.marca &&
-    equipo?.modelo &&
-    equipo?.numeroSerie &&
-    ficha.diagnostico &&
-    ficha.trabajo,
+      equipo?.modelo &&
+      equipo?.numeroSerie &&
+      ficha.diagnostico &&
+      ficha.trabajo,
   );
   // El técnico no avanza a checklist y observaciones hasta guardar los datos técnicos
   const bloqueado = editable && !datosCompletos;
@@ -152,92 +183,131 @@ export default function DetalleFicha({ ficha }) {
   };
 
   const PESTANAS = [
-    ["datos", "Datos técnicos"],
-    ["checklist", `Checklist (${revisados}/${ficha.checklist.length})`],
-    ["observaciones", `Observaciones (${ficha.observaciones.length})`],
+    { id: "datos", etiqueta: "Datos técnicos" },
+    {
+      id: "checklist",
+      etiqueta: `Checklist (${revisados}/${ficha.checklist.length})`,
+      disabled: bloqueado,
+    },
+    {
+      id: "observaciones",
+      etiqueta: `Observaciones (${ficha.observaciones.length})`,
+      disabled: bloqueado,
+    },
   ];
 
   return (
-    <div className="mt-3 border-t pt-4 space-y-4 text-sm">
+    <div className="space-y-5 text-sm">
       {!editable && (
-        <p className="bg-neutral-100 rounded p-2">
+        <Alerta variante="info">
           Solo lectura:{" "}
           {ficha.tecnicosIds.includes(usuario.id)
             ? "la ficha ya está cerrada."
             : "no estás asignado a esta ficha."}
-        </p>
+        </Alerta>
       )}
 
       {/* Resumen siempre visible */}
-      <section className="space-y-1">
-        <p>
-          <span className="text-neutral-600">Equipo:</span>{" "}
-          {equipo?.numeroEquipo} · {equipo?.tipo}
-          {equipo?.marca && ` · ${equipo.marca} ${equipo.modelo}`}
-        </p>
-        {equipo?.accesorios && (
-          <p>
-            <span className="text-neutral-600">Accesorios:</span>{" "}
-            {equipo.accesorios}
-          </p>
-        )}
-        <p>
-          <span className="text-neutral-600">Técnicos:</span>{" "}
-          {ficha.tecnicosIds.map(nombreUsuario).join(" y ")}
-        </p>
-        <label className="block">
-          <span className="text-neutral-600">Estado: </span>
-          {editable ? (
-            <select
-              className="border rounded px-2 py-1 disabled:opacity-50"
-              value={ficha.estado}
-              disabled={!datosCompletos}
-              onChange={(e) => cambiarEstado(e.target.value)}
-            >
-              {ESTADOS_TECNICO.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <span>{ficha.estado}</span>
-          )}
-        </label>
+      <section className="space-y-3 rounded-control border border-neutral-200 bg-neutral-50 p-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <dl className="grid flex-1 gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                Equipo
+              </dt>
+              <dd className="mt-0.5 font-medium text-neutral-800">
+                {equipo?.numeroEquipo} · {equipo?.tipo}
+                {equipo?.marca && ` · ${equipo.marca} ${equipo.modelo}`}
+              </dd>
+            </div>
+            {equipo?.accesorios && (
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Accesorios
+                </dt>
+                <dd className="mt-0.5 text-neutral-800">
+                  {equipo.accesorios}
+                </dd>
+              </div>
+            )}
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                Técnicos
+              </dt>
+              <dd className="mt-0.5 text-neutral-800">
+                {ficha.tecnicosIds.map(nombreUsuario).join(" y ")}
+              </dd>
+            </div>
+          </dl>
+
+          <div className="shrink-0">
+            {editable ? (
+              <Campo
+                as="select"
+                etiqueta="Estado"
+                className="w-full sm:w-52"
+                value={ficha.estado}
+                disabled={!datosCompletos}
+                onChange={(e) => cambiarEstado(e.target.value)}
+              >
+                {ESTADOS_TECNICO.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </Campo>
+            ) : (
+              <div className="space-y-1.5">
+                <span className="block text-sm font-semibold text-tinta">
+                  Estado
+                </span>
+                <Insignia estado={ficha.estado} />
+              </div>
+            )}
+          </div>
+        </div>
+
         {bloqueado && (
-          <p className="text-neutral-600">
+          <Alerta variante="aviso">
             Registra los datos técnicos para poder cambiar el estado.
-          </p>
+          </Alerta>
         )}
       </section>
 
       {propietario && puedeVerContacto(usuario, ficha) && (
-        <section className="border rounded-lg p-3 bg-neutral-50">
-          <h3 className="font-semibold">Contacto del propietario</h3>
-          <p>
+        <section className="space-y-2 rounded-control border border-neutral-200 bg-white p-4">
+          <h3 className="flex items-center gap-2 font-semibold text-tinta">
+            <IconoTelefono className="h-4 w-4 text-neutral-500" />
+            Contacto del propietario
+          </h3>
+          <p className="text-neutral-800">
             {nombreCompleto(propietario)} ·{" "}
-            <a className="underline" href={`tel:+56${propietario.telefono}`}>
+            <a
+              className="font-semibold text-inacap underline underline-offset-4 hover:text-inacap-oscuro"
+              href={`tel:+56${propietario.telefono}`}
+            >
               {mostrarTelefono(propietario.telefono)}
             </a>
           </p>
           {ficha.estado === "Listo" && (
-            <p className="mt-1 text-neutral-600">
+            <Alerta variante="exito">
               El equipo está listo: avisa al propietario.
-            </p>
+            </Alerta>
           )}
         </section>
       )}
 
       {anterior && (
-        <div>
-          <button
+        <div className="space-y-2">
+          <Boton
+            variante="enlace"
             onClick={() => setVerAnterior(!verAnterior)}
-            className="underline"
+            aria-expanded={verAnterior}
           >
             {verAnterior
               ? "Ocultar atención anterior"
               : "Ver atención anterior de este equipo"}
-          </button>
+          </Boton>
           {verAnterior && (
             <AtencionAnterior
               ficha={anterior}
@@ -248,89 +318,73 @@ export default function DetalleFicha({ ficha }) {
       )}
 
       {aviso && (
-        <p role="status" className="text-green-800">
+        <Alerta variante="exito" role="status">
           {aviso}
-        </p>
+        </Alerta>
       )}
 
       {/* Pestañas */}
-      <div role="tablist" className="flex gap-1 border-b">
-        {PESTANAS.map(([id, etiqueta]) => (
-          <button
-            key={id}
-            role="tab"
-            aria-selected={pestana === id}
-            disabled={bloqueado && id !== "datos"}
-            onClick={() => irA(id)}
-            className={`px-3 py-2 -mb-px border-b-2 disabled:opacity-40 ${
-              pestana === id
-                ? "border-[#EE0000] font-semibold"
-                : "border-transparent"
-            }`}
-          >
-            {etiqueta}
-          </button>
-        ))}
-      </div>
+      <PestanasNav
+        pestanas={PESTANAS}
+        activa={pestana}
+        onChange={irA}
+        etiqueta="Detalle de la ficha"
+      />
 
       {pestana === "datos" && (
-        <section role="tabpanel" className="space-y-3">
+        <section role="tabpanel" className="space-y-4">
           {editable ? (
-            <form onSubmit={guardarDatos} className="space-y-3">
+            <form onSubmit={guardarDatos} className="space-y-4">
               {!datosCompletos && (
-                <p className="bg-amber-50 border border-amber-300 rounded p-2">
+                <Alerta variante="aviso">
                   Completa estos datos para habilitar el checklist y las
                   observaciones.
-                </p>
+                </Alerta>
               )}
-              <div className="grid sm:grid-cols-3 gap-3">
-                <label>
-                  Marca
-                  <input
-                    className={ESTILO_INPUT}
-                    value={datosForm.marca}
-                    onChange={cambiarDato("marca")}
-                    maxLength={40}
-                  />
-                </label>
-                <label>
-                  Modelo
-                  <input
-                    className={ESTILO_INPUT}
-                    value={datosForm.modelo}
-                    onChange={cambiarDato("modelo")}
-                    maxLength={60}
-                  />
-                </label>
-                <label>
-                  Número de serie
-                  <input
-                    className={ESTILO_INPUT}
-                    value={datosForm.numeroSerie}
-                    onChange={cambiarDato("numeroSerie")}
-                    maxLength={40}
-                  />
-                </label>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Campo
+                  etiqueta="Marca"
+                  value={datosForm.marca}
+                  onChange={cambiarDato("marca")}
+                  maxLength={40}
+                  autoComplete="off"
+                />
+                <Campo
+                  etiqueta="Modelo"
+                  value={datosForm.modelo}
+                  onChange={cambiarDato("modelo")}
+                  maxLength={60}
+                  autoComplete="off"
+                />
+                <Campo
+                  etiqueta="Número de serie"
+                  value={datosForm.numeroSerie}
+                  onChange={cambiarDato("numeroSerie")}
+                  maxLength={40}
+                  autoComplete="off"
+                />
               </div>
+
               {reingresos.length > 0 && (
-                <div className="border border-amber-300 bg-amber-50 rounded-lg p-3 space-y-2">
-                  <p className="font-semibold text-amber-900">
-                    Posible reingreso: este número de serie ya fue atendido
-                  </p>
-                  <p className="text-amber-900">
+                <div className="space-y-3">
+                  <Alerta
+                    variante="aviso"
+                    titulo="Posible reingreso: este número de serie ya fue atendido"
+                  >
                     Se encontraron {reingresos.length} atención(es) anterior(es)
                     con la serie {datosForm.numeroSerie.trim()}. Revisa qué se
                     hizo antes y por qué podría haber vuelto.
-                  </p>
+                  </Alerta>
 
                   {reingresos.map((f) => (
                     <AtencionAnterior key={f.id} ficha={f} />
                   ))}
 
-                  <label className="flex items-start gap-2">
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-amber-200 bg-aviso-tenue p-3.5 text-sm leading-relaxed text-amber-900">
                     <input
                       type="checkbox"
-                      className="mt-1"
+                      className="mt-0.5 h-4 w-4 shrink-0"
                       checked={confirmarReingreso}
                       onChange={(e) =>
                         setConfirmarReingreso(e.target.checked)
@@ -343,85 +397,127 @@ export default function DetalleFicha({ ficha }) {
                   </label>
                 </div>
               )}
-              <label className="block">
-                Diagnóstico
-                <textarea
-                  className={ESTILO_INPUT}
-                  rows={2}
-                  value={datosForm.diagnostico}
-                  onChange={cambiarDato("diagnostico")}
-                  maxLength={500}
-                />
-              </label>
-              <label className="block">
-                Trabajo a realizar
-                <textarea
-                  className={ESTILO_INPUT}
-                  rows={2}
-                  value={datosForm.trabajo}
-                  onChange={cambiarDato("trabajo")}
-                  maxLength={500}
-                />
-              </label>
+
+              <Campo
+                as="textarea"
+                etiqueta="Diagnóstico"
+                rows={3}
+                value={datosForm.diagnostico}
+                onChange={cambiarDato("diagnostico")}
+                maxLength={500}
+                autoComplete="off"
+              />
+              <Campo
+                as="textarea"
+                etiqueta="Trabajo a realizar"
+                rows={3}
+                value={datosForm.trabajo}
+                onChange={cambiarDato("trabajo")}
+                maxLength={500}
+                autoComplete="off"
+              />
+
               {errorDatos && (
-                <p role="alert" className="text-red-700">
+                <Alerta variante="error" role="alert">
                   {errorDatos}
-                </p>
+                </Alerta>
               )}
-              <button className="bg-[#EE0000] text-white rounded px-3 py-2">
+
+              <Boton type="submit" bloque className="sm:w-auto">
                 Guardar datos técnicos
-              </button>
+              </Boton>
             </form>
           ) : (
-            <div className="space-y-1">
-              <p>
-                <span className="text-neutral-600">Marca y modelo:</span>{" "}
-                {equipo?.marca
-                  ? `${equipo.marca} ${equipo.modelo}`
-                  : "Pendiente"}
-              </p>
-              <p>
-                <span className="text-neutral-600">Número de serie:</span>{" "}
-                {equipo?.numeroSerie || "Pendiente"}
-              </p>
-              <p>
-                <span className="text-neutral-600">Diagnóstico:</span>{" "}
-                {ficha.diagnostico || "Pendiente"}
-              </p>
-              <p>
-                <span className="text-neutral-600">Trabajo a realizar:</span>{" "}
-                {ficha.trabajo || "Pendiente"}
-              </p>
-            </div>
+            <dl className="grid gap-3 rounded-control border border-neutral-200 bg-white p-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Marca y modelo
+                </dt>
+                <dd className="mt-0.5 text-neutral-800">
+                  {equipo?.marca
+                    ? `${equipo.marca} ${equipo.modelo}`
+                    : "Pendiente"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Número de serie
+                </dt>
+                <dd className="mt-0.5 text-neutral-800">
+                  {equipo?.numeroSerie || "Pendiente"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Diagnóstico
+                </dt>
+                <dd className="mt-0.5 text-neutral-800">
+                  {ficha.diagnostico || "Pendiente"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Trabajo a realizar
+                </dt>
+                <dd className="mt-0.5 text-neutral-800">
+                  {ficha.trabajo || "Pendiente"}
+                </dd>
+              </div>
+            </dl>
           )}
         </section>
       )}
 
       {pestana === "checklist" && (
-        <section role="tabpanel" className="space-y-2">
-          <ul className="space-y-1">
-            {ficha.checklist.map((i) => (
-              <li
-                key={i.itemId}
-                className="flex flex-wrap justify-between gap-2"
-              >
-                <span>{i.texto}</span>
-                <select
-                  className="border rounded px-2 py-1"
-                  value={CLAVE(i.ok)}
-                  disabled={!editable}
-                  onChange={(e) => cambiarItem(i.itemId, e.target.value)}
-                  aria-label={`Resultado: ${i.texto}`}
+        <section role="tabpanel" className="space-y-3">
+          <ul className="space-y-3">
+            {ficha.checklist.map((i) => {
+              const valorActual = CLAVE(i.ok);
+              return (
+                <li
+                  key={i.itemId}
+                  className="rounded-control border border-neutral-200 bg-white p-3 sm:p-4"
                 >
-                  <option value="pendiente">Sin revisar</option>
-                  <option value="ok">Correcto</option>
-                  <option value="falla">Con falla</option>
-                </select>
-              </li>
-            ))}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="font-medium text-neutral-800">{i.texto}</p>
+                    <div
+                      role="group"
+                      aria-label={`Resultado: ${i.texto}`}
+                      className="grid grid-cols-3 gap-1.5 sm:w-auto"
+                    >
+                      {OPCIONES_CHECKLIST.map(({ clave, texto, Icono, activo }) => {
+                        const seleccionado = valorActual === clave;
+                        return (
+                          <button
+                            key={clave}
+                            type="button"
+                            aria-pressed={seleccionado}
+                            aria-label={`${texto}: ${i.texto}`}
+                            disabled={!editable}
+                            onClick={() => cambiarItem(i.itemId, clave)}
+                            className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border px-2 py-2 text-xs font-semibold leading-tight transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
+                              seleccionado
+                                ? activo
+                                : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50"
+                            }`}
+                          >
+                            {createElement(Icono, {
+                              className: "h-4 w-4 shrink-0",
+                            })}
+                            <span className="text-center">{texto}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
             {ficha.checklist.length === 0 && (
-              <li className="text-neutral-600">
-                Esta ficha no tiene ítems de checklist.
+              <li>
+                <Alerta variante="info">
+                  Esta ficha no tiene ítems de checklist.
+                </Alerta>
               </li>
             )}
           </ul>
@@ -429,35 +525,41 @@ export default function DetalleFicha({ ficha }) {
       )}
 
       {pestana === "observaciones" && (
-        <section role="tabpanel" className="space-y-2">
-          <ul className="space-y-1">
+        <section role="tabpanel" className="space-y-4">
+          <ul className="space-y-2">
             {ficha.observaciones.map((o) => (
-              <li key={o.id}>
-                {o.texto}{" "}
-                <span className="text-neutral-600">
-                  ({nombreUsuario(o.autorId)},{" "}
-                  {new Date(o.fecha).toLocaleString("es-CL")})
-                </span>
+              <li
+                key={o.id}
+                className="rounded-control border border-neutral-200 bg-white p-3"
+              >
+                <p className="text-neutral-800">{o.texto}</p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  {nombreUsuario(o.autorId)} ·{" "}
+                  {new Date(o.fecha).toLocaleString("es-CL")}
+                </p>
               </li>
             ))}
             {ficha.observaciones.length === 0 && (
               <li className="text-neutral-600">Sin observaciones.</li>
             )}
           </ul>
+
           {editable && (
-            <form onSubmit={agregarObservacion} className="flex gap-2">
-              <textarea
-                className="flex-1 border rounded px-3 py-2"
-                rows={2}
+            <form onSubmit={agregarObservacion} className="space-y-3">
+              <Campo
+                as="textarea"
+                etiqueta="Nueva observación"
+                rows={3}
                 maxLength={500}
                 placeholder="Escribe una observación"
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
                 aria-label="Nueva observación"
+                autoComplete="off"
               />
-              <button className="bg-[#EE0000] text-white rounded px-3 self-start py-2">
+              <Boton type="submit" bloque className="sm:w-auto">
                 Agregar
-              </button>
+              </Boton>
             </form>
           )}
         </section>
