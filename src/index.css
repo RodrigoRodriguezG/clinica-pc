@@ -76,3 +76,29 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+@keyframes menu-entrar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes overlay-entrar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animar-menu {
+  animation: menu-entrar 180ms ease-out;
+}
+
+.animar-overlay {
+  animation: overlay-entrar 150ms ease-out;
+}
