@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
-import { PERMISOS } from "../constantes.js";
-import { puede } from "../lib/permisos.js";
+import { LIMITE_FICHAS_TECNICO } from "../constantes.js";
 import { siguienteCodigo } from "../lib/codigos.js";
+import { fichasEnCursoDe } from "../lib/fichas.js";
 import Alerta from "./ui/Alerta.jsx";
 import Boton from "./ui/Boton.jsx";
 import Campo from "./ui/Campo.jsx";
+import SelectorTecnicos from "./SelectorTecnicos.jsx";
 import { IconoMonitor } from "./ui/iconos.jsx";
 
 export default function FormularioFicha({
@@ -20,14 +21,6 @@ export default function FormularioFicha({
   const [tecnicosIds, setTecnicosIds] = useState([]);
   const [error, setError] = useState("");
 
-  // Solo técnicos activos asignados a esta clínica
-  const tecnicos = datos.usuarios.filter(
-    (u) =>
-      puede(u, PERMISOS.REVISAR_EQUIPOS) &&
-      (clinica.personalIds ?? []).includes(u.id),
-  );
-
-  // Una pareja como máximo: 1 o 2 técnicos
   const alternarTecnico = (id) =>
     setTecnicosIds((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
@@ -37,6 +30,15 @@ export default function FormularioFicha({
     e.preventDefault();
     if (tecnicosIds.length < 1 || tecnicosIds.length > 2)
       return setError("Asigna uno o dos técnicos al equipo.");
+    // Se vuelve a comprobar aquí: lo que bloquea la pantalla no es la única barrera
+    if (
+      tecnicosIds.some(
+        (id) => fichasEnCursoDe(datos, id).length >= LIMITE_FICHAS_TECNICO,
+      )
+    )
+      return setError(
+        `Uno de los técnicos ya tiene ${LIMITE_FICHAS_TECNICO} fichas en trabajo.`,
+      );
     setError("");
 
     // El checklist se copia de la plantilla de la clínica, con el texto de cada ítem
@@ -102,37 +104,11 @@ export default function FormularioFicha({
         ayuda="Opcional. Registra cargador, mouse, maletín u otros accesorios."
       />
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-tinta">
-          Técnicos que revisarán el equipo (1 o 2)
-        </legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {tecnicos.map((t) => {
-            const marcado = tecnicosIds.includes(t.id);
-            return (
-              <label
-                key={t.id}
-                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:border-neutral-300 hover:bg-neutral-50 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
-              >
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 shrink-0"
-                  checked={marcado}
-                  onChange={() => alternarTecnico(t.id)}
-                  disabled={!marcado && tecnicosIds.length >= 2}
-                />
-                {t.nombre}
-              </label>
-            );
-          })}
-          {tecnicos.length === 0 && (
-            <p className="text-sm text-neutral-600">
-              Esta clínica no tiene técnicos asignados. Pídele al encargado que
-              los asigne.
-            </p>
-          )}
-        </div>
-      </fieldset>
+      <SelectorTecnicos
+        clinica={clinica}
+        seleccion={tecnicosIds}
+        onAlternar={alternarTecnico}
+      />
 
       {error && (
         <Alerta variante="error" role="alert">

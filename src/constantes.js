@@ -50,11 +50,22 @@ export const PERMISOS_POR_ROL = {
   tecnico: ["revisarEquipos"],
 };
 
+// Máximo de fichas en trabajo por técnico
+export const LIMITE_FICHAS_TECNICO = 2;
+
+// Resultado "no aplica" de un ítem del checklist
+export const NO_APLICA = "na";
+
+export const ESTADO_CIERRE_ANTICIPADO = "Cierre anticipado";
+export const ESTADO_POR_REASIGNAR = "Por reasignar";
+
 export const ESTADOS_FICHA = [
   "Recibido",
   "En diagnóstico",
   "En reparación",
   "Listo",
+  "Cierre anticipado",
+  "Por reasignar",
   "Entregado",
   "No retirado",
 ];

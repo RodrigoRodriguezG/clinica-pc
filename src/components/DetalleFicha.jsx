@@ -1,12 +1,22 @@
 import { createElement, useState } from "react";
 import { useApp } from "../store.jsx";
-import { ESTADOS_TECNICO } from "../constantes.js";
+import {
+  ESTADOS_TECNICO,
+  ESTADOS_EN_TRABAJO,
+  ESTADO_CIERRE_ANTICIPADO,
+  LIMITE_FICHAS_TECNICO,
+  NO_APLICA,
+} from "../constantes.js";
 import { nombreCompleto, mostrarTelefono, normalizar } from "../lib/texto.js";
 import {
   propietarioDeFicha,
   puedeEditarFicha,
   puedeVerContacto,
+  puedeRechazarOCerrar,
   fichasDeEquipo,
+  fichasEnCursoDe,
+  rechazarFicha,
+  cerrarAnticipadamente,
 } from "../lib/fichas.js";
 import AtencionAnterior from "./AtencionAnterior.jsx";
 import Alerta from "./ui/Alerta.jsx";
@@ -14,16 +24,29 @@ import Boton from "./ui/Boton.jsx";
 import Campo from "./ui/Campo.jsx";
 import Insignia from "./ui/Insignia.jsx";
 import PestanasNav from "./ui/PestanasNav.jsx";
-import {
-  IconoAlerta,
-  IconoCheck,
-  IconoTelefono,
-  IconoXCircle,
-} from "./ui/iconos.jsx";
+import { IconoCheck, IconoTelefono, IconoXCircle } from "./ui/iconos.jsx";
 
-// ok: true = correcto, false = con falla, null = sin revisar
-const VALOR = { pendiente: null, ok: true, falla: false };
-const CLAVE = (v) => (v === true ? "ok" : v === false ? "falla" : "pendiente");
+// ok: true = correcto, false = con falla, 'na' = no aplica, null = pendiente
+const VALOR = { ok: true, falla: false, na: NO_APLICA };
+const CLAVE = (v) =>
+  v === true ? "ok" : v === false ? "falla" : v === NO_APLICA ? "na" : null;
+
+function IconoNoAplica({ className }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12h8" />
+    </svg>
+  );
+}
 
 const OPCIONES_CHECKLIST = [
   {
@@ -39,9 +62,9 @@ const OPCIONES_CHECKLIST = [
     activo: "border-error bg-error-tenue text-error",
   },
   {
-    clave: "pendiente",
-    texto: "Sin revisar",
-    Icono: IconoAlerta,
+    clave: "na",
+    texto: "No aplica",
+    Icono: IconoNoAplica,
     activo: "border-neutral-400 bg-neutral-100 text-neutral-700",
   },
 ];
@@ -61,10 +84,10 @@ export default function DetalleFicha({ ficha }) {
   // Se calcula con lo ya guardado, no con lo que se está escribiendo
   const datosCompletos = Boolean(
     equipo?.marca &&
-      equipo?.modelo &&
-      equipo?.numeroSerie &&
-      ficha.diagnostico &&
-      ficha.trabajo,
+    equipo?.modelo &&
+    equipo?.numeroSerie &&
+    ficha.diagnostico &&
+    ficha.trabajo,
   );
   // El técnico no avanza a checklist y observaciones hasta guardar los datos técnicos
   const bloqueado = editable && !datosCompletos;
@@ -76,7 +99,11 @@ export default function DetalleFicha({ ficha }) {
   const [texto, setTexto] = useState("");
   const [aviso, setAviso] = useState("");
   const [errorDatos, setErrorDatos] = useState("");
+  const [errorEstado, setErrorEstado] = useState("");
   const [confirmarReingreso, setConfirmarReingreso] = useState(false);
+  const [accion, setAccion] = useState(null); // 'rechazar' | 'cerrar' | null
+  const [motivo, setMotivo] = useState("");
+  const [errorAccion, setErrorAccion] = useState("");
   const [datosForm, setDatosForm] = useState({
     marca: equipo?.marca ?? "",
     modelo: equipo?.modelo ?? "",
@@ -102,6 +129,13 @@ export default function DetalleFicha({ ficha }) {
         })
         .sort((a, b) => b.creada.localeCompare(a.creada))
     : [];
+
+  const textoSoloLectura =
+    ficha.estado === ESTADO_CIERRE_ANTICIPADO
+      ? "la ficha tiene cierre anticipado."
+      : ficha.tecnicosIds.includes(usuario.id)
+        ? "la ficha ya está cerrada."
+        : "no estás asignado a esta ficha.";
 
   const irA = (id) => {
     setPestana(id);
@@ -153,15 +187,34 @@ export default function DetalleFicha({ ficha }) {
     setPestana("checklist");
   };
 
+  // Pulsar la opción ya marcada la desmarca: el ítem vuelve a pendiente
   const cambiarItem = (itemId, clave) =>
     modificar((f) => ({
       ...f,
       checklist: f.checklist.map((i) =>
-        i.itemId === itemId ? { ...i, ok: VALOR[clave] } : i,
+        i.itemId !== itemId
+          ? i
+          : { ...i, ok: CLAVE(i.ok) === clave ? null : VALOR[clave] },
       ),
     }));
 
-  const cambiarEstado = (estado) => modificar((f) => ({ ...f, estado }));
+  const cambiarEstado = (estado) => {
+    // Volver de "Listo" a trabajo no puede pasar el límite de fichas por técnico
+    const vuelveATrabajo =
+      ESTADOS_EN_TRABAJO.includes(estado) &&
+      !ESTADOS_EN_TRABAJO.includes(ficha.estado);
+    if (
+      vuelveATrabajo &&
+      ficha.tecnicosIds.some(
+        (id) => fichasEnCursoDe(datos, id).length >= LIMITE_FICHAS_TECNICO,
+      )
+    )
+      return setErrorEstado(
+        `No puedes volver a trabajar en esta ficha: un técnico ya tiene ${LIMITE_FICHAS_TECNICO} fichas en trabajo.`,
+      );
+    setErrorEstado("");
+    modificar((f) => ({ ...f, estado }));
+  };
 
   const agregarObservacion = (e) => {
     e.preventDefault();
@@ -182,6 +235,25 @@ export default function DetalleFicha({ ficha }) {
     setTexto("");
   };
 
+  const abrirAccion = (tipo) => {
+    setAccion(tipo);
+    setMotivo("");
+    setErrorAccion("");
+  };
+
+  const confirmarAccion = (e) => {
+    e.preventDefault();
+    const limpio = motivo.trim();
+    if (limpio.length < 10)
+      return setErrorAccion("Explica el motivo en al menos 10 caracteres.");
+    modificar((f) =>
+      accion === "rechazar"
+        ? rechazarFicha(f, usuario.id, limpio)
+        : cerrarAnticipadamente(f, usuario.id, limpio),
+    );
+    setAccion(null);
+  };
+
   const PESTANAS = [
     { id: "datos", etiqueta: "Datos técnicos" },
     {
@@ -199,12 +271,7 @@ export default function DetalleFicha({ ficha }) {
   return (
     <div className="space-y-5 text-sm">
       {!editable && (
-        <Alerta variante="info">
-          Solo lectura:{" "}
-          {ficha.tecnicosIds.includes(usuario.id)
-            ? "la ficha ya está cerrada."
-            : "no estás asignado a esta ficha."}
-        </Alerta>
+        <Alerta variante="info">Solo lectura: {textoSoloLectura}</Alerta>
       )}
 
       {/* Resumen siempre visible */}
@@ -225,9 +292,7 @@ export default function DetalleFicha({ ficha }) {
                 <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
                   Accesorios
                 </dt>
-                <dd className="mt-0.5 text-neutral-800">
-                  {equipo.accesorios}
-                </dd>
+                <dd className="mt-0.5 text-neutral-800">{equipo.accesorios}</dd>
               </div>
             )}
             <div>
@@ -235,7 +300,9 @@ export default function DetalleFicha({ ficha }) {
                 Técnicos
               </dt>
               <dd className="mt-0.5 text-neutral-800">
-                {ficha.tecnicosIds.map(nombreUsuario).join(" y ")}
+                {ficha.tecnicosIds.length > 0
+                  ? ficha.tecnicosIds.map(nombreUsuario).join(" y ")
+                  : "Sin asignar"}
               </dd>
             </div>
           </dl>
@@ -272,6 +339,11 @@ export default function DetalleFicha({ ficha }) {
             Registra los datos técnicos para poder cambiar el estado.
           </Alerta>
         )}
+        {errorEstado && (
+          <Alerta variante="error" role="alert">
+            {errorEstado}
+          </Alerta>
+        )}
       </section>
 
       {propietario && puedeVerContacto(usuario, ficha) && (
@@ -292,6 +364,12 @@ export default function DetalleFicha({ ficha }) {
           {ficha.estado === "Listo" && (
             <Alerta variante="exito">
               El equipo está listo: avisa al propietario.
+            </Alerta>
+          )}
+          {ficha.estado === ESTADO_CIERRE_ANTICIPADO && (
+            <Alerta variante="aviso">
+              Esta ficha se cerró anticipadamente. Avisa al propietario para que
+              retire su equipo.
             </Alerta>
           )}
         </section>
@@ -386,9 +464,7 @@ export default function DetalleFicha({ ficha }) {
                       type="checkbox"
                       className="mt-0.5 h-4 w-4 shrink-0"
                       checked={confirmarReingreso}
-                      onChange={(e) =>
-                        setConfirmarReingreso(e.target.checked)
-                      }
+                      onChange={(e) => setConfirmarReingreso(e.target.checked)}
                     />
                     <span>
                       Confirmo que es el mismo equipo y que revisé el historial
@@ -479,35 +555,44 @@ export default function DetalleFicha({ ficha }) {
                   className="rounded-control border border-neutral-200 bg-white p-3 sm:p-4"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="font-medium text-neutral-800">{i.texto}</p>
+                    <p className="font-medium text-neutral-800">
+                      {i.texto}
+                      {valorActual === null && (
+                        <span className="ml-2 text-xs font-normal text-neutral-500">
+                          Pendiente
+                        </span>
+                      )}
+                    </p>
                     <div
                       role="group"
                       aria-label={`Resultado: ${i.texto}`}
                       className="grid grid-cols-3 gap-1.5 sm:w-auto"
                     >
-                      {OPCIONES_CHECKLIST.map(({ clave, texto, Icono, activo }) => {
-                        const seleccionado = valorActual === clave;
-                        return (
-                          <button
-                            key={clave}
-                            type="button"
-                            aria-pressed={seleccionado}
-                            aria-label={`${texto}: ${i.texto}`}
-                            disabled={!editable}
-                            onClick={() => cambiarItem(i.itemId, clave)}
-                            className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border px-2 py-2 text-xs font-semibold leading-tight transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
-                              seleccionado
-                                ? activo
-                                : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50"
-                            }`}
-                          >
-                            {createElement(Icono, {
-                              className: "h-4 w-4 shrink-0",
-                            })}
-                            <span className="text-center">{texto}</span>
-                          </button>
-                        );
-                      })}
+                      {OPCIONES_CHECKLIST.map(
+                        ({ clave, texto, Icono, activo }) => {
+                          const seleccionado = valorActual === clave;
+                          return (
+                            <button
+                              key={clave}
+                              type="button"
+                              aria-pressed={seleccionado}
+                              aria-label={`${texto}: ${i.texto}`}
+                              disabled={!editable}
+                              onClick={() => cambiarItem(i.itemId, clave)}
+                              className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border px-2 py-2 text-xs font-semibold leading-tight transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                seleccionado
+                                  ? activo
+                                  : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50"
+                              }`}
+                            >
+                              {createElement(Icono, {
+                                className: "h-4 w-4 shrink-0",
+                              })}
+                              <span className="text-center">{texto}</span>
+                            </button>
+                          );
+                        },
+                      )}
                     </div>
                   </div>
                 </li>
@@ -560,6 +645,72 @@ export default function DetalleFicha({ ficha }) {
               <Boton type="submit" bloque className="sm:w-auto">
                 Agregar
               </Boton>
+            </form>
+          )}
+        </section>
+      )}
+
+      {/* Rechazar o cerrar anticipadamente */}
+      {puedeRechazarOCerrar(usuario, ficha) && (
+        <section className="space-y-3 border-t border-neutral-200 pt-4">
+          <h3 className="font-semibold text-tinta">
+            ¿No puedes continuar con este equipo?
+          </h3>
+
+          {!accion ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Boton
+                variante="secundario"
+                onClick={() => abrirAccion("rechazar")}
+              >
+                Rechazar ficha
+              </Boton>
+              <Boton
+                variante="secundario"
+                onClick={() => abrirAccion("cerrar")}
+              >
+                Cerrar anticipadamente
+              </Boton>
+            </div>
+          ) : (
+            <form
+              onSubmit={confirmarAccion}
+              className="space-y-3 rounded-control border border-amber-300 bg-amber-50 p-4"
+            >
+              <p className="text-amber-900">
+                {accion === "rechazar"
+                  ? "Rechazar devuelve la ficha: sales de la pareja y Servicio al cliente la reasigna a otros técnicos."
+                  : "El cierre anticipado deja de trabajar en el equipo. La ficha queda en solo lectura hasta que se avise al propietario y se entregue."}
+              </p>
+              <Campo
+                as="textarea"
+                etiqueta="Motivo (obligatorio)"
+                rows={3}
+                maxLength={300}
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                placeholder={
+                  accion === "rechazar"
+                    ? "Ej. No tengo experiencia con esta falla de placa madre."
+                    : "Ej. El equipo no tiene reparación; la placa está dañada."
+                }
+                autoComplete="off"
+              />
+              {errorAccion && (
+                <Alerta variante="error" role="alert">
+                  {errorAccion}
+                </Alerta>
+              )}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Boton type="submit" variante="peligro">
+                  {accion === "rechazar"
+                    ? "Confirmar rechazo"
+                    : "Confirmar cierre anticipado"}
+                </Boton>
+                <Boton variante="secundario" onClick={() => setAccion(null)}>
+                  Cancelar
+                </Boton>
+              </div>
             </form>
           )}
         </section>

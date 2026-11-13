@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../store.jsx";
+import { ESTADO_POR_REASIGNAR } from "../constantes.js";
 import { limpiarRut, enmascararRut } from "../lib/rut.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { estaAbierta, fichasDeEquipo } from "../lib/fichas.js";
 import { clinicaActivaDe } from "../lib/clinicas.js";
+import {
+  estaAusente,
+  marcarAusente,
+  restaurarInscripcion,
+} from "../lib/inscripciones.js";
 import AtencionAnterior from "../components/AtencionAnterior.jsx";
 import FormularioFicha from "../components/FormularioFicha.jsx";
+import ReasignarFicha from "../components/ReasignarFicha.jsx";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -27,18 +34,22 @@ export default function Recepcion() {
 
   const [busqueda, setBusqueda] = useState("");
   const [soloPendientes, setSoloPendientes] = useState(false);
+  const [verAusentes, setVerAusentes] = useState(false);
   const [propietarioId, setPropietarioId] = useState(null);
   const [equipoElegido, setEquipoElegido] = useState(null);
   const [verAnterior, setVerAnterior] = useState(null);
   const [creada, setCreada] = useState(null);
-  const [porEliminar, setPorEliminar] = useState(null); // 'p:<id>' o 'e:<id>'
+  // Confirmaciones: 'a:<id>' no se presentó, 'd:<id>' eliminar definitivo, 'e:<id>' quitar equipo
+  const [confirmar, setConfirmar] = useState(null);
 
   const propietario = datos.propietarios.find((p) => p.id === propietarioId);
   const equiposDe = (id) => datos.equipos.filter((e) => e.propietarioId === id);
   const tieneFichas = (equipoId) =>
     datos.fichas.some((f) => f.equipoId === equipoId);
-  const propietarioConFichas = (id) =>
-    equiposDe(id).some((e) => tieneFichas(e.id));
+  const fichasDe = (id) => {
+    const ids = new Set(equiposDe(id).map((e) => e.id));
+    return datos.fichas.filter((f) => ids.has(f.equipoId));
+  };
   const pendientesDe = (id) =>
     equiposDe(id).filter((e) => !tieneFichas(e.id)).length;
 
@@ -47,18 +58,41 @@ export default function Recepcion() {
     setEquipoElegido(null);
     setVerAnterior(null);
     setCreada(null);
-    setPorEliminar(null);
+    setConfirmar(null);
   };
 
-  // Elimina una inscripción completa (propietario y sus equipos)
-  const eliminarPropietario = (id) => {
+  // "No se presentó": se guarda por clínica y no borra nada
+  const marcarNoSePresento = (id) => {
+    if (!clinica || fichasDe(id).some(estaAbierta)) return;
+    actualizar((d) => ({
+      ...d,
+      propietarios: d.propietarios.map((p) =>
+        p.id === id ? marcarAusente(p, clinica.id) : p,
+      ),
+    }));
+    setConfirmar(null);
+  };
+
+  const restaurar = (id) => {
+    if (!clinica) return;
+    actualizar((d) => ({
+      ...d,
+      propietarios: d.propietarios.map((p) =>
+        p.id === id ? restaurarInscripcion(p, clinica.id) : p,
+      ),
+    }));
+  };
+
+  // Solo para inscripciones que nunca tuvieron atenciones (por ejemplo, duplicadas)
+  const eliminarDefinitivo = (id) => {
+    if (fichasDe(id).length > 0) return;
     actualizar((d) => ({
       ...d,
       propietarios: d.propietarios.filter((p) => p.id !== id),
       equipos: d.equipos.filter((e) => e.propietarioId !== id),
     }));
     if (propietarioId === id) reiniciar();
-    setPorEliminar(null);
+    setConfirmar(null);
   };
 
   const eliminarEquipo = (id) => {
@@ -66,13 +100,23 @@ export default function Recepcion() {
       ...d,
       equipos: d.equipos.filter((e) => e.id !== id),
     }));
-    setPorEliminar(null);
+    setConfirmar(null);
   };
+
+  const ausentes = datos.propietarios.filter((p) =>
+    estaAusente(p, clinica?.id),
+  );
+  const porReasignar = clinica
+    ? datos.fichas.filter(
+        (f) => f.estado === ESTADO_POR_REASIGNAR && f.clinicaId === clinica.id,
+      )
+    : [];
 
   const q = normalizar(busqueda.trim());
   const qRut = limpiarRut(busqueda);
   const lista = datos.propietarios
     .filter((p) => {
+      if (estaAusente(p, clinica?.id) && !verAusentes) return false;
       if (soloPendientes && pendientesDe(p.id) === 0) return false;
       if (!q) return true;
       const porNombre = normalizar(nombreCompleto(p)).includes(q);
@@ -155,14 +199,30 @@ export default function Recepcion() {
         </Alerta>
       ) : (
         <Alerta variante="aviso" role="alert">
-          “No estás asignado a la clínica de este año. Pídele al encargado que
-          te asigne a una.”
+          No estás asignado a la clínica de este año. Pídele al encargado que te
+          asigne a una.
         </Alerta>
+      )}
+
+      {!propietario && porReasignar.length > 0 && (
+        <section className="space-y-3" aria-labelledby="por-reasignar">
+          <h2
+            id="por-reasignar"
+            className="text-sm font-semibold text-neutral-700"
+          >
+            Fichas por reasignar ({porReasignar.length})
+          </h2>
+          <ul className="space-y-3">
+            {porReasignar.map((f) => (
+              <ReasignarFicha key={f.id} ficha={f} clinica={clinica} />
+            ))}
+          </ul>
+        </section>
       )}
 
       {!propietario && (
         <section className="space-y-4" aria-labelledby="lista-propietarios">
-          <Tarjeta className="p-4 sm:p-5">
+          <Tarjeta className="space-y-3 p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <Campo
                 etiqueta="Buscar propietario"
@@ -185,6 +245,17 @@ export default function Recepcion() {
                 Solo con equipos pendientes de recibir
               </label>
             </div>
+            {ausentes.length > 0 && (
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 shrink-0"
+                  checked={verAusentes}
+                  onChange={(e) => setVerAusentes(e.target.checked)}
+                />
+                Mostrar quienes no se presentaron ({ausentes.length})
+              </label>
+            )}
           </Tarjeta>
 
           <div className="flex items-center justify-between gap-3">
@@ -215,16 +286,24 @@ export default function Recepcion() {
             <ul className="space-y-3">
               {lista.map((p) => {
                 const pendientes = pendientesDe(p.id);
-                const bloqueado = propietarioConFichas(p.id);
+                const ausente = estaAusente(p, clinica?.id);
+                const abierta = fichasDe(p.id).some(estaAbierta);
+                const sinFichas = fichasDe(p.id).length === 0;
                 return (
-                  <Tarjeta as="li" key={p.id} className="p-4 sm:p-5">
+                  <Tarjeta
+                    as="li"
+                    key={p.id}
+                    className={`p-4 sm:p-5 ${ausente ? "opacity-80" : ""}`}
+                  >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0 space-y-1.5">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="font-semibold text-tinta">
                             {nombreCompleto(p)}
                           </p>
-                          {pendientes > 0 ? (
+                          {ausente ? (
+                            <Insignia tono="neutral">No se presentó</Insignia>
+                          ) : pendientes > 0 ? (
                             <Insignia tono="aviso">
                               {pendientes} por recibir
                             </Insignia>
@@ -240,43 +319,98 @@ export default function Recepcion() {
                       </div>
 
                       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                        <Boton
-                          variante="peligro-enlace"
-                          onClick={() => setPorEliminar(`p:${p.id}`)}
-                          disabled={bloqueado}
-                          title={
-                            bloqueado
-                              ? "No se puede eliminar: tiene equipos con fichas"
-                              : ""
-                          }
-                        >
-                          Eliminar inscripción
-                        </Boton>
-                        <Boton onClick={() => setPropietarioId(p.id)}>
-                          Seleccionar
-                        </Boton>
+                        {ausente ? (
+                          <>
+                            {sinFichas && (
+                              <Boton
+                                variante="peligro-enlace"
+                                onClick={() => setConfirmar(`d:${p.id}`)}
+                              >
+                                Eliminar definitivamente
+                              </Boton>
+                            )}
+                            <Boton
+                              variante="secundario"
+                              onClick={() => restaurar(p.id)}
+                            >
+                              Restaurar inscripción
+                            </Boton>
+                          </>
+                        ) : (
+                          <>
+                            <Boton
+                              variante="peligro-enlace"
+                              onClick={() => setConfirmar(`a:${p.id}`)}
+                              disabled={!clinica || abierta}
+                              title={
+                                abierta
+                                  ? "Tiene un equipo con ficha abierta"
+                                  : !clinica
+                                    ? "Necesitas una clínica activa"
+                                    : ""
+                              }
+                            >
+                              No se presentó
+                            </Boton>
+                            <Boton onClick={() => setPropietarioId(p.id)}>
+                              Seleccionar
+                            </Boton>
+                          </>
+                        )}
                       </div>
                     </div>
 
-                    {porEliminar === `p:${p.id}` && (
+                    {confirmar === `a:${p.id}` && (
                       <Alerta
-                        variante="error"
+                        variante="aviso"
                         role="alert"
-                        titulo="Eliminar inscripción"
+                        titulo="Marcar como ausente"
                         className="mt-4"
                         acciones={
                           <>
                             <Boton
                               variante="peligro"
                               tamano="sm"
-                              onClick={() => eliminarPropietario(p.id)}
+                              onClick={() => marcarNoSePresento(p.id)}
+                            >
+                              Sí, no se presentó
+                            </Boton>
+                            <Boton
+                              variante="secundario"
+                              tamano="sm"
+                              onClick={() => setConfirmar(null)}
+                            >
+                              Cancelar
+                            </Boton>
+                          </>
+                        }
+                      >
+                        ¿Marcar a {nombreCompleto(p)} como que no se presentó a{" "}
+                        {clinica?.nombre}? Dejará de aparecer en esta lista,
+                        pero sus datos y su historial se conservan. Puedes
+                        restaurarla cuando quieras.
+                      </Alerta>
+                    )}
+
+                    {confirmar === `d:${p.id}` && (
+                      <Alerta
+                        variante="error"
+                        role="alert"
+                        titulo="Eliminar definitivamente"
+                        className="mt-4"
+                        acciones={
+                          <>
+                            <Boton
+                              variante="peligro"
+                              tamano="sm"
+                              onClick={() => eliminarDefinitivo(p.id)}
                             >
                               Sí, eliminar
                             </Boton>
                             <Boton
                               variante="secundario"
                               tamano="sm"
-                              onClick={() => setPorEliminar(null)}
+                              onClick={() => setConfirmar(null)}
                             >
                               Cancelar
                             </Boton>
@@ -286,7 +420,7 @@ export default function Recepcion() {
                         ¿Eliminar la inscripción de {nombreCompleto(p)} y sus{" "}
                         {equiposDe(p.id).length}{" "}
                         {equiposDe(p.id).length === 1 ? "equipo" : "equipos"}?
-                        Esta acción no se puede deshacer.
+                        Nunca tuvo atenciones. Esta acción no se puede deshacer.
                       </Alerta>
                     )}
                   </Tarjeta>
@@ -391,7 +525,7 @@ export default function Recepcion() {
                           {fichas.length === 0 && (
                             <Boton
                               variante="peligro-enlace"
-                              onClick={() => setPorEliminar(`e:${e.id}`)}
+                              onClick={() => setConfirmar(`e:${e.id}`)}
                             >
                               Quitar equipo
                             </Boton>
@@ -410,7 +544,7 @@ export default function Recepcion() {
                         </div>
                       </div>
 
-                      {porEliminar === `e:${e.id}` && (
+                      {confirmar === `e:${e.id}` && (
                         <Alerta
                           variante="error"
                           role="alert"
@@ -428,7 +562,7 @@ export default function Recepcion() {
                               <Boton
                                 variante="secundario"
                                 tamano="sm"
-                                onClick={() => setPorEliminar(null)}
+                                onClick={() => setConfirmar(null)}
                               >
                                 Cancelar
                               </Boton>

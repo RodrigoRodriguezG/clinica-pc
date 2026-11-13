@@ -27,6 +27,8 @@ const TONO_POR_ESTADO = {
   Listo: "exito",
   Entregado: "exito-fuerte",
   "No retirado": "error",
+  "Por reasignar": "aviso",
+  "Cierre anticipado": "neutral",
 };
 
 export default function Insignia({
