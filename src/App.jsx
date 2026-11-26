@@ -27,6 +27,7 @@ import MiCuenta from "./pages/MiCuenta.jsx";
 import Boton from "./components/ui/Boton.jsx";
 import Tarjeta from "./components/ui/Tarjeta.jsx";
 import { cx } from "./components/ui/cx.js";
+import { LogoInacap } from "./components/ui/LogoInacap.jsx";
 import {
   IconoCerrar,
   IconoChecklist,
@@ -35,7 +36,6 @@ import {
   IconoFichas,
   IconoInscripcion,
   IconoMenu,
-  IconoMonitor,
   IconoQR,
   IconoRecepcion,
   IconoRestablecer,
@@ -126,34 +126,31 @@ function Protegida({ permiso, children }) {
 
 function Marca({ compacta = false }) {
   return (
-    <div className="flex items-center gap-3">
+    <div
+      className={cx(
+        "flex min-w-0 items-center gap-3",
+        compacta ? "text-tinta" : "text-white",
+      )}
+    >
+      <LogoInacap
+        className={cx("w-auto shrink-0", compacta ? "h-5" : "h-6")}
+        iconoClassName="text-inacap"
+      />
       <span
         aria-hidden="true"
         className={cx(
-          "flex shrink-0 items-center justify-center rounded-xl bg-inacap text-white shadow-sm",
-          compacta ? "h-10 w-10" : "h-11 w-11",
+          "w-px shrink-0",
+          compacta ? "h-5 bg-neutral-300" : "h-6 bg-white/30",
+        )}
+      />
+      <p
+        className={cx(
+          "truncate font-bold leading-tight tracking-tight",
+          compacta ? "text-base" : "text-lg",
         )}
       >
-        <IconoMonitor className={compacta ? "h-5 w-5" : "h-6 w-6"} />
-      </span>
-      <div className="min-w-0">
-        <p
-          className={cx(
-            "truncate font-bold leading-tight tracking-tight",
-            compacta ? "text-base text-tinta" : "text-lg text-white",
-          )}
-        >
-          Clínica del PC
-        </p>
-        <p
-          className={cx(
-            "text-[0.7rem] font-semibold uppercase tracking-[0.18em]",
-            compacta ? "text-neutral-500" : "text-neutral-400",
-          )}
-        >
-          INACAP
-        </p>
-      </div>
+        Clínica del PC
+      </p>
     </div>
   );
 }

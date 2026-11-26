@@ -6,10 +6,10 @@ import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
+import { LogoInacap } from "../components/ui/LogoInacap.jsx";
 import {
   IconoChevronAbajo,
   IconoEscudo,
-  IconoMonitor,
 } from "../components/ui/iconos.jsx";
 
 // Claves originales de las cuentas demo. Se toman de los datos iniciales y no
@@ -42,18 +42,10 @@ export default function Login() {
           className="pointer-events-none absolute -bottom-32 -left-20 h-96 w-96 rounded-full border border-white/10"
         />
 
-        <div className="relative flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-inacap text-white">
-            <IconoMonitor className="h-6 w-6" />
-          </span>
-          <div>
-            <p className="text-lg font-bold leading-tight text-white">
-              Clínica del PC
-            </p>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-neutral-400">
-              INACAP
-            </p>
-          </div>
+        <div className="relative flex items-center gap-3 text-white">
+          <LogoInacap className="h-7 w-auto" iconoClassName="text-inacap" />
+          <span aria-hidden="true" className="h-7 w-px bg-white/30" />
+          <p className="text-lg font-bold leading-tight">Clínica del PC</p>
         </div>
 
         <div className="relative max-w-lg">
@@ -75,18 +67,10 @@ export default function Login() {
       {/* Formulario */}
       <section className="flex min-h-screen flex-col justify-center px-4 py-8 sm:px-6 lg:px-10">
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-6 flex items-center gap-3 lg:hidden">
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-inacap text-white">
-              <IconoMonitor className="h-6 w-6" />
-            </span>
-            <div>
-              <p className="text-base font-bold leading-tight text-tinta">
-                Clínica del PC
-              </p>
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-neutral-500">
-                INACAP
-              </p>
-            </div>
+          <div className="mb-6 flex items-center gap-3 text-tinta lg:hidden">
+            <LogoInacap className="h-6 w-auto" iconoClassName="text-inacap" />
+            <span aria-hidden="true" className="h-6 w-px bg-neutral-300" />
+            <p className="text-base font-bold leading-tight">Clínica del PC</p>
           </div>
 
           <Tarjeta className="p-6 sm:p-8">
