@@ -55,13 +55,13 @@ export default function AjustesClinica({ clinica }) {
       </Alerta>
 
       <fieldset className="space-y-3">
-        <legend className="text-base font-semibold text-tinta">
+        <legend className="text-base font-semibold text-slate-900">
           Personal asignado
-          <span className="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-neutral-700">
+          <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-slate-700">
             {ids.length}
           </span>
         </legend>
-        <p className="text-sm leading-relaxed text-neutral-600">
+        <p className="text-sm leading-relaxed text-slate-600">
           Marca a las personas que podrán recepcionar o revisar equipos en esta
           clínica. Cada persona trabaja en una sola sede por año.
         </p>
@@ -77,10 +77,10 @@ export default function AjustesClinica({ clinica }) {
                 className={cx(
                   "flex min-h-14 items-center gap-3 rounded-control border px-3 py-2.5 text-sm transition-colors duration-150",
                   marcado
-                    ? "border-neutral-400 bg-white shadow-sm"
+                    ? "border-slate-400 bg-white shadow-sm"
                     : otra
-                      ? "cursor-not-allowed border-neutral-200 bg-neutral-50 text-neutral-500"
-                      : "cursor-pointer border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50",
+                      ? "cursor-not-allowed border-slate-200 bg-slate-50 text-slate-500"
+                      : "cursor-pointer border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
                   marcado && "cursor-pointer",
                 )}
               >
@@ -93,10 +93,10 @@ export default function AjustesClinica({ clinica }) {
                   aria-label={`Asignar a ${u.nombre}`}
                 />
                 <span className="min-w-0">
-                  <span className="block font-medium text-neutral-800">
+                  <span className="block font-medium text-slate-800">
                     {u.nombre}
                   </span>
-                  <span className="block text-xs text-neutral-500">
+                  <span className="block text-xs text-slate-500">
                     {NOMBRE_ROL[u.rol]}
                     {otra && ` · Ya asignado a ${otra.sede}`}
                   </span>
@@ -105,7 +105,7 @@ export default function AjustesClinica({ clinica }) {
             );
           })}
           {personal.length === 0 && (
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-slate-600">
               No hay usuarios con permisos de recepción o revisión.
             </p>
           )}

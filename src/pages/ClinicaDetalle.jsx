@@ -43,9 +43,9 @@ function Filtro({ valor, onChange, placeholder, ariaLabel }) {
 function CabeceraPanel({ descripcion, visibles, total }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <p className="text-sm text-neutral-600">{descripcion}</p>
+      <p className="text-sm text-slate-600">{descripcion}</p>
       <p
-        className="text-sm tabular-nums text-neutral-500"
+        className="text-sm tabular-nums text-slate-500"
         aria-live="polite"
       >
         {visibles} de {total}
@@ -214,53 +214,60 @@ export default function ClinicaDetalle() {
     <div className="space-y-6">
       <Link
         to="/clinicas"
-        className="-ml-1 inline-flex min-h-11 items-center gap-1.5 rounded-control px-1 text-sm font-semibold text-neutral-600 transition-colors duration-150 hover:text-tinta"
+        className="-mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:text-inacap"
       >
         <IconoFlechaIzquierda className="h-4 w-4" />
         Volver a clínicas
       </Link>
 
-      {/* Encabezado de la clínica */}
-      <Tarjeta>
-        <div className="space-y-3 p-5 sm:p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+      {/* Encabezado de la clínica: tarjeta protagonista con acento rojo */}
+      <Tarjeta acento className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-inacap">
+              {clinica.sede}
+            </p>
+            <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-slate-900">
               {clinica.nombre}
             </h1>
-            {clinicaEsActiva(clinica) && (
-              <Insignia tono="exito">Clínica activa</Insignia>
-            )}
           </div>
-          <dl className="flex flex-col gap-x-6 gap-y-2 text-sm text-neutral-600 sm:flex-row sm:flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Sede</dt>
-              <IconoClinicas className="h-4 w-4 text-neutral-400" />
-              <dd>{clinica.sede}</dd>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <dt className="sr-only">Plantilla</dt>
-              <IconoChecklist className="h-4 w-4 text-neutral-400" />
-              <dd>{nombrePlantilla}</dd>
-            </div>
-            <div className="flex items-start gap-1.5">
-              <dt className="sr-only">Días</dt>
-              <IconoCalendario className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
-              <dd>
-                {clinica.dias.length > 0
-                  ? clinica.dias.map(formatearFecha).join(" · ")
-                  : "Sin días definidos"}
-              </dd>
-            </div>
-          </dl>
+          {clinicaEsActiva(clinica) ? (
+            <Insignia tono="exito">Activa</Insignia>
+          ) : (
+            <Insignia tono="neutral">Inactiva</Insignia>
+          )}
         </div>
 
-        <dl className="grid grid-cols-2 divide-neutral-100 border-t border-neutral-100 sm:grid-cols-4 sm:divide-x">
+        <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 border-t border-slate-100 pt-5 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <IconoChecklist className="h-3.5 w-3.5" />
+              Plantilla de checklist
+            </dt>
+            <dd className="mt-0.5 font-medium text-slate-900">
+              {nombrePlantilla}
+            </dd>
+          </div>
+          <div>
+            <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <IconoCalendario className="h-3.5 w-3.5" />
+              Días de atención
+            </dt>
+            <dd className="mt-0.5 font-medium text-slate-900">
+              {clinica.dias.length > 0
+                ? clinica.dias.map(formatearFecha).join(" · ")
+                : "Sin días definidos"}
+            </dd>
+          </div>
+        </dl>
+
+        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {resumen.map(({ etiqueta, valor, uno, varios }) => (
-            <div key={etiqueta} className="px-5 py-4 sm:px-6">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <div key={etiqueta} className="rounded-xl bg-slate-50 px-4 py-3">
+              <dt className="text-xs font-medium text-slate-500">
                 {etiqueta}
               </dt>
-              <dd className="mt-1 text-2xl font-bold tabular-nums text-tinta">
+              <dd className="mt-0.5 text-xl font-bold tabular-nums text-slate-900">
                 {valor}
                 <span className="sr-only"> {valor === 1 ? uno : varios}</span>
               </dd>
@@ -331,15 +338,15 @@ export default function ClinicaDetalle() {
                       <div className="flex items-start gap-3">
                         <span
                           aria-hidden="true"
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600"
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600"
                         >
                           <IconoUsuarios className="h-5 w-5" />
                         </span>
                         <div className="min-w-0 space-y-1">
-                          <p className="font-semibold text-tinta">
+                          <p className="font-semibold text-slate-900">
                             {usuario.nombre}
                           </p>
-                          <p className="break-all text-sm text-neutral-600">
+                          <p className="break-all text-sm text-slate-600">
                             {NOMBRE_ROL[usuario.rol]} · {usuario.correo}
                           </p>
                           <div className="flex flex-wrap gap-1.5 pt-1.5">
@@ -417,7 +424,7 @@ export default function ClinicaDetalle() {
                   return (
                     <Tarjeta as="li" key={p.id} className="p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="font-semibold text-tinta">
+                        <p className="font-semibold text-slate-900">
                           {nombreCompleto(p)}
                         </p>
                         <Insignia tono="neutral" punto={false}>
@@ -426,7 +433,7 @@ export default function ClinicaDetalle() {
                           {susEquipos.length === 1 ? "equipo" : "equipos"}
                         </Insignia>
                       </div>
-                      <dl className="mt-2 space-y-0.5 text-sm text-neutral-600">
+                      <dl className="mt-2 space-y-0.5 text-sm text-slate-600">
                         <div>
                           <dt className="sr-only">RUT y comuna</dt>
                           <dd>
@@ -496,20 +503,20 @@ export default function ClinicaDetalle() {
                       <div className="flex min-w-0 items-start gap-3">
                         <span
                           aria-hidden="true"
-                          className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600 sm:flex"
+                          className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-inacap-tenue text-inacap-oscuro sm:flex"
                         >
                           <IconoMonitor className="h-5 w-5" />
                         </span>
                         <div className="min-w-0 space-y-1">
-                          <p className="font-semibold text-tinta">
+                          <p className="font-semibold text-slate-900">
                             {equipo.numeroEquipo} · {equipo.tipo}
                           </p>
-                          <p className="text-sm text-neutral-700">
+                          <p className="text-sm text-slate-700">
                             {propietario
                               ? nombreCompleto(propietario)
                               : "Sin propietario registrado"}
                           </p>
-                          <p className="text-sm text-neutral-500">
+                          <p className="text-sm text-slate-500">
                             {[
                               equipo.marca,
                               equipo.modelo,
@@ -527,7 +534,7 @@ export default function ClinicaDetalle() {
                             key={f.id}
                             className="flex flex-wrap items-center gap-2 sm:justify-end"
                           >
-                            <span className="text-xs font-semibold tabular-nums text-neutral-500">
+                            <span className="text-xs font-semibold tabular-nums text-slate-500">
                               {f.numero}
                             </span>
                             <Insignia estado={f.estado} />

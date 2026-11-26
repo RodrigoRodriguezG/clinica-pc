@@ -5,22 +5,29 @@ export default function Encabezado({
   descripcion,
   acciones,
   superior,
+  // Etiqueta corta en rojo y mayúsculas sobre el título
+  eyebrow,
   className = "",
 }) {
   return (
     <header
       className={cx(
-        "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between",
+        "flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
         className,
       )}
     >
-      <div className="min-w-0 space-y-1.5">
+      <div className="min-w-0 space-y-1">
         {superior}
-        <h1 className="text-2xl font-bold tracking-tight text-tinta sm:text-3xl">
+        {eyebrow && (
+          <p className="text-xs font-semibold uppercase tracking-wide text-inacap">
+            {eyebrow}
+          </p>
+        )}
+        <h1 className="text-2xl font-bold leading-tight tracking-tight text-slate-900">
           {titulo}
         </h1>
         {descripcion && (
-          <p className="max-w-2xl text-sm leading-relaxed text-neutral-600 sm:text-base">
+          <p className="max-w-2xl text-sm leading-relaxed text-slate-600">
             {descripcion}
           </p>
         )}

@@ -275,7 +275,7 @@ function Panel() {
   if (!usuario) return <Login />;
 
   return (
-    <div className="min-h-screen bg-neutral-100">
+    <div className="min-h-screen bg-slate-50">
       {/* Barra lateral fija en escritorio */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 flex-col bg-tinta px-5 py-6 shadow-lateral lg:flex">
         <div className="mb-8 shrink-0">
@@ -289,7 +289,7 @@ function Panel() {
         <div className="flex min-w-0 items-center gap-2">
           <Boton
             variante="secundario"
-            className="w-11 shrink-0 px-0"
+            className="w-11 shrink-0 px-0!"
             onClick={() => setMenuAbierto(true)}
             aria-label="Abrir menú de navegación"
             aria-expanded={menuAbierto}

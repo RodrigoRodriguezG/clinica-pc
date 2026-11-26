@@ -10,16 +10,16 @@ export default function EstadoVacio({
   return (
     <div
       className={
-        "flex flex-col items-center justify-center rounded-tarjeta border border-dashed border-neutral-300 bg-white px-5 py-9 text-center sm:px-8 sm:py-12 " +
+        "flex flex-col items-center justify-center rounded-tarjeta border border-dashed border-slate-300 bg-white px-6 py-10 text-center sm:px-8 sm:py-12 " +
         className
       }
     >
-      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-400">
+      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-inacap-tenue text-inacap-oscuro">
         {icono ?? <IconoBuscar className="h-6 w-6" />}
       </span>
-      <p className="font-semibold text-tinta">{titulo}</p>
+      <p className="font-semibold text-slate-900">{titulo}</p>
       {descripcion && (
-        <p className="mt-1 max-w-sm text-sm leading-relaxed text-neutral-600">
+        <p className="mt-1 max-w-sm text-sm leading-relaxed text-slate-600">
           {descripcion}
         </p>
       )}

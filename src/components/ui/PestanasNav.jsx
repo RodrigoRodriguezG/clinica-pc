@@ -12,7 +12,7 @@ export default function PestanasNav({
       <div
         role="tablist"
         aria-label={etiqueta}
-        className="flex min-w-max gap-1 border-b border-neutral-200 px-1"
+        className="flex min-w-max gap-1 border-b border-slate-200 px-1"
       >
         {pestanas.map(({ id, etiqueta: texto, disabled }) => {
           const seleccionada = activa === id;
@@ -27,8 +27,8 @@ export default function PestanasNav({
               className={cx(
                 "min-h-11 whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40",
                 seleccionada
-                  ? "border-inacap font-semibold text-inacap"
-                  : "border-transparent text-neutral-600 hover:border-neutral-300 hover:text-tinta",
+                  ? "border-inacap font-semibold text-inacap-oscuro"
+                  : "border-transparent font-medium text-slate-600 hover:border-slate-300 hover:text-slate-900",
               )}
             >
               {texto}

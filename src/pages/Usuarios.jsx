@@ -18,6 +18,7 @@ import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
 import Seccion from "../components/ui/Seccion.jsx";
 import BarraFiltros from "../components/ui/BarraFiltros.jsx";
+import Chips from "../components/ui/Chips.jsx";
 import Paso from "../components/ui/Paso.jsx";
 import PanelCreacion, {
   PieAcciones,
@@ -155,13 +156,13 @@ export default function Usuarios() {
         acciones={
           <>
             <Boton
-              variante="secundario"
+              variante="contorno"
               onClick={() => {
                 setPanel("importar");
                 setError("");
               }}
               aria-pressed={panel === "importar"}
-              className="pl-3.5"
+              className="pl-4.5"
             >
               <IconoDocumento className="h-4 w-4" />
               Importar desde Excel
@@ -169,7 +170,7 @@ export default function Usuarios() {
             <Boton
               onClick={() => setPanel("crear")}
               aria-pressed={panel === "crear"}
-              className="pl-3.5"
+              className="pl-4.5"
             >
               <IconoMas className="h-4 w-4" />
               Nuevo usuario
@@ -266,7 +267,22 @@ export default function Usuarios() {
         titulo="Usuarios registrados"
         contador={`${usuariosFiltrados.length} de ${datos.usuarios.length}`}
       >
-        <BarraFiltros hayFiltros={hayFiltros} onLimpiar={limpiarFiltros}>
+        <BarraFiltros
+          hayFiltros={hayFiltros}
+          onLimpiar={limpiarFiltros}
+          chips={
+            <Chips
+              etiqueta="Filtrar por estado"
+              valor={filtroEstado}
+              onChange={conFiltro(setFiltroEstado)}
+              opciones={[
+                { valor: "", texto: "Todos" },
+                { valor: "activos", texto: "Activos" },
+                { valor: "inactivos", texto: "Inactivos" },
+              ]}
+            />
+          }
+        >
           <Campo
             etiqueta="Buscar usuario"
             type="search"
@@ -287,16 +303,6 @@ export default function Usuarios() {
                 {NOMBRE_ROL[r]}
               </option>
             ))}
-          </Campo>
-          <Campo
-            as="select"
-            etiqueta="Estado"
-            value={filtroEstado}
-            onChange={(e) => conFiltro(setFiltroEstado)(e.target.value)}
-          >
-            <option value="">Todos</option>
-            <option value="activos">Activos</option>
-            <option value="inactivos">Inactivos</option>
           </Campo>
         </BarraFiltros>
 
@@ -328,7 +334,7 @@ export default function Usuarios() {
               return (
                 <Tarjeta
                   key={u.id}
-                  className={cx(!u.activo && "bg-neutral-50")}
+                  className={cx(!u.activo && "bg-slate-50")}
                 >
                   {/* Identidad y acción principal */}
                   <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
@@ -340,16 +346,19 @@ export default function Usuarios() {
                     >
                       <span
                         aria-hidden="true"
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600"
                       >
                         <IconoUsuarios className="h-5 w-5" />
                       </span>
                       <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-semibold text-tinta">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-inacap">
+                          {NOMBRE_ROL[u.rol]}
+                        </p>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-slate-900">
                             {u.nombre}{" "}
                             {esYo && (
-                              <span className="font-normal text-neutral-500">
+                              <span className="font-normal text-slate-500">
                                 (tú)
                               </span>
                             )}
@@ -358,7 +367,7 @@ export default function Usuarios() {
                             {u.activo ? "Activo" : "Inactivo"}
                           </Insignia>
                         </div>
-                        <p className="break-all text-sm text-neutral-600">
+                        <p className="break-all text-sm text-slate-600">
                           {u.correo}
                         </p>
                       </div>
@@ -375,7 +384,7 @@ export default function Usuarios() {
                   </div>
 
                   {/* Rol y permisos */}
-                  <div className="grid gap-4 border-t border-neutral-100 px-4 py-4 sm:grid-cols-[16rem_minmax(0,1fr)] sm:items-start sm:px-5">
+                  <div className="grid gap-4 border-t border-slate-100 px-4 py-4 sm:grid-cols-[16rem_minmax(0,1fr)] sm:items-start sm:px-5">
                     <Campo
                       as="select"
                       etiqueta="Rol"
@@ -396,18 +405,18 @@ export default function Usuarios() {
                     </Campo>
 
                     {/* Permisos, plegados para que la lista sea manejable */}
-                    <details className="group rounded-control border border-neutral-200 sm:mt-[1.625rem]">
-                      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-control px-3 py-2.5 text-sm font-semibold text-neutral-700 transition-colors duration-150 hover:bg-neutral-50 [&::-webkit-details-marker]:hidden">
+                    <details className="group rounded-control border border-slate-200 sm:mt-[1.625rem]">
+                      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-control px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-150 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
                         <span>
                           Permisos{" "}
-                          <span className="font-normal tabular-nums text-neutral-500">
+                          <span className="font-normal tabular-nums text-slate-500">
                             · {permisosActivos} de{" "}
                             {Object.keys(ETIQUETA_PERMISO).length} activos
                           </span>
                         </span>
                         <IconoChevronAbajo className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" />
                       </summary>
-                      <div className="grid gap-1 border-t border-neutral-200 p-2 sm:grid-cols-2">
+                      <div className="grid gap-1 border-t border-slate-200 p-2 sm:grid-cols-2">
                         {Object.entries(ETIQUETA_PERMISO).map(
                           ([permiso, etiqueta]) => {
                             const deshabilitado =
@@ -419,7 +428,7 @@ export default function Usuarios() {
                                   "flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors duration-150",
                                   deshabilitado
                                     ? "cursor-not-allowed opacity-60"
-                                    : "cursor-pointer hover:bg-neutral-50",
+                                    : "cursor-pointer hover:bg-slate-50",
                                 )}
                                 title={
                                   deshabilitado

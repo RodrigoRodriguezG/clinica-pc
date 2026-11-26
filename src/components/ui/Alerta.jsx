@@ -8,19 +8,19 @@ import {
 
 const VARIANTES = {
   info: {
-    caja: "border-blue-200 bg-info-tenue text-info",
+    caja: "border-sky-200 bg-sky-50 text-sky-900",
     Icono: IconoInfo,
   },
   aviso: {
-    caja: "border-amber-200 bg-aviso-tenue text-aviso",
+    caja: "border-amber-200 bg-amber-50 text-amber-900",
     Icono: IconoAlerta,
   },
   error: {
-    caja: "border-red-200 bg-error-tenue text-error",
+    caja: "border-inacap/30 bg-inacap-tenue text-inacap-oscuro",
     Icono: IconoXCircle,
   },
   exito: {
-    caja: "border-green-200 bg-exito-tenue text-exito",
+    caja: "border-emerald-200 bg-emerald-50 text-emerald-900",
     Icono: IconoCheckCircle,
   },
 };
@@ -39,12 +39,12 @@ export default function Alerta({
     <div
       role={role}
       className={cx(
-        "flex items-start gap-3 rounded-tarjeta border p-3.5 sm:p-4",
+        "flex items-start gap-3 rounded-xl border px-4 py-3",
         caja,
         className,
       )}
     >
-      <Icono className="mt-0.5 h-5 w-5 shrink-0" />
+      <Icono className="mt-px h-5 w-5 shrink-0" strokeWidth="1.5" />
       <div className="min-w-0 flex-1 space-y-1">
         {titulo && <p className="font-semibold leading-snug">{titulo}</p>}
         {children && (

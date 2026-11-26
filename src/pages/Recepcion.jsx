@@ -23,6 +23,7 @@ import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
 import Seccion from "../components/ui/Seccion.jsx";
 import BarraFiltros from "../components/ui/BarraFiltros.jsx";
+import Chips from "../components/ui/Chips.jsx";
 import {
   IconoFlechaIzquierda,
   IconoInscripcion,
@@ -149,13 +150,13 @@ export default function Recepcion() {
             , que registrará sus datos técnicos.
           </Alerta>
 
-          <dl className="grid gap-3 rounded-control bg-neutral-50 p-4 text-sm sm:grid-cols-2">
+          <dl className="grid gap-3 rounded-control bg-slate-50 p-4 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-neutral-500">N° de ficha</dt>
-              <dd className="font-semibold text-tinta">{creada.numero}</dd>
+              <dt className="text-slate-500">N° de ficha</dt>
+              <dd className="font-semibold text-slate-900">{creada.numero}</dd>
             </div>
             <div>
-              <dt className="text-neutral-500">Estado inicial</dt>
+              <dt className="text-slate-500">Estado inicial</dt>
               <dd className="mt-1">
                 <Insignia estado={creada.estado} />
               </dd>
@@ -187,17 +188,13 @@ export default function Recepcion() {
       <Encabezado
         titulo="Recepción de equipos"
         descripcion="Busca al propietario, revisa sus equipos y crea la ficha de atención."
-        superior={
-          clinica && (
-            <Insignia tono="exito">Clínica activa: {clinica.nombre}</Insignia>
-          )
-        }
+        eyebrow={clinica ? `Clínica activa · ${clinica.nombre}` : undefined}
         acciones={
           <Boton
             as={Link}
             to="/inscripcion"
-            variante="secundario"
-            className="pl-3.5"
+            variante="contorno"
+            className="pl-4.5"
           >
             <IconoInscripcion className="h-4 w-4" />
             Inscribir propietario
@@ -233,39 +230,41 @@ export default function Recepcion() {
 
       {!propietario && (
         <Seccion titulo="Propietarios inscritos" contador={lista.length}>
-          <BarraFiltros>
+          <BarraFiltros
+            chips={
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <Chips
+                  etiqueta="Filtrar propietarios"
+                  valor={soloPendientes}
+                  onChange={setSoloPendientes}
+                  opciones={[
+                    { valor: false, texto: "Todos" },
+                    { valor: true, texto: "Con equipos por recibir" },
+                  ]}
+                />
+                {ausentes.length > 0 && (
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium text-slate-700">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 shrink-0"
+                      checked={verAusentes}
+                      onChange={(e) => setVerAusentes(e.target.checked)}
+                    />
+                    Mostrar quienes no se presentaron ({ausentes.length})
+                  </label>
+                )}
+              </div>
+            }
+          >
             <Campo
               etiqueta="Buscar propietario"
               type="search"
-              className="sm:col-span-2"
               placeholder="Nombre, RUT o N° de equipo"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               aria-label="Buscar propietario"
               autoComplete="off"
             />
-            <div className="flex flex-col justify-end gap-1 sm:col-span-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5">
-              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium text-neutral-700">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 shrink-0"
-                  checked={soloPendientes}
-                  onChange={(e) => setSoloPendientes(e.target.checked)}
-                />
-                Solo con equipos pendientes de recibir
-              </label>
-              {ausentes.length > 0 && (
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium text-neutral-700">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 shrink-0"
-                    checked={verAusentes}
-                    onChange={(e) => setVerAusentes(e.target.checked)}
-                  />
-                  Mostrar quienes no se presentaron ({ausentes.length})
-                </label>
-              )}
-            </div>
           </BarraFiltros>
 
           {lista.length === 0 ? (
@@ -295,7 +294,7 @@ export default function Recepcion() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0 space-y-1.5">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-tinta">
+                          <p className="font-semibold text-slate-900">
                             {nombreCompleto(p)}
                           </p>
                           {ausente ? (
@@ -308,7 +307,7 @@ export default function Recepcion() {
                             <Insignia tono="neutral">Sin pendientes</Insignia>
                           )}
                         </div>
-                        <p className="text-sm leading-relaxed text-neutral-600">
+                        <p className="text-sm leading-relaxed text-slate-600">
                           RUT {enmascararRut(p.rut)} · {p.comuna} ·{" "}
                           {equiposDe(p.id).length}{" "}
                           {equiposDe(p.id).length === 1 ? "equipo" : "equipos"}
@@ -440,10 +439,10 @@ export default function Recepcion() {
                   <IconoUsuarios className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 space-y-1">
-                  <h2 className="text-lg font-semibold text-tinta">
+                  <h2 className="text-lg font-semibold text-slate-900">
                     {nombreCompleto(propietario)}
                   </h2>
-                  <p className="text-sm text-neutral-600">
+                  <p className="text-sm text-slate-600">
                     RUT {enmascararRut(propietario.rut)} · {propietario.comuna}
                   </p>
                 </div>
@@ -451,7 +450,7 @@ export default function Recepcion() {
               <Boton
                 variante="secundario"
                 onClick={reiniciar}
-                className="pl-3.5"
+                className="pl-4.5"
               >
                 <IconoFlechaIzquierda className="h-4 w-4" />
                 Volver a la lista
@@ -460,7 +459,7 @@ export default function Recepcion() {
           </Tarjeta>
 
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-tinta">
+            <h2 className="text-lg font-semibold text-slate-900">
               {equiposDe(propietario.id).length > 1
                 ? "Selecciona el equipo que trae"
                 : "Equipo inscrito"}
@@ -488,7 +487,7 @@ export default function Recepcion() {
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 space-y-1.5">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold text-tinta">
+                            <p className="font-semibold text-slate-900">
                               {e.numeroEquipo} · {e.tipo}
                             </p>
                             {abierta && <Insignia estado={abierta.estado} />}
@@ -501,7 +500,7 @@ export default function Recepcion() {
                               </Insignia>
                             )}
                           </div>
-                          <p className="text-sm leading-relaxed text-neutral-600">
+                          <p className="text-sm leading-relaxed text-slate-600">
                             {e.marca
                               ? `${e.marca} ${e.modelo}`
                               : "Datos técnicos pendientes"}

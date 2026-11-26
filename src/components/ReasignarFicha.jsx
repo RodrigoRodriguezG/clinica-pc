@@ -48,12 +48,12 @@ export default function ReasignarFicha({ ficha, clinica }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-tinta">
+            <p className="font-semibold text-slate-900">
               {ficha.numero} · {equipo?.numeroEquipo} · {equipo?.tipo}
             </p>
             <Insignia estado={ficha.estado} />
           </div>
-          {motivo && <p className="text-sm text-neutral-600">{motivo}</p>}
+          {motivo && <p className="text-sm text-slate-600">{motivo}</p>}
         </div>
         <Boton
           variante={abierto ? "secundario" : "primario"}
@@ -64,7 +64,7 @@ export default function ReasignarFicha({ ficha, clinica }) {
       </div>
 
       {abierto && (
-        <div className="space-y-3 rounded-control border border-neutral-200 bg-neutral-50 p-4">
+        <div className="space-y-3 rounded-control border border-slate-200 bg-slate-50 p-4">
           <SelectorTecnicos
             clinica={clinica}
             seleccion={seleccion}

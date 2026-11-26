@@ -24,7 +24,7 @@ export default function SelectorTecnicos({
 
   return (
     <fieldset className="space-y-2">
-      <legend className="text-sm font-semibold text-tinta">
+      <legend className="text-sm font-semibold text-slate-900">
         Técnicos que revisarán el equipo (1 o 2)
       </legend>
       <div className="grid gap-2 sm:grid-cols-2">
@@ -38,7 +38,7 @@ export default function SelectorTecnicos({
           return (
             <label
               key={t.id}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:border-neutral-300 hover:bg-neutral-50 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors duration-150 hover:border-slate-300 hover:bg-slate-50 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50"
             >
               <input
                 type="checkbox"
@@ -49,7 +49,7 @@ export default function SelectorTecnicos({
               />
               <span>
                 {t.nombre}{" "}
-                <span className="font-normal text-neutral-500">
+                <span className="font-normal text-slate-500">
                   {excluido
                     ? "(rechazó esta ficha)"
                     : `(${cupo(t.id)} de ${LIMITE_FICHAS_TECNICO} fichas)`}
@@ -59,7 +59,7 @@ export default function SelectorTecnicos({
           );
         })}
         {tecnicos.length === 0 && (
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-slate-600">
             Esta clínica no tiene técnicos asignados. Pídele al encargado que
             los asigne.
           </p>

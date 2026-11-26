@@ -1,23 +1,15 @@
 import { cx } from "./cx.js";
 
+// Badges con anillo interior; el texto siempre acompaña al color
 const TONOS = {
-  neutral: "border-neutral-200 bg-neutral-100 text-neutral-700",
-  info: "border-blue-200 bg-info-tenue text-info",
-  aviso: "border-amber-200 bg-aviso-tenue text-aviso",
-  exito: "border-green-200 bg-exito-tenue text-exito",
-  "exito-fuerte": "border-green-300 bg-green-100 text-exito-fuerte",
-  error: "border-red-200 bg-error-tenue text-error",
-  inacap: "border-inacap/20 bg-inacap-tenue text-inacap-oscuro",
-};
-
-const PUNTO = {
-  neutral: "bg-neutral-500",
-  info: "bg-info",
-  aviso: "bg-aviso",
-  exito: "bg-exito",
-  "exito-fuerte": "bg-exito-fuerte",
-  error: "bg-error",
-  inacap: "bg-inacap",
+  neutral: "bg-slate-100 text-slate-700 ring-slate-500/25",
+  info: "bg-sky-50 text-sky-800 ring-sky-600/25",
+  aviso: "bg-amber-50 text-amber-800 ring-amber-600/30",
+  exito: "bg-emerald-50 text-emerald-800 ring-emerald-600/25",
+  "exito-fuerte": "bg-emerald-100 text-emerald-900 ring-emerald-700/30",
+  error: "bg-inacap-tenue text-inacap-oscuro ring-inacap/30",
+  inacap: "bg-inacap-tenue text-inacap-oscuro ring-inacap/30",
+  blanco: "bg-white text-slate-700 ring-slate-300",
 };
 
 const TONO_POR_ESTADO = {
@@ -44,7 +36,7 @@ export default function Insignia({
   return (
     <span
       className={cx(
-        "inline-flex min-h-7 items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-semibold leading-none",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold leading-none ring-1 ring-inset",
         TONOS[clave] ?? TONOS.neutral,
         className,
       )}
@@ -52,10 +44,7 @@ export default function Insignia({
       {punto && (
         <span
           aria-hidden="true"
-          className={cx(
-            "h-1.5 w-1.5 shrink-0 rounded-full",
-            PUNTO[clave] ?? PUNTO.neutral,
-          )}
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-current"
         />
       )}
       {texto}

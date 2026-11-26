@@ -97,7 +97,7 @@ export default function ImportarUsuarios({ onCerrar }) {
           type="button"
           variante="secundario"
           onClick={descargarPlantilla}
-          className="pl-3.5"
+          className="pl-4.5"
         >
           <IconoDocumento className="h-4 w-4" />
           Descargar plantilla
@@ -117,7 +117,7 @@ export default function ImportarUsuarios({ onCerrar }) {
           onChange={elegirArchivo}
           disabled={leyendo}
           className="sm:max-w-md"
-          classNameControl="file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-tinta"
+          classNameControl="file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-slate-900"
         />
 
         {error && (
@@ -138,20 +138,20 @@ export default function ImportarUsuarios({ onCerrar }) {
         ayuda="Las filas con errores se omiten."
       >
         {!filas ? (
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-slate-500">
             Aquí verás la vista previa cuando subas un archivo.
           </p>
         ) : (
           <div className="space-y-4">
-            <p className="text-sm text-neutral-700" aria-live="polite">
+            <p className="text-sm text-slate-700" aria-live="polite">
               <span className="font-semibold">{nombreArchivo}</span>:{" "}
               {validas.length} listos para crear
               {conError > 0 && `, ${conError} con errores (se omitirán)`}.
             </p>
 
-            <div className="max-h-80 overflow-auto overscroll-contain rounded-control border border-neutral-200">
+            <div className="max-h-80 overflow-auto overscroll-contain rounded-control border border-slate-200">
               <table className="w-full text-left text-sm">
-                <thead className="sticky top-0 bg-neutral-50 text-xs uppercase tracking-wide text-neutral-600">
+                <thead className="sticky top-0 bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
                   <tr>
                     <th className="px-3 py-2 font-semibold">Fila</th>
                     <th className="px-3 py-2 font-semibold">Nombre</th>
@@ -159,14 +159,14 @@ export default function ImportarUsuarios({ onCerrar }) {
                     <th className="px-3 py-2 font-semibold">Estado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-200">
+                <tbody className="divide-y divide-slate-200">
                   {filas.map((f) => (
                     <tr key={f.fila}>
-                      <td className="px-3 py-2 tabular-nums text-neutral-500">
+                      <td className="px-3 py-2 tabular-nums text-slate-500">
                         {f.fila}
                       </td>
-                      <td className="px-3 py-2 text-tinta">{f.nombre || "—"}</td>
-                      <td className="break-all px-3 py-2 text-neutral-700">
+                      <td className="px-3 py-2 text-slate-900">{f.nombre || "—"}</td>
+                      <td className="break-all px-3 py-2 text-slate-700">
                         {f.correo || "—"}
                       </td>
                       <td className="px-3 py-2">

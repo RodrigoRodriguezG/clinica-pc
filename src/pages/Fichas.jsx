@@ -14,6 +14,7 @@ import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
 import Seccion from "../components/ui/Seccion.jsx";
 import BarraFiltros from "../components/ui/BarraFiltros.jsx";
+import Chips from "../components/ui/Chips.jsx";
 import { cx } from "../components/ui/cx.js";
 import {
   IconoChevronAbajo,
@@ -86,6 +87,17 @@ export default function Fichas() {
         <BarraFiltros
           hayFiltros={Boolean(hayFiltros)}
           onLimpiar={() => setFiltros(FILTROS_VACIOS)}
+          chips={
+            <Chips
+              etiqueta="Filtrar por estado"
+              valor={filtros.estado}
+              onChange={(v) => setFiltros({ ...filtros, estado: v })}
+              opciones={[
+                { valor: "", texto: "Todas" },
+                ...ESTADOS_FICHA.map((s) => ({ valor: s, texto: s })),
+              ]}
+            />
+          }
         >
           <Campo
             etiqueta="Buscar"
@@ -96,20 +108,6 @@ export default function Fichas() {
             aria-label="Buscar ficha"
             autoComplete="off"
           />
-          <Campo
-            as="select"
-            etiqueta="Estado"
-            value={filtros.estado}
-            onChange={cambiar("estado")}
-            aria-label="Filtrar por estado"
-          >
-            <option value="">Todos los estados</option>
-            {ESTADOS_FICHA.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </Campo>
           <Campo
             as="select"
             etiqueta="Clínica"
@@ -185,33 +183,35 @@ export default function Fichas() {
                     <div className="flex min-w-0 items-start gap-3">
                       <span
                         aria-hidden="true"
-                        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600 sm:flex"
+                        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-inacap-tenue text-inacap-oscuro sm:flex"
                       >
                         <IconoMonitor className="h-5 w-5" />
                       </span>
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-semibold tabular-nums text-tinta">
-                            {f.numero}
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold uppercase tracking-wide text-inacap">
+                          {clinica?.nombre ?? "Clínica no disponible"}
+                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold leading-snug text-slate-900">
+                            {[eq?.tipo, eq?.marca, eq?.modelo]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </h3>
                           <Insignia estado={f.estado} />
                           {esTecnico &&
                             (asignada ? (
                               <Insignia tono="inacap">Asignada a ti</Insignia>
                             ) : (
-                              <Insignia tono="neutral">
+                              <Insignia tono="blanco" punto={false}>
                                 Historial del equipo
                               </Insignia>
                             ))}
                         </div>
-                        <p className="text-sm font-medium text-neutral-700">
-                          {[eq?.tipo, eq?.marca, eq?.modelo]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </p>
-                        <p className="text-xs leading-relaxed text-neutral-500">
-                          {clinica?.nombre ?? "Clínica no disponible"} ·{" "}
-                          {formatearFecha(fechaLocal(f.creada))}
+                        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                          <span className="font-medium tabular-nums text-slate-700">
+                            {f.numero}
+                          </span>{" "}
+                          · {formatearFecha(fechaLocal(f.creada))}
                         </p>
                       </div>
                     </div>
@@ -219,7 +219,7 @@ export default function Fichas() {
                       variante="secundario"
                       onClick={() => setAbierta(expandida ? null : f.id)}
                       aria-expanded={expandida}
-                      className="shrink-0 pr-3.5"
+                      className="shrink-0 pr-4.5"
                     >
                       {expandida ? "Cerrar" : "Ver detalle"}
                       <IconoChevronAbajo
@@ -232,7 +232,7 @@ export default function Fichas() {
                   </div>
 
                   {expandida && (
-                    <div className="border-t border-neutral-200 bg-neutral-50 p-4 sm:p-5">
+                    <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5">
                       <DetalleFicha ficha={f} />
                     </div>
                   )}

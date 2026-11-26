@@ -42,16 +42,16 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
 
   return (
     <Tarjeta as="article">
-      <header className="flex flex-col gap-3 border-b border-neutral-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <header className="flex flex-col gap-3 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <span
             aria-hidden="true"
-            className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600 sm:flex"
+            className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-inacap-tenue text-inacap-oscuro sm:flex"
           >
             <IconoChecklist className="h-5 w-5" />
           </span>
           <div className="min-w-0 space-y-1">
-            <h3 className="text-base font-semibold text-tinta">
+            <h3 className="text-base font-semibold text-slate-900">
               {plantilla.nombre}
             </h3>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -80,16 +80,16 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
       </header>
 
       <div className="p-4 sm:px-5">
-        <p className="mb-3 text-sm text-neutral-600">
+        <p className="mb-3 text-sm text-slate-600">
           Ítems que verán los técnicos al revisar cada equipo.
         </p>
 
-        <ol className="divide-y divide-neutral-100">
+        <ol className="divide-y divide-slate-100">
           {plantilla.items.map((item, indice) => (
             <li key={item.id} className="flex items-center gap-2 py-2">
               <span
                 aria-hidden="true"
-                className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-semibold tabular-nums text-neutral-500"
+                className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-semibold tabular-nums text-slate-500"
               >
                 {indice + 1}
               </span>
@@ -98,7 +98,7 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
               </label>
               <input
                 id={`item-${item.id}`}
-                className="block min-h-11 w-full min-w-0 flex-1 rounded-control border border-neutral-300 bg-white px-3 py-2 text-base text-tinta transition-[border-color,box-shadow] duration-150 hover:border-neutral-400 focus:border-inacap focus:outline-none focus:ring-4 focus:ring-inacap/15"
+                className="block min-h-11 w-full min-w-0 flex-1 rounded-control border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 transition-[border-color,box-shadow] duration-150 hover:border-slate-400 focus:border-inacap focus:outline-none focus:ring-4 focus:ring-inacap/15"
                 value={item.texto}
                 maxLength={80}
                 onChange={(e) => editarItem(item.id, e.target.value)}
@@ -108,7 +108,7 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
                 onClick={() => quitarItem(item.id)}
                 aria-label={`Quitar ítem ${indice + 1}`}
                 title="Quitar ítem"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-neutral-500 transition-colors duration-150 hover:bg-error-tenue hover:text-error"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-slate-500 transition-colors duration-150 hover:bg-error-tenue hover:text-error"
               >
                 <IconoBasura className="h-5 w-5" />
               </button>
@@ -124,7 +124,7 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
 
       <form
         onSubmit={agregarItem}
-        className="flex flex-col gap-3 rounded-b-tarjeta border-t border-neutral-100 bg-neutral-50 p-4 sm:flex-row sm:items-end sm:px-5"
+        className="flex flex-col gap-3 rounded-b-tarjeta border-t border-slate-100 bg-slate-50 p-4 sm:flex-row sm:items-end sm:px-5"
       >
         <Campo
           etiqueta="Nuevo ítem"
@@ -135,7 +135,7 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
           onChange={(e) => setNuevoItem(e.target.value)}
           aria-label="Nuevo ítem de la plantilla"
         />
-        <Boton type="submit" variante="secundario" className="pl-3.5">
+        <Boton type="submit" variante="secundario" className="pl-4.5">
           <IconoMas className="h-4 w-4" />
           Agregar ítem
         </Boton>
@@ -208,7 +208,7 @@ export default function Checklists() {
   };
 
   const botonNueva = (
-    <Boton onClick={() => setMostrarFormulario(true)} className="pl-3.5">
+    <Boton onClick={() => setMostrarFormulario(true)} className="pl-4.5">
       <IconoMas className="h-4 w-4" />
       Nueva plantilla
     </Boton>

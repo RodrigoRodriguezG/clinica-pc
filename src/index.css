@@ -5,39 +5,42 @@
     "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 
-  /* Identidad INACAP */
-  --color-inacap: #ee0000;
-  --color-inacap-oscuro: #c70000;
-  --color-inacap-tenue: #fff1f1;
+  /* Identidad INACAP (mismos valores que el sistema de Actas) */
+  --color-inacap: #e31c19;
+  --color-inacap-oscuro: #b8122c;
+  --color-inacap-tenue: #fdecec;
 
   /* Base institucional */
-  --color-tinta: #17181c;
-  --color-tinta-suave: #24262d;
-  --color-pizarra: #5b606b;
+  --color-tinta: #0f172a;
+  --color-tinta-suave: #1e293b;
+  --color-pizarra: #475569;
 
   /* Estados semánticos */
-  --color-exito: #15803d;
-  --color-exito-fuerte: #166534;
-  --color-exito-tenue: #f0fdf4;
-  --color-aviso: #b45309;
+  --color-exito: #047857;
+  --color-exito-fuerte: #065f46;
+  --color-exito-tenue: #ecfdf5;
+  --color-aviso: #92400e;
   --color-aviso-tenue: #fffbeb;
-  --color-error: #b91c1c;
-  --color-error-tenue: #fef2f2;
-  --color-info: #1d4ed8;
-  --color-info-tenue: #eff6ff;
+  --color-error: #b8122c;
+  --color-error-tenue: #fdecec;
+  --color-info: #075985;
+  --color-info-tenue: #f0f9ff;
 
   /* Radios y sombras consistentes */
-  --radius-control: 0.625rem;
-  --radius-tarjeta: 0.875rem;
+  --radius-control: 0.5rem;
+  --radius-tarjeta: 1rem;
 
-  /* El anillo de 1px reemplaza al borde: la tarjeta conserva
+  /* Superficies: anillo de 1px + elevación en capas. La tarjeta conserva
      border-transparent para que el modo de colores forzados dibuje un borde. */
   --shadow-tarjeta:
-    0 0 0 1px rgb(15 23 42 / 0.07), 0 1px 2px -1px rgb(15 23 42 / 0.06),
-    0 2px 4px 0 rgb(15 23 42 / 0.04);
+    0px 0px 0px 1px oklch(0 0 0 / 0.06), 0px 1px 2px -1px oklch(0 0 0 / 0.06),
+    0px 2px 4px 0px oklch(0 0 0 / 0.04);
   --shadow-tarjeta-hover:
-    0 0 0 1px rgb(15 23 42 / 0.12), 0 2px 4px -1px rgb(15 23 42 / 0.06),
-    0 8px 20px -6px rgb(15 23 42 / 0.12);
+    0px 0px 0px 1px oklch(0 0 0 / 0.08), 0px 1px 2px -1px oklch(0 0 0 / 0.08),
+    0px 2px 4px 0px oklch(0 0 0 / 0.06);
+  --shadow-elevada-suave:
+    0px 0px 0px 1px oklch(0 0 0 / 0.06), 0 4px 12px -2px oklch(0 0 0 / 0.1),
+    0 2px 4px -2px oklch(0 0 0 / 0.06);
   --shadow-elevada: 0 12px 32px -16px rgb(15 23 42 / 0.28);
   --shadow-lateral: 10px 0 40px -24px rgb(0 0 0 / 0.55);
 }
@@ -50,7 +53,7 @@
   }
 
   body {
-    @apply bg-neutral-100 font-sans text-base text-tinta antialiased;
+    @apply bg-slate-50 font-sans text-base text-slate-800 antialiased;
     overflow-x: clip;
   }
 
@@ -70,6 +73,12 @@
   input[type="checkbox"],
   input[type="radio"] {
     accent-color: var(--color-inacap);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
   }
 
   ::selection {

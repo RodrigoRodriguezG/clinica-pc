@@ -10,7 +10,7 @@ import Campo from "../components/ui/Campo.jsx";
 import Encabezado from "../components/ui/Encabezado.jsx";
 import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
-import Tarjeta from "../components/ui/Tarjeta.jsx";
+import TarjetaEnlace from "../components/ui/TarjetaEnlace.jsx";
 import Seccion from "../components/ui/Seccion.jsx";
 import BarraFiltros from "../components/ui/BarraFiltros.jsx";
 import Paso from "../components/ui/Paso.jsx";
@@ -20,7 +20,6 @@ import PanelCreacion, {
 import {
   IconoCalendario,
   IconoCerrar,
-  IconoChevronDerecha,
   IconoClinicas,
   IconoMas,
 } from "../components/ui/iconos.jsx";
@@ -130,7 +129,7 @@ export default function Clinicas() {
   };
 
   const botonNueva = (
-    <Boton onClick={() => setMostrarFormulario(true)} className="pl-3.5">
+    <Boton onClick={() => setMostrarFormulario(true)} className="pl-4.5">
       <IconoMas className="h-4 w-4" />
       Nueva clínica
     </Boton>
@@ -191,10 +190,10 @@ export default function Clinicas() {
                 />
                 <Boton
                   type="button"
-                  variante="secundario"
+                  variante="contorno"
                   onClick={agregarDia}
                   disabled={!dia}
-                  className="pl-3.5"
+                  className="pl-4.5"
                 >
                   <IconoMas className="h-4 w-4" />
                   Agregar día
@@ -209,15 +208,15 @@ export default function Clinicas() {
                   {dias.map((fecha) => (
                     <li
                       key={fecha}
-                      className="flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 py-0.5 pl-3 pr-0.5 text-sm font-medium text-tinta"
+                      className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 py-0.5 pl-3 pr-0.5 text-sm font-medium text-slate-900"
                     >
-                      <IconoCalendario className="h-4 w-4 text-neutral-500" />
+                      <IconoCalendario className="h-4 w-4 text-slate-500" />
                       {formatearFecha(fecha)}
                       <button
                         type="button"
                         onClick={() => quitarDia(fecha)}
                         aria-label={`Quitar ${formatearFecha(fecha)}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 transition-colors duration-150 hover:bg-neutral-200 hover:text-error"
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 hover:bg-slate-200 hover:text-error"
                       >
                         <IconoCerrar className="h-4 w-4" />
                       </button>
@@ -225,7 +224,7 @@ export default function Clinicas() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-sm text-neutral-500">
+                <p className="mt-3 text-sm text-slate-500">
                   Aún no agregas días.
                 </p>
               )}
@@ -321,65 +320,39 @@ export default function Clinicas() {
           <ul className="grid gap-3">
             {clinicasVisibles.map((c) => (
               <li key={c.id}>
-                <Tarjeta
+                <TarjetaEnlace
                   as={Link}
                   to={`/clinicas/${c.id}`}
-                  interactiva
-                  className="group block"
-                >
-                  <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span
-                        aria-hidden="true"
-                        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600 sm:flex"
-                      >
-                        <IconoClinicas className="h-5 w-5" />
-                      </span>
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-base font-semibold text-tinta">
-                            {c.nombre}
-                          </h3>
-                          {clinicaEsActiva(c) && (
-                            <Insignia tono="exito">Clínica activa</Insignia>
-                          )}
-                        </div>
-                        <p className="text-sm leading-relaxed text-neutral-600">
-                          {c.sede}
-                          <span
-                            aria-hidden="true"
-                            className="px-1.5 text-neutral-300"
-                          >
-                            |
-                          </span>
-                          Plantilla: {nombrePlantilla(c.plantillaId)}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="inline-flex min-h-10 shrink-0 items-center gap-1 text-sm font-semibold text-inacap">
-                      <span className="hidden sm:inline">Ver detalle</span>
-                      <IconoChevronDerecha className="h-5 w-5 transition-transform duration-150 group-hover:translate-x-0.5" />
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5 border-t border-neutral-100 px-4 py-3 sm:px-5">
-                    <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                      Días
-                    </span>
-                    {c.dias.length > 0 ? (
-                      c.dias.map((fecha) => (
-                        <Insignia key={fecha} tono="neutral" punto={false}>
-                          <IconoCalendario className="h-3.5 w-3.5" />
-                          {formatearFecha(fecha)}
-                        </Insignia>
-                      ))
+                  icono={<IconoClinicas className="h-5 w-5" />}
+                  eyebrow={c.sede}
+                  insignia={
+                    clinicaEsActiva(c) ? (
+                      <Insignia tono="exito">Activa</Insignia>
                     ) : (
-                      <span className="text-sm text-neutral-500">
-                        Sin días definidos
-                      </span>
-                    )}
-                  </div>
-                </Tarjeta>
+                      <Insignia tono="neutral">Inactiva</Insignia>
+                    )
+                  }
+                  titulo={c.nombre}
+                  pie={
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <span className="sr-only">Días:</span>
+                      {c.dias.length > 0 ? (
+                        c.dias.map((fecha) => (
+                          <Insignia key={fecha} tono="blanco" punto={false}>
+                            <IconoCalendario className="h-3.5 w-3.5" />
+                            {formatearFecha(fecha)}
+                          </Insignia>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-500">
+                          Sin días definidos
+                        </span>
+                      )}
+                    </span>
+                  }
+                >
+                  Plantilla: {nombrePlantilla(c.plantillaId)}
+                </TarjetaEnlace>
               </li>
             ))}
           </ul>

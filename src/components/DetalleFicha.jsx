@@ -65,7 +65,7 @@ const OPCIONES_CHECKLIST = [
     clave: "na",
     texto: "No aplica",
     Icono: IconoNoAplica,
-    activo: "border-neutral-400 bg-neutral-100 text-neutral-700",
+    activo: "border-slate-400 bg-slate-100 text-slate-700",
   },
 ];
 
@@ -275,31 +275,31 @@ export default function DetalleFicha({ ficha }) {
       )}
 
       {/* Resumen siempre visible */}
-      <section className="space-y-3 rounded-control border border-neutral-200 bg-white p-4">
+      <section className="space-y-3 rounded-control border border-slate-200 bg-white p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <dl className="grid flex-1 gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Equipo
               </dt>
-              <dd className="mt-0.5 font-medium text-neutral-800">
+              <dd className="mt-0.5 font-medium text-slate-800">
                 {equipo?.numeroEquipo} · {equipo?.tipo}
                 {equipo?.marca && ` · ${equipo.marca} ${equipo.modelo}`}
               </dd>
             </div>
             {equipo?.accesorios && (
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Accesorios
                 </dt>
-                <dd className="mt-0.5 text-neutral-800">{equipo.accesorios}</dd>
+                <dd className="mt-0.5 text-slate-800">{equipo.accesorios}</dd>
               </div>
             )}
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Técnicos
               </dt>
-              <dd className="mt-0.5 text-neutral-800">
+              <dd className="mt-0.5 text-slate-800">
                 {ficha.tecnicosIds.length > 0
                   ? ficha.tecnicosIds.map(nombreUsuario).join(" y ")
                   : "Sin asignar"}
@@ -325,7 +325,7 @@ export default function DetalleFicha({ ficha }) {
               </Campo>
             ) : (
               <div className="space-y-1.5">
-                <span className="block text-sm font-semibold text-tinta">
+                <span className="block text-sm font-semibold text-slate-900">
                   Estado
                 </span>
                 <Insignia estado={ficha.estado} />
@@ -347,12 +347,12 @@ export default function DetalleFicha({ ficha }) {
       </section>
 
       {propietario && puedeVerContacto(usuario, ficha) && (
-        <section className="space-y-2 rounded-control border border-neutral-200 bg-white p-4">
-          <h3 className="flex items-center gap-2 font-semibold text-tinta">
-            <IconoTelefono className="h-4 w-4 text-neutral-500" />
+        <section className="space-y-2 rounded-control border border-slate-200 bg-white p-4">
+          <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+            <IconoTelefono className="h-4 w-4 text-slate-500" />
             Contacto del propietario
           </h3>
-          <p className="text-neutral-800">
+          <p className="text-slate-800">
             {nombreCompleto(propietario)} ·{" "}
             <a
               className="font-semibold text-inacap underline underline-offset-4 hover:text-inacap-oscuro"
@@ -499,45 +499,45 @@ export default function DetalleFicha({ ficha }) {
                 </Alerta>
               )}
 
-              <div className="flex justify-end border-t border-neutral-200 pt-4">
+              <div className="flex justify-end border-t border-slate-200 pt-4">
                 <Boton type="submit" bloque className="sm:w-auto">
                   Guardar datos técnicos
                 </Boton>
               </div>
             </form>
           ) : (
-            <dl className="grid gap-3 rounded-control border border-neutral-200 bg-white p-4 sm:grid-cols-2">
+            <dl className="grid gap-3 rounded-control border border-slate-200 bg-white p-4 sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Marca y modelo
                 </dt>
-                <dd className="mt-0.5 text-neutral-800">
+                <dd className="mt-0.5 text-slate-800">
                   {equipo?.marca
                     ? `${equipo.marca} ${equipo.modelo}`
                     : "Pendiente"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Número de serie
                 </dt>
-                <dd className="mt-0.5 text-neutral-800">
+                <dd className="mt-0.5 text-slate-800">
                   {equipo?.numeroSerie || "Pendiente"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Diagnóstico
                 </dt>
-                <dd className="mt-0.5 text-neutral-800">
+                <dd className="mt-0.5 text-slate-800">
                   {ficha.diagnostico || "Pendiente"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Trabajo a realizar
                 </dt>
-                <dd className="mt-0.5 text-neutral-800">
+                <dd className="mt-0.5 text-slate-800">
                   {ficha.trabajo || "Pendiente"}
                 </dd>
               </div>
@@ -554,13 +554,13 @@ export default function DetalleFicha({ ficha }) {
               return (
                 <li
                   key={i.itemId}
-                  className="rounded-control border border-neutral-200 bg-white p-3 sm:p-4"
+                  className="rounded-control border border-slate-200 bg-white p-3 sm:p-4"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="font-medium text-neutral-800">
+                    <p className="font-medium text-slate-800">
                       {i.texto}
                       {valorActual === null && (
-                        <span className="ml-2 text-xs font-normal text-neutral-500">
+                        <span className="ml-2 text-xs font-normal text-slate-500">
                           Pendiente
                         </span>
                       )}
@@ -584,7 +584,7 @@ export default function DetalleFicha({ ficha }) {
                               className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-control border px-2 py-2 text-xs font-semibold leading-tight transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
                                 seleccionado
                                   ? activo
-                                  : "border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50"
+                                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                               }`}
                             >
                               {createElement(Icono, {
@@ -617,17 +617,17 @@ export default function DetalleFicha({ ficha }) {
             {ficha.observaciones.map((o) => (
               <li
                 key={o.id}
-                className="rounded-control border border-neutral-200 bg-white p-3"
+                className="rounded-control border border-slate-200 bg-white p-3"
               >
-                <p className="text-neutral-800">{o.texto}</p>
-                <p className="mt-1 text-xs text-neutral-500">
+                <p className="text-slate-800">{o.texto}</p>
+                <p className="mt-1 text-xs text-slate-500">
                   {nombreUsuario(o.autorId)} ·{" "}
                   {new Date(o.fecha).toLocaleString("es-CL")}
                 </p>
               </li>
             ))}
             {ficha.observaciones.length === 0 && (
-              <li className="text-neutral-600">Sin observaciones.</li>
+              <li className="text-slate-600">Sin observaciones.</li>
             )}
           </ul>
 
@@ -656,8 +656,8 @@ export default function DetalleFicha({ ficha }) {
 
       {/* Rechazar o cerrar anticipadamente */}
       {puedeRechazarOCerrar(usuario, ficha) && (
-        <section className="space-y-3 border-t border-neutral-200 pt-4">
-          <h3 className="font-semibold text-tinta">
+        <section className="space-y-3 border-t border-slate-200 pt-4">
+          <h3 className="font-semibold text-slate-900">
             ¿No puedes continuar con este equipo?
           </h3>
 

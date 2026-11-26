@@ -78,20 +78,20 @@ export default function FormularioFicha({
   return (
     <form
       onSubmit={crear}
-      className="mt-4 space-y-4 rounded-control border border-neutral-200 bg-neutral-50 p-4 sm:p-5"
+      className="mt-4 space-y-4 rounded-control border border-slate-200 bg-slate-50 p-4 sm:p-5"
     >
       <header className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-white text-inacap shadow-sm ring-1 ring-neutral-200"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-white text-inacap shadow-sm ring-1 ring-slate-200"
         >
           <IconoMonitor className="h-5 w-5" />
         </span>
         <div className="min-w-0">
-          <h3 className="font-semibold text-tinta">
+          <h3 className="font-semibold text-slate-900">
             Recepción de {equipo.numeroEquipo} · {equipo.tipo}
           </h3>
-          <p className="text-sm text-neutral-600">Clínica: {clinica.nombre}</p>
+          <p className="text-sm text-slate-600">Clínica: {clinica.nombre}</p>
         </div>
       </header>
 
