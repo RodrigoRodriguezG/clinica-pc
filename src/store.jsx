@@ -10,11 +10,19 @@ const AppContext = createContext(null);
 // eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => useContext(AppContext);
 
+// Ajusta datos guardados con versiones anteriores: "En diagnóstico" ya no existe
+const migrar = (datos) => ({
+  ...datos,
+  fichas: datos.fichas.map((f) =>
+    f.estado === "En diagnóstico" ? { ...f, estado: "En reparación" } : f,
+  ),
+});
+
 // Lee los datos guardados; si no hay (o están dañados), usa los de ejemplo
 function cargarDatos() {
   try {
     const guardado = localStorage.getItem(CLAVE_DATOS);
-    if (guardado) return JSON.parse(guardado);
+    if (guardado) return migrar(JSON.parse(guardado));
   } catch {
     // datos corruptos: se ignoran y se parte de cero
   }

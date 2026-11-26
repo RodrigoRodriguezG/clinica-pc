@@ -147,7 +147,7 @@ export default function Recepcion() {
             {creada.tecnicosIds.length === 1
               ? "un técnico"
               : "una pareja de técnicos"}
-            , que registrará sus datos técnicos.
+            , que registrará el problema, los accesorios y los datos técnicos.
           </Alerta>
 
           <dl className="grid gap-3 rounded-control bg-slate-50 p-4 text-sm sm:grid-cols-2">

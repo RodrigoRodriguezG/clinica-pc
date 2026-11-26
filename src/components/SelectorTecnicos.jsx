@@ -1,5 +1,5 @@
 import { useApp } from "../store.jsx";
-import { LIMITE_FICHAS_TECNICO, PERMISOS } from "../constantes.js";
+import { PERMISOS } from "../constantes.js";
 import { puede } from "../lib/permisos.js";
 import { fichasEnCursoDe } from "../lib/fichas.js";
 
@@ -17,10 +17,8 @@ export default function SelectorTecnicos({
       puede(u, PERMISOS.REVISAR_EQUIPOS) &&
       (clinica.personalIds ?? []).includes(u.id),
   );
-  const cupo = (id) => fichasEnCursoDe(datos, id).length;
-  const hayDisponibles = tecnicos.some(
-    (t) => cupo(t.id) < LIMITE_FICHAS_TECNICO && !excluir.includes(t.id),
-  );
+  // Se muestra cuántas fichas tiene cada uno para repartir la carga
+  const enTrabajo = (id) => fichasEnCursoDe(datos, id).length;
 
   return (
     <fieldset className="space-y-2">
@@ -30,11 +28,10 @@ export default function SelectorTecnicos({
       <div className="grid gap-2 sm:grid-cols-2">
         {tecnicos.map((t) => {
           const marcado = seleccion.includes(t.id);
-          const lleno = cupo(t.id) >= LIMITE_FICHAS_TECNICO;
           const excluido = excluir.includes(t.id);
+          const n = enTrabajo(t.id);
           // Quien ya está marcado siempre puede desmarcarse
-          const bloqueado =
-            !marcado && (lleno || excluido || seleccion.length >= 2);
+          const bloqueado = !marcado && (excluido || seleccion.length >= 2);
           return (
             <label
               key={t.id}
@@ -52,7 +49,7 @@ export default function SelectorTecnicos({
                 <span className="font-normal text-slate-500">
                   {excluido
                     ? "(rechazó esta ficha)"
-                    : `(${cupo(t.id)} de ${LIMITE_FICHAS_TECNICO} fichas)`}
+                    : `(${n} ${n === 1 ? "ficha" : "fichas"} en trabajo)`}
                 </span>
               </span>
             </label>
@@ -65,12 +62,6 @@ export default function SelectorTecnicos({
           </p>
         )}
       </div>
-      {tecnicos.length > 0 && !hayDisponibles && (
-        <p className="text-sm text-amber-800">
-          Todos los técnicos tienen su cupo lleno. Espera a que alguno deje un
-          equipo en estado Listo.
-        </p>
-      )}
     </fieldset>
   );
 }

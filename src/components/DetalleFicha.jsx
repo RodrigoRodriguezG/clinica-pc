@@ -1,10 +1,8 @@
 import { createElement, useState } from "react";
 import { useApp } from "../store.jsx";
 import {
-  ESTADOS_TECNICO,
-  ESTADOS_EN_TRABAJO,
   ESTADO_CIERRE_ANTICIPADO,
-  LIMITE_FICHAS_TECNICO,
+  ESTADO_LISTO,
   NO_APLICA,
 } from "../constantes.js";
 import { nombreCompleto, mostrarTelefono, normalizar } from "../lib/texto.js";
@@ -14,9 +12,10 @@ import {
   puedeVerContacto,
   puedeRechazarOCerrar,
   fichasDeEquipo,
-  fichasEnCursoDe,
   rechazarFicha,
   cerrarAnticipadamente,
+  cerrarFicha,
+  estadoTrasGuardarDatos,
 } from "../lib/fichas.js";
 import AtencionAnterior from "./AtencionAnterior.jsx";
 import Alerta from "./ui/Alerta.jsx";
@@ -86,7 +85,6 @@ export default function DetalleFicha({ ficha }) {
     equipo?.marca &&
     equipo?.modelo &&
     equipo?.numeroSerie &&
-    ficha.diagnostico &&
     ficha.trabajo,
   );
   // El técnico no avanza a checklist y observaciones hasta guardar los datos técnicos
@@ -99,20 +97,22 @@ export default function DetalleFicha({ ficha }) {
   const [texto, setTexto] = useState("");
   const [aviso, setAviso] = useState("");
   const [errorDatos, setErrorDatos] = useState("");
-  const [errorEstado, setErrorEstado] = useState("");
   const [confirmarReingreso, setConfirmarReingreso] = useState(false);
   const [accion, setAccion] = useState(null); // 'rechazar' | 'cerrar' | null
+  const [confirmarCierre, setConfirmarCierre] = useState(false);
+  const [errorCierre, setErrorCierre] = useState("");
   const [motivo, setMotivo] = useState("");
   const [errorAccion, setErrorAccion] = useState("");
   const [datosForm, setDatosForm] = useState({
     marca: equipo?.marca ?? "",
     modelo: equipo?.modelo ?? "",
     numeroSerie: equipo?.numeroSerie ?? "",
-    diagnostico: ficha.diagnostico ?? "",
+    accesorios: equipo?.accesorios ?? "",
     trabajo: ficha.trabajo ?? "",
   });
 
   const revisados = ficha.checklist.filter((i) => i.ok !== null).length;
+  const checklistCompleto = revisados === ficha.checklist.length;
 
   // Busca atenciones anteriores con el mismo número de serie en otros equipos
   const serieBuscada = normalizar(datosForm.numeroSerie.trim());
@@ -133,9 +133,11 @@ export default function DetalleFicha({ ficha }) {
   const textoSoloLectura =
     ficha.estado === ESTADO_CIERRE_ANTICIPADO
       ? "la ficha tiene cierre anticipado."
-      : ficha.tecnicosIds.includes(usuario.id)
-        ? "la ficha ya está cerrada."
-        : "no estás asignado a esta ficha.";
+      : ficha.estado === ESTADO_LISTO
+        ? "la ficha está cerrada y el equipo está listo para la entrega."
+        : ficha.tecnicosIds.includes(usuario.id)
+          ? "la ficha ya está cerrada."
+          : "no estás asignado a esta ficha.";
 
   const irA = (id) => {
     setPestana(id);
@@ -159,13 +161,12 @@ export default function DetalleFicha({ ficha }) {
     const marca = datosForm.marca.trim();
     const modelo = datosForm.modelo.trim();
     const numeroSerie = datosForm.numeroSerie.trim();
-    const diagnostico = datosForm.diagnostico.trim();
+    const accesorios = datosForm.accesorios.trim();
     const trabajo = datosForm.trabajo.trim();
 
     if (!marca || !modelo || !numeroSerie)
       return setErrorDatos("Completa marca, modelo y número de serie.");
-    if (!diagnostico || !trabajo)
-      return setErrorDatos("Completa el diagnóstico y el trabajo a realizar.");
+    if (!trabajo) return setErrorDatos("Completa el trabajo a realizar.");
     if (reingresos.length > 0 && !confirmarReingreso)
       return setErrorDatos(
         "Este número de serie tiene atenciones anteriores. Revisa el historial y marca la confirmación de reingreso.",
@@ -176,13 +177,22 @@ export default function DetalleFicha({ ficha }) {
     actualizar((d) => ({
       ...d,
       equipos: d.equipos.map((x) =>
-        x.id === equipo.id ? { ...x, marca, modelo, numeroSerie } : x,
+        x.id === equipo.id
+          ? { ...x, marca, modelo, numeroSerie, accesorios }
+          : x,
       ),
+      // Guardar los datos técnicos pasa la ficha a "En reparación"
       fichas: d.fichas.map((f) =>
-        f.id === ficha.id ? { ...f, diagnostico, trabajo } : f,
+        f.id === ficha.id
+          ? { ...f, trabajo, estado: estadoTrasGuardarDatos(f) }
+          : f,
       ),
     }));
-    setAviso("Datos técnicos guardados.");
+    setAviso(
+      ficha.estado === "Recibido"
+        ? "Datos técnicos guardados. La ficha pasó a En reparación."
+        : "Datos técnicos guardados.",
+    );
     setConfirmarReingreso(false);
     setPestana("checklist");
   };
@@ -198,22 +208,26 @@ export default function DetalleFicha({ ficha }) {
       ),
     }));
 
-  const cambiarEstado = (estado) => {
-    // Volver de "Listo" a trabajo no puede pasar el límite de fichas por técnico
-    const vuelveATrabajo =
-      ESTADOS_EN_TRABAJO.includes(estado) &&
-      !ESTADOS_EN_TRABAJO.includes(ficha.estado);
-    if (
-      vuelveATrabajo &&
-      ficha.tecnicosIds.some(
-        (id) => fichasEnCursoDe(datos, id).length >= LIMITE_FICHAS_TECNICO,
-      )
-    )
-      return setErrorEstado(
-        `No puedes volver a trabajar en esta ficha: un técnico ya tiene ${LIMITE_FICHAS_TECNICO} fichas en trabajo.`,
+  // Cerrar la ficha la deja "Listo". El correo al propietario aún no se
+  // envía de verdad (prototipo solo front end): por ahora solo se informa
+  const pedirCierre = () => {
+    if (!datosCompletos)
+      return setErrorCierre(
+        "Guarda los datos técnicos antes de cerrar la ficha.",
       );
-    setErrorEstado("");
-    modificar((f) => ({ ...f, estado }));
+    if (!checklistCompleto)
+      return setErrorCierre(
+        `Completa el checklist antes de cerrar la ficha (${revisados}/${ficha.checklist.length} revisados).`,
+      );
+    setErrorCierre("");
+    setAccion(null);
+    setConfirmarCierre(true);
+  };
+
+  const confirmarCerrarFicha = () => {
+    modificar((f) => cerrarFicha(f, usuario.id));
+    setConfirmarCierre(false);
+    setAviso("Ficha cerrada, correo enviado al cliente.");
   };
 
   const agregarObservacion = (e) => {
@@ -237,6 +251,8 @@ export default function DetalleFicha({ ficha }) {
 
   const abrirAccion = (tipo) => {
     setAccion(tipo);
+    setConfirmarCierre(false);
+    setErrorCierre("");
     setMotivo("");
     setErrorAccion("");
   };
@@ -287,6 +303,14 @@ export default function DetalleFicha({ ficha }) {
                 {equipo?.marca && ` · ${equipo.marca} ${equipo.modelo}`}
               </dd>
             </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Problema (según el propietario)
+              </dt>
+              <dd className="mt-0.5 text-slate-800">
+                {ficha.diagnostico || "No indicado"}
+              </dd>
+            </div>
             {equipo?.accesorios && (
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -307,41 +331,17 @@ export default function DetalleFicha({ ficha }) {
             </div>
           </dl>
 
-          <div className="shrink-0">
-            {editable ? (
-              <Campo
-                as="select"
-                etiqueta="Estado"
-                className="w-full sm:w-52"
-                value={ficha.estado}
-                disabled={!datosCompletos}
-                onChange={(e) => cambiarEstado(e.target.value)}
-              >
-                {ESTADOS_TECNICO.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Campo>
-            ) : (
-              <div className="space-y-1.5">
-                <span className="block text-sm font-semibold text-slate-900">
-                  Estado
-                </span>
-                <Insignia estado={ficha.estado} />
-              </div>
-            )}
+          <div className="shrink-0 space-y-1.5">
+            <span className="block text-sm font-semibold text-slate-900">
+              Estado
+            </span>
+            <Insignia estado={ficha.estado} />
           </div>
         </div>
 
         {bloqueado && (
           <Alerta variante="aviso">
-            Registra los datos técnicos para poder cambiar el estado.
-          </Alerta>
-        )}
-        {errorEstado && (
-          <Alerta variante="error" role="alert">
-            {errorEstado}
+            Guarda los datos técnicos para pasar la ficha a En reparación.
           </Alerta>
         )}
       </section>
@@ -361,9 +361,10 @@ export default function DetalleFicha({ ficha }) {
               {mostrarTelefono(propietario.telefono)}
             </a>
           </p>
-          {ficha.estado === "Listo" && (
+          {ficha.estado === ESTADO_LISTO && (
             <Alerta variante="exito">
-              El equipo está listo: avisa al propietario.
+              Ficha cerrada: se envió un correo al propietario para que retire
+              su equipo.
             </Alerta>
           )}
           {ficha.estado === ESTADO_CIERRE_ANTICIPADO && (
@@ -444,6 +445,16 @@ export default function DetalleFicha({ ficha }) {
                 />
               </div>
 
+              <Campo
+                etiqueta="Accesorios que deja el propietario"
+                value={datosForm.accesorios}
+                onChange={cambiarDato("accesorios")}
+                maxLength={120}
+                placeholder="Ej. cargador, mouse"
+                ayuda="Opcional. Registra cargador, mouse, maletín u otros accesorios."
+                autoComplete="off"
+              />
+
               {reingresos.length > 0 && (
                 <div className="space-y-3">
                   <Alerta
@@ -474,15 +485,6 @@ export default function DetalleFicha({ ficha }) {
                 </div>
               )}
 
-              <Campo
-                as="textarea"
-                etiqueta="Diagnóstico"
-                rows={3}
-                value={datosForm.diagnostico}
-                onChange={cambiarDato("diagnostico")}
-                maxLength={500}
-                autoComplete="off"
-              />
               <Campo
                 as="textarea"
                 etiqueta="Trabajo a realizar"
@@ -525,15 +527,15 @@ export default function DetalleFicha({ ficha }) {
                   {equipo?.numeroSerie || "Pendiente"}
                 </dd>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Diagnóstico
+                  Accesorios
                 </dt>
                 <dd className="mt-0.5 text-slate-800">
-                  {ficha.diagnostico || "Pendiente"}
+                  {equipo?.accesorios || "Ninguno registrado"}
                 </dd>
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   Trabajo a realizar
                 </dt>
@@ -650,6 +652,48 @@ export default function DetalleFicha({ ficha }) {
                 </Boton>
               </div>
             </form>
+          )}
+        </section>
+      )}
+
+      {/* Cerrar la ficha: el trabajo terminó y el equipo queda Listo */}
+      {puedeRechazarOCerrar(usuario, ficha) && (
+        <section className="space-y-3 border-t border-slate-200 pt-4">
+          <h3 className="font-semibold text-slate-900">
+            ¿Terminaste el trabajo?
+          </h3>
+          {!confirmarCierre ? (
+            <Boton onClick={pedirCierre} bloque className="sm:w-auto">
+              Cerrar ficha
+            </Boton>
+          ) : (
+            <Alerta
+              variante="aviso"
+              role="alert"
+              titulo="Cerrar ficha"
+              acciones={
+                <>
+                  <Boton tamano="sm" onClick={confirmarCerrarFicha}>
+                    Sí, cerrar ficha
+                  </Boton>
+                  <Boton
+                    variante="secundario"
+                    tamano="sm"
+                    onClick={() => setConfirmarCierre(false)}
+                  >
+                    Cancelar
+                  </Boton>
+                </>
+              }
+            >
+              La ficha quedará en estado Listo y en solo lectura, y se enviará
+              un correo al propietario para que retire su equipo.
+            </Alerta>
+          )}
+          {errorCierre && (
+            <Alerta variante="error" role="alert">
+              {errorCierre}
+            </Alerta>
           )}
         </section>
       )}

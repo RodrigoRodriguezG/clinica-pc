@@ -36,7 +36,7 @@ export default function AtencionAnterior({ ficha, onCerrar }) {
 
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-slate-500">Diagnóstico</dt>
+          <dt className="text-slate-500">Problema</dt>
           <dd className="mt-0.5 text-slate-800">{ficha.diagnostico}</dd>
         </div>
         <div>

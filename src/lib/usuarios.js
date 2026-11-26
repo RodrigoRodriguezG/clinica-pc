@@ -12,6 +12,6 @@ export const aplicarRol = (usuario, rol) => ({
 export function motivoBloqueoCambioRol(datos, usuario, yo) {
   if (usuario.id === yo.id) return "No puedes cambiar tu propio rol.";
   if (fichasEnCursoDe(datos, usuario.id).length > 0)
-    return "Tiene equipos en trabajo. Espera a que queden en estado Listo.";
+    return "Tiene equipos en trabajo. Espera a que cierre sus fichas.";
   return null;
 }

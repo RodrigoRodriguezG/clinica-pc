@@ -50,18 +50,17 @@ export const PERMISOS_POR_ROL = {
   tecnico: ["revisarEquipos"],
 };
 
-// Máximo de fichas en trabajo por técnico
-export const LIMITE_FICHAS_TECNICO = 2;
-
 // Resultado "no aplica" de un ítem del checklist
 export const NO_APLICA = "na";
 
 export const ESTADO_CIERRE_ANTICIPADO = "Cierre anticipado";
 export const ESTADO_POR_REASIGNAR = "Por reasignar";
 
+export const ESTADO_EN_REPARACION = "En reparación";
+export const ESTADO_LISTO = "Listo";
+
 export const ESTADOS_FICHA = [
   "Recibido",
-  "En diagnóstico",
   "En reparación",
   "Listo",
   "Cierre anticipado",
@@ -75,17 +74,8 @@ export const SERVICIOS = ["Mantención lógica", "Mantención física", "Formate
 // Una ficha en estos estados ya terminó su atención
 export const ESTADOS_CERRADOS = ["Entregado", "No retirado"];
 
-// Estados que el técnico puede asignar. "Entregado" y "No retirado" son del cierre (Paso 8)
-export const ESTADOS_TECNICO = [
-  "Recibido",
-  "En diagnóstico",
-  "En reparación",
-  "Listo",
-];
+// El estado avanza solo: "Recibido" al crear la ficha, "En reparación" al guardar
+// los datos técnicos y "Listo" cuando el técnico cierra la ficha
 
-// Estados en los que los técnicos están trabajando en la ficha. "Listo" los libera
-export const ESTADOS_EN_TRABAJO = [
-  "Recibido",
-  "En diagnóstico",
-  "En reparación",
-];
+// Estados en los que los técnicos están trabajando en la ficha
+export const ESTADOS_EN_TRABAJO = ["Recibido", "En reparación"];

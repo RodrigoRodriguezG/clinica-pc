@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
-import { LIMITE_FICHAS_TECNICO } from "../constantes.js";
-import { fichasEnCursoDe, reasignarFicha } from "../lib/fichas.js";
+import { reasignarFicha } from "../lib/fichas.js";
 import Alerta from "./ui/Alerta.jsx";
 import Boton from "./ui/Boton.jsx";
 import Insignia from "./ui/Insignia.jsx";
@@ -27,14 +26,6 @@ export default function ReasignarFicha({ ficha, clinica }) {
   const confirmar = () => {
     if (seleccion.length < 1 || seleccion.length > 2)
       return setError("Asigna uno o dos técnicos.");
-    if (
-      seleccion.some(
-        (id) => fichasEnCursoDe(datos, id).length >= LIMITE_FICHAS_TECNICO,
-      )
-    )
-      return setError(
-        `Uno de los técnicos ya tiene ${LIMITE_FICHAS_TECNICO} fichas en trabajo.`,
-      );
     actualizar((d) => ({
       ...d,
       fichas: d.fichas.map((f) =>

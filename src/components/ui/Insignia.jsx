@@ -14,7 +14,6 @@ const TONOS = {
 
 const TONO_POR_ESTADO = {
   Recibido: "neutral",
-  "En diagnóstico": "info",
   "En reparación": "aviso",
   Listo: "exito",
   Entregado: "exito-fuerte",

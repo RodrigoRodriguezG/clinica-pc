@@ -67,7 +67,7 @@ const FORMULARIO_VACIO = {
   aceptaTerminos: false,
 };
 
-const EQUIPO_VACIO = { tipo: "" };
+const EQUIPO_VACIO = { tipo: "", problema: "" };
 
 const ESTILO_INPUT =
   "block w-full min-h-11 rounded-control border border-neutral-300 bg-white px-3 py-2.5 text-base text-tinta placeholder:text-neutral-400 transition-[border-color,box-shadow,background-color] duration-150 hover:border-neutral-400 focus:border-inacap focus:outline-none focus:ring-4 focus:ring-inacap/15";
@@ -255,6 +255,9 @@ export default function FormInscripcion() {
   const agregarEquipo = () => {
     if (!equipo.tipo)
       return setErrorEquipo("Selecciona el tipo de PC antes de agregarlo.");
+    const problema = equipo.problema.trim();
+    if (!problema)
+      return setErrorEquipo("Cuéntanos qué problema tiene el PC.");
 
     setErrorEquipo("");
     setEquipos((prev) => [
@@ -262,6 +265,7 @@ export default function FormInscripcion() {
       {
         id: crypto.randomUUID(),
         tipo: equipo.tipo,
+        problema,
         numeroEquipo: siguienteNumeroEquipo(),
       },
     ]);
@@ -313,12 +317,13 @@ export default function FormInscripcion() {
       creadoEn: ahora,
     };
 
-    // Los datos técnicos (marca, modelo, serie, accesorios y servicio)
-    // se completan después en recepción
+    // El propietario indica el problema; los datos técnicos (marca, modelo,
+    // serie, accesorios y servicio) los completa después el técnico
     const nuevosEquipos = equipos.map((e) => ({
       id: e.id,
       propietarioId: propietario.id,
       tipo: e.tipo,
+      problema: e.problema,
       marca: "",
       modelo: "",
       numeroSerie: "",
@@ -409,7 +414,7 @@ export default function FormInscripcion() {
                           {e.numeroEquipo} · {e.tipo}
                         </p>
                         <p className="text-xs text-neutral-500">
-                          Datos técnicos por registrar en recepción
+                          Datos técnicos por registrar por el técnico
                         </p>
                       </div>
                     </li>
@@ -599,7 +604,9 @@ export default function FormInscripcion() {
                   etiqueta="Tipo de PC"
                   className="flex-1"
                   value={equipo.tipo}
-                  onChange={(e) => setEquipo({ tipo: e.target.value })}
+                  onChange={(e) =>
+                    setEquipo({ ...equipo, tipo: e.target.value })
+                  }
                 >
                   <option value="">Selecciona...</option>
                   {TIPOS_EQUIPO.map((tipo) => (
@@ -608,6 +615,21 @@ export default function FormInscripcion() {
                     </option>
                   ))}
                 </Campo>
+              </div>
+              <Campo
+                as="textarea"
+                etiqueta="¿Qué problema tiene?"
+                className="mt-3"
+                rows={2}
+                maxLength={500}
+                placeholder="Ej. Está muy lento y se apaga solo."
+                value={equipo.problema}
+                onChange={(e) =>
+                  setEquipo({ ...equipo, problema: e.target.value })
+                }
+                autoComplete="off"
+              />
+              <div className="mt-3 flex justify-end">
                 <Boton
                   type="button"
                   variante="secundario"
@@ -638,12 +660,17 @@ export default function FormInscripcion() {
                         >
                           <IconoMonitor className="h-5 w-5" />
                         </span>
-                        <p>
-                          <span className="font-semibold text-tinta">
-                            {e.numeroEquipo}
-                          </span>{" "}
-                          · {e.tipo}
-                        </p>
+                        <div className="min-w-0">
+                          <p>
+                            <span className="font-semibold text-tinta">
+                              {e.numeroEquipo}
+                            </span>{" "}
+                            · {e.tipo}
+                          </p>
+                          <p className="text-xs text-neutral-500">
+                            {e.problema}
+                          </p>
+                        </div>
                       </div>
                       <Boton
                         type="button"

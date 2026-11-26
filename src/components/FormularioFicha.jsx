@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
-import { LIMITE_FICHAS_TECNICO } from "../constantes.js";
 import { siguienteCodigo } from "../lib/codigos.js";
-import { fichasEnCursoDe } from "../lib/fichas.js";
 import Alerta from "./ui/Alerta.jsx";
 import Boton from "./ui/Boton.jsx";
 import Campo from "./ui/Campo.jsx";
@@ -17,7 +15,13 @@ export default function FormularioFicha({
 }) {
   const { datos, actualizar, usuario } = useApp();
 
-  const [accesorios, setAccesorios] = useState(equipo.accesorios ?? "");
+  // El problema que escribió el propietario al inscribirse se usa en una sola
+  // ficha. Si no hay (por ejemplo, un reingreso), se le pide uno nuevo
+  const problemaInscrito = (equipo.problema ?? "").trim();
+  const pedirProblema = !problemaInscrito;
+  const esReingreso = datos.fichas.some((f) => f.equipoId === equipo.id);
+
+  const [problema, setProblema] = useState("");
   const [tecnicosIds, setTecnicosIds] = useState([]);
   const [error, setError] = useState("");
 
@@ -28,17 +32,11 @@ export default function FormularioFicha({
 
   const crear = (e) => {
     e.preventDefault();
+    const problemaFicha = pedirProblema ? problema.trim() : problemaInscrito;
+    if (!problemaFicha)
+      return setError("Anota el problema que indica el propietario.");
     if (tecnicosIds.length < 1 || tecnicosIds.length > 2)
       return setError("Asigna uno o dos técnicos al equipo.");
-    // Se vuelve a comprobar aquí: lo que bloquea la pantalla no es la única barrera
-    if (
-      tecnicosIds.some(
-        (id) => fichasEnCursoDe(datos, id).length >= LIMITE_FICHAS_TECNICO,
-      )
-    )
-      return setError(
-        `Uno de los técnicos ya tiene ${LIMITE_FICHAS_TECNICO} fichas en trabajo.`,
-      );
     setError("");
 
     // El checklist se copia de la plantilla de la clínica, con el texto de cada ítem
@@ -52,7 +50,7 @@ export default function FormularioFicha({
       equipoId: equipo.id,
       recepcionistaId: usuario.id,
       tecnicosIds,
-      diagnostico: "", // lo registra el técnico
+      diagnostico: problemaFicha, // el problema lo indica el propietario
       trabajo: "", // lo registra el técnico
       estado: "Recibido",
       checklist: (plantilla?.items ?? []).map((i) => ({
@@ -65,10 +63,11 @@ export default function FormularioFicha({
       cerrada: null,
     };
 
+    // El problema queda en la ficha; el equipo lo libera para la próxima visita
     actualizar((d) => ({
       ...d,
       equipos: d.equipos.map((x) =>
-        x.id === equipo.id ? { ...x, accesorios: accesorios.trim() } : x,
+        x.id === equipo.id ? { ...x, problema: "" } : x,
       ),
       fichas: [...d.fichas, ficha],
     }));
@@ -95,14 +94,30 @@ export default function FormularioFicha({
         </div>
       </header>
 
-      <Campo
-        etiqueta="Accesorios que deja el propietario"
-        value={accesorios}
-        onChange={(e) => setAccesorios(e.target.value)}
-        maxLength={120}
-        placeholder="Ej. cargador, mouse"
-        ayuda="Opcional. Registra cargador, mouse, maletín u otros accesorios."
-      />
+      {pedirProblema ? (
+        <Campo
+          as="textarea"
+          etiqueta="Problema que indica el propietario"
+          ayuda={
+            esReingreso
+              ? "Este equipo ya vino antes. Pregúntale al propietario qué problema tiene ahora y anótalo tal como lo cuenta."
+              : "El propietario no indicó el problema al inscribirse. Pregúntale y anótalo tal como lo cuenta."
+          }
+          rows={2}
+          maxLength={500}
+          placeholder="Ej. Está muy lento y se apaga solo."
+          value={problema}
+          onChange={(e) => setProblema(e.target.value)}
+          autoComplete="off"
+        />
+      ) : (
+        <div className="rounded-control border border-slate-200 bg-white p-3 text-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Problema (según el propietario)
+          </p>
+          <p className="mt-0.5 text-slate-800">{problemaInscrito}</p>
+        </div>
+      )}
 
       <SelectorTecnicos
         clinica={clinica}
