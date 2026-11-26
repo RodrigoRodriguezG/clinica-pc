@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
-import { formatearFecha } from "../lib/fechas.js";
+import { formatearFecha, hoyLocal, mananaLocal } from "../lib/fechas.js";
 import { clinicaEsActiva } from "../lib/clinicas.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
@@ -35,7 +35,8 @@ export default function Clinicas() {
     plantillaId: datos.plantillas[0]?.id ?? "",
   }));
   const [dias, setDias] = useState([]);
-  const [dia, setDia] = useState("");
+  // Por defecto se propone el día siguiente
+  const [dia, setDia] = useState(mananaLocal);
   const [filtro, setFiltro] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
   const [error, setError] = useState("");
@@ -52,8 +53,12 @@ export default function Clinicas() {
   // Agrega una fecha a la lista, sin duplicados y ordenada
   const agregarDia = () => {
     if (!dia) return;
+    // min en el input no impide escribir una fecha pasada a mano
+    if (dia < hoyLocal())
+      return setError("No puedes agregar una fecha anterior a hoy.");
+    setError("");
     setDias((prev) => (prev.includes(dia) ? prev : [...prev, dia].sort()));
-    setDia("");
+    setDia(mananaLocal());
   };
 
   const quitarDia = (fecha) =>
@@ -66,6 +71,11 @@ export default function Clinicas() {
 
     if (dias.length === 0)
       return setError("Agrega al menos un día para la clínica.");
+    // Por si el formulario quedó abierto de un día para otro
+    if (dias.some((d) => d < hoyLocal()))
+      return setError(
+        "Hay días anteriores a hoy; quítalos antes de crear la clínica.",
+      );
     if (!form.plantillaId)
       return setError("Selecciona una plantilla de checklist.");
     if (
@@ -91,7 +101,7 @@ export default function Clinicas() {
       plantillaId: datos.plantillas[0]?.id ?? "",
     });
     setDias([]);
-    setDia("");
+    setDia(mananaLocal());
     setMostrarFormulario(false);
   };
 
@@ -184,6 +194,7 @@ export default function Clinicas() {
                   etiqueta="Fecha"
                   type="date"
                   className="sm:w-56"
+                  min={hoyLocal()}
                   value={dia}
                   onChange={(e) => setDia(e.target.value)}
                   aria-label="Día de la clínica"
