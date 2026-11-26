@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
-import { NOMBRE_ROL } from "../constantes.js";
+import { nombreRol } from "../lib/roles.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -140,7 +140,7 @@ export default function Login() {
                             {u.correo}
                           </span>
                           <span className="text-neutral-500">
-                            {NOMBRE_ROL[u.rol]}
+                            {nombreRol(datos, u.rol)}
                           </span>
                         </li>
                       ))}

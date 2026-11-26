@@ -1,5 +1,6 @@
 import { useApp } from "../store.jsx";
-import { PERMISOS, NOMBRE_ROL } from "../constantes.js";
+import { PERMISOS } from "../constantes.js";
+import { nombreRol } from "../lib/roles.js";
 import { puede } from "../lib/permisos.js";
 import {
   anioDeClinica,
@@ -97,7 +98,7 @@ export default function AjustesClinica({ clinica }) {
                     {u.nombre}
                   </span>
                   <span className="block text-xs text-slate-500">
-                    {NOMBRE_ROL[u.rol]}
+                    {nombreRol(datos, u.rol)}
                     {otra && ` · Ya asignado a ${otra.sede}`}
                   </span>
                 </span>

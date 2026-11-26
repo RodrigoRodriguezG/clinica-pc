@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { crearDatosIniciales } from "./data/seed.js";
+import { PERMISOS, ROLES, copiarRolesBase } from "./constantes.js";
 
 const CLAVE_DATOS = "clinica-pc-datos";
 const CLAVE_SESION = "clinica-pc-sesion";
@@ -10,13 +11,29 @@ const AppContext = createContext(null);
 // eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => useContext(AppContext);
 
+// Datos guardados antes de que existieran los roles editables: se crean los
+// roles base y los administradores reciben el permiso nuevo de gestionar roles
+const migrarRoles = (datos) =>
+  datos.roles
+    ? datos
+    : {
+        ...datos,
+        roles: copiarRolesBase(),
+        usuarios: datos.usuarios.map((u) =>
+          u.rol === ROLES.ADMIN && !u.permisos.includes(PERMISOS.GESTIONAR_ROLES)
+            ? { ...u, permisos: [...u.permisos, PERMISOS.GESTIONAR_ROLES] }
+            : u,
+        ),
+      };
+
 // Ajusta datos guardados con versiones anteriores: "En diagnóstico" ya no existe
-const migrar = (datos) => ({
-  ...datos,
-  fichas: datos.fichas.map((f) =>
-    f.estado === "En diagnóstico" ? { ...f, estado: "En reparación" } : f,
-  ),
-});
+const migrar = (datos) =>
+  migrarRoles({
+    ...datos,
+    fichas: datos.fichas.map((f) =>
+      f.estado === "En diagnóstico" ? { ...f, estado: "En reparación" } : f,
+    ),
+  });
 
 // Lee los datos guardados; si no hay (o están dañados), usa los de ejemplo
 function cargarDatos() {

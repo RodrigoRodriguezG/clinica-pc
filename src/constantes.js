@@ -1,4 +1,4 @@
-// Roles del sistema (los 3 del diagrama de clases + administrador)
+// Ids de los roles del sistema (los 3 del diagrama de clases + administrador)
 export const ROLES = {
   ADMIN: "admin",
   ENCARGADO: "encargado",
@@ -6,16 +6,10 @@ export const ROLES = {
   TECNICO: "tecnico",
 };
 
-export const NOMBRE_ROL = {
-  admin: "Administrador de sistema",
-  encargado: "Encargado de clínica",
-  recepcionista: "Servicio al cliente",
-  tecnico: "Técnico",
-};
-
-// Permisos que el administrador puede activar o desactivar por usuario
+// Permisos que el administrador asigna a cada rol (y puede ajustar por usuario)
 export const PERMISOS = {
   GESTIONAR_USUARIOS: "gestionarUsuarios",
+  GESTIONAR_ROLES: "gestionarRoles",
   CREAR_CLINICAS: "crearClinicas",
   EDITAR_CHECKLISTS: "editarChecklists",
   VER_TODAS_FICHAS: "verTodasFichas",
@@ -28,6 +22,7 @@ export const PERMISOS = {
 
 export const ETIQUETA_PERMISO = {
   gestionarUsuarios: "Gestionar usuarios y permisos",
+  gestionarRoles: "Crear y editar roles",
   crearClinicas: "Crear y editar clínicas",
   editarChecklists: "Editar plantillas de checklist",
   verTodasFichas: "Ver todas las fichas",
@@ -38,20 +33,49 @@ export const ETIQUETA_PERMISO = {
   generarQr: "Generar QR de inscripción",
 };
 
-// Permisos que recibe un usuario al crearse, según su rol
-export const PERMISOS_POR_ROL = {
-  admin: ["gestionarUsuarios", "verReportes"],
-  encargado: [
-    "crearClinicas",
-    "editarChecklists",
-    "verTodasFichas",
-    "verReportes",
-    "verRetroalimentacion",
-    "generarQr",
-  ],
-  recepcionista: ["recepcionar", "generarQr"],
-  tecnico: ["revisarEquipos"],
-};
+// Permisos que el rol Administrador nunca puede perder (evita quedar sin acceso)
+export const PERMISOS_FIJOS_ADMIN = ["gestionarUsuarios", "gestionarRoles"];
+
+// Roles con los que parte el sistema. Se copian a datos.roles, donde el
+// administrador puede editar sus permisos y crear roles nuevos.
+// Los marcados "sistema" no se pueden eliminar ni renombrar.
+export const ROLES_BASE = [
+  {
+    id: "admin",
+    nombre: "Administrador de sistema",
+    permisos: ["gestionarUsuarios", "gestionarRoles", "verReportes"],
+    sistema: true,
+  },
+  {
+    id: "encargado",
+    nombre: "Encargado de clínica",
+    permisos: [
+      "crearClinicas",
+      "editarChecklists",
+      "verTodasFichas",
+      "verReportes",
+      "verRetroalimentacion",
+      "generarQr",
+    ],
+    sistema: true,
+  },
+  {
+    id: "recepcionista",
+    nombre: "Servicio al cliente",
+    permisos: ["recepcionar", "generarQr"],
+    sistema: true,
+  },
+  {
+    id: "tecnico",
+    nombre: "Técnico",
+    permisos: ["revisarEquipos"],
+    sistema: true,
+  },
+];
+
+// Copia limpia de los roles base (para los datos iniciales y la migración)
+export const copiarRolesBase = () =>
+  ROLES_BASE.map((r) => ({ ...r, permisos: [...r.permisos] }));
 
 // Resultado "no aplica" de un ítem del checklist
 export const NO_APLICA = "na";

@@ -1,8 +1,13 @@
-import { PERMISOS_POR_ROL } from "../constantes.js";
+import { ROLES_BASE, copiarRolesBase } from "../constantes.js";
+
+const permisosBase = (id) => [
+  ...ROLES_BASE.find((r) => r.id === id).permisos,
+];
 
 // Datos de demostración. Es una función para que "restablecer" siempre
 // devuelva una copia limpia.
 export const crearDatosIniciales = () => ({
+  roles: copiarRolesBase(),
   usuarios: [
     {
       id: "u1",
@@ -10,7 +15,7 @@ export const crearDatosIniciales = () => ({
       correo: "pablo@pesce.cl",
       clave: "Demo1234",
       rol: "admin",
-      permisos: PERMISOS_POR_ROL.admin,
+      permisos: permisosBase("admin"),
       activo: true,
     },
     {
@@ -19,7 +24,7 @@ export const crearDatosIniciales = () => ({
       correo: "german@mardones.cl",
       clave: "Patito123",
       rol: "encargado",
-      permisos: PERMISOS_POR_ROL.encargado,
+      permisos: permisosBase("encargado"),
       activo: true,
     },
     {
@@ -28,7 +33,7 @@ export const crearDatosIniciales = () => ({
       correo: "sebastian@neira.cl",
       clave: "Demo1234",
       rol: "recepcionista",
-      permisos: PERMISOS_POR_ROL.recepcionista,
+      permisos: permisosBase("recepcionista"),
       activo: true,
     },
     {
@@ -37,7 +42,7 @@ export const crearDatosIniciales = () => ({
       correo: "rodrigo@rodriguez.cl",
       clave: "Demo1234",
       rol: "tecnico",
-      permisos: PERMISOS_POR_ROL.tecnico,
+      permisos: permisosBase("tecnico"),
       activo: true,
     },
     {
@@ -46,7 +51,7 @@ export const crearDatosIniciales = () => ({
       correo: "cristian@millaqueo.cl",
       clave: "Demo1234",
       rol: "tecnico",
-      permisos: PERMISOS_POR_ROL.tecnico,
+      permisos: permisosBase("tecnico"),
       activo: true,
     },
   ],

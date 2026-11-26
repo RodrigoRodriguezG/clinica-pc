@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useApp } from "../store.jsx";
-import { NOMBRE_ROL, PERMISOS } from "../constantes.js";
+import { PERMISOS } from "../constantes.js";
+import { nombreRol } from "../lib/roles.js";
 import { puede } from "../lib/permisos.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
@@ -131,7 +132,7 @@ export default function ClinicaDetalle() {
         !qParticipantes ||
         normalizar(usuario.nombre).includes(qParticipantes) ||
         normalizar(usuario.correo).includes(qParticipantes) ||
-        normalizar(NOMBRE_ROL[usuario.rol]).includes(qParticipantes),
+        normalizar(nombreRol(datos, usuario.rol)).includes(qParticipantes),
     )
     .sort((a, b) => a.usuario.nombre.localeCompare(b.usuario.nombre));
 
@@ -347,7 +348,7 @@ export default function ClinicaDetalle() {
                             {usuario.nombre}
                           </p>
                           <p className="break-all text-sm text-slate-600">
-                            {NOMBRE_ROL[usuario.rol]} · {usuario.correo}
+                            {nombreRol(datos, usuario.rol)} · {usuario.correo}
                           </p>
                           <div className="flex flex-wrap gap-1.5 pt-1.5">
                             <Insignia tono="neutral">

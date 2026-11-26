@@ -1,4 +1,4 @@
-import { PERMISOS_POR_ROL, ROLES } from "../constantes.js";
+import { ROLES } from "../constantes.js";
 import { normalizar } from "./texto.js";
 
 // Encabezados aceptados (ya normalizados: sin tildes ni mayúsculas)
@@ -66,13 +66,13 @@ export function validarFilas(filas, usuariosExistentes) {
 }
 
 // Misma forma que un usuario creado desde el formulario de Usuarios
-export const crearTecnico = ({ nombre, correo }, clave) => ({
+export const crearTecnico = ({ nombre, correo }, clave, permisos) => ({
   id: crypto.randomUUID(),
   nombre,
   correo,
   clave,
   rol: ROLES.TECNICO,
-  permisos: PERMISOS_POR_ROL[ROLES.TECNICO],
+  permisos,
   activo: true,
 });
 

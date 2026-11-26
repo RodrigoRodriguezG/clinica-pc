@@ -1,11 +1,11 @@
-import { PERMISOS_POR_ROL } from "../constantes.js";
+import { permisosDeRol } from "./roles.js";
 import { fichasEnCursoDe } from "./fichas.js";
 
 // Cambio de rol: el usuario queda con los permisos base del nuevo rol
-export const aplicarRol = (usuario, rol) => ({
+export const aplicarRol = (datos, usuario, rol) => ({
   ...usuario,
   rol,
-  permisos: PERMISOS_POR_ROL[rol],
+  permisos: permisosDeRol(datos, rol),
 });
 
 // Motivo por el que no se puede cambiar el rol de alguien (null si se puede)

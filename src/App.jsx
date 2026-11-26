@@ -7,7 +7,8 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AppProvider, useApp } from "./store.jsx";
-import { NOMBRE_ROL, PERMISOS } from "./constantes.js";
+import { PERMISOS } from "./constantes.js";
+import { nombreRol } from "./lib/roles.js";
 import { puede } from "./lib/permisos.js";
 import Login from "./pages/Login.jsx";
 import Usuarios from "./pages/Usuarios.jsx";
@@ -18,6 +19,7 @@ import Recepcion from "./pages/Recepcion.jsx";
 import Fichas from "./pages/Fichas.jsx";
 import ClinicaDetalle from "./pages/ClinicaDetalle.jsx";
 import GenerarQR from "./pages/GenerarQR.jsx";
+import Roles from "./pages/Roles.jsx";
 import Boton from "./components/ui/Boton.jsx";
 import Tarjeta from "./components/ui/Tarjeta.jsx";
 import { cx } from "./components/ui/cx.js";
@@ -25,6 +27,7 @@ import {
   IconoCerrar,
   IconoChecklist,
   IconoClinicas,
+  IconoEscudo,
   IconoFichas,
   IconoInscripcion,
   IconoMenu,
@@ -66,6 +69,12 @@ const MENU = [
     texto: "Usuarios y permisos",
     permiso: PERMISOS.GESTIONAR_USUARIOS,
     Icono: IconoUsuarios,
+  },
+  {
+    ruta: "/roles",
+    texto: "Roles",
+    permiso: PERMISOS.GESTIONAR_ROLES,
+    Icono: IconoEscudo,
   },
   {
     ruta: "/inscripcion",
@@ -146,7 +155,7 @@ function Iniciales({ nombre, oscuro = true }) {
 }
 
 function Navegacion({ opciones, usuario, onNavegar }) {
-  const { salir, restablecer } = useApp();
+  const { datos, salir, restablecer } = useApp();
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -193,7 +202,7 @@ function Navegacion({ opciones, usuario, onNavegar }) {
               {usuario.nombre}
             </p>
             <p className="truncate text-xs text-neutral-400">
-              {NOMBRE_ROL[usuario.rol]}
+              {nombreRol(datos, usuario.rol)}
             </p>
           </div>
         </div>
@@ -377,6 +386,14 @@ function Panel() {
               element={
                 <Protegida permiso={PERMISOS.GESTIONAR_USUARIOS}>
                   <Usuarios />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/roles"
+              element={
+                <Protegida permiso={PERMISOS.GESTIONAR_ROLES}>
+                  <Roles />
                 </Protegida>
               }
             />

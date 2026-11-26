@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import { useApp } from "../store.jsx";
+import { ROLES } from "../constantes.js";
+import { permisosDeRol } from "../lib/roles.js";
 import {
   crearTecnico,
   descargarPlantilla,
@@ -69,7 +71,7 @@ export default function ImportarUsuarios({ onCerrar }) {
       return lista.filter((f) => !existentes.has(f.correo));
     };
     const nuevos = sinRepetir(datos.usuarios, validas).map((f) =>
-      crearTecnico(f, clave),
+      crearTecnico(f, clave, permisosDeRol(datos, ROLES.TECNICO)),
     );
     actualizar((d) => ({
       ...d,

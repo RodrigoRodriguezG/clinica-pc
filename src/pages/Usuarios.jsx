@@ -1,11 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
-import {
-  NOMBRE_ROL,
-  ETIQUETA_PERMISO,
-  PERMISOS_POR_ROL,
-  PERMISOS,
-} from "../constantes.js";
+import { ETIQUETA_PERMISO, PERMISOS, ROLES } from "../constantes.js";
+import { nombreRol, permisosDeRol } from "../lib/roles.js";
 import { normalizar } from "../lib/texto.js";
 import { aplicarRol, motivoBloqueoCambioRol } from "../lib/usuarios.js";
 import ImportarUsuarios from "../components/ImportarUsuarios.jsx";
@@ -32,7 +28,12 @@ import {
   IconoUsuarios,
 } from "../components/ui/iconos.jsx";
 
-const FORMULARIO_VACIO = { nombre: "", correo: "", clave: "", rol: "tecnico" };
+const FORMULARIO_VACIO = {
+  nombre: "",
+  correo: "",
+  clave: "",
+  rol: ROLES.TECNICO,
+};
 const POR_PAGINA = 20;
 
 export default function Usuarios() {
@@ -52,6 +53,10 @@ export default function Usuarios() {
     setter(valor);
     setLimite(POR_PAGINA);
   };
+
+  const opcionesRol = [...datos.roles].sort((a, b) =>
+    a.nombre.localeCompare(b.nombre),
+  );
 
   const busqueda = normalizar(filtro.trim());
   const usuariosFiltrados = datos.usuarios
@@ -85,6 +90,8 @@ export default function Usuarios() {
     e.preventDefault();
     const correo = form.correo.trim().toLowerCase();
 
+    if (!datos.roles.some((r) => r.id === form.rol))
+      return setError("Elige un rol válido.");
     if (form.clave.length < 8)
       return setError("La contraseña debe tener al menos 8 caracteres.");
     if (datos.usuarios.some((u) => u.correo === correo))
@@ -97,7 +104,7 @@ export default function Usuarios() {
       correo,
       clave: form.clave,
       rol: form.rol,
-      permisos: PERMISOS_POR_ROL[form.rol], // permisos iniciales según el rol
+      permisos: permisosDeRol(datos, form.rol), // permisos iniciales según el rol
       activo: true,
     };
     actualizar((d) => ({ ...d, usuarios: [...d.usuarios, nuevo] }));
@@ -137,7 +144,7 @@ export default function Usuarios() {
     actualizar((d) => ({
       ...d,
       usuarios: d.usuarios.map((x) =>
-        x.id === u.id ? aplicarRol(x, cambioRol.rol) : x,
+        x.id === u.id ? aplicarRol(d, x, cambioRol.rol) : x,
       ),
     }));
     setCambioRol(null);
@@ -236,9 +243,9 @@ export default function Usuarios() {
                   value={form.rol}
                   onChange={cambiar("rol")}
                 >
-                  {Object.keys(NOMBRE_ROL).map((r) => (
-                    <option key={r} value={r}>
-                      {NOMBRE_ROL[r]}
+                  {opcionesRol.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nombre}
                     </option>
                   ))}
                 </Campo>
@@ -298,9 +305,9 @@ export default function Usuarios() {
             onChange={(e) => conFiltro(setFiltroRol)(e.target.value)}
           >
             <option value="">Todos los roles</option>
-            {Object.keys(NOMBRE_ROL).map((r) => (
-              <option key={r} value={r}>
-                {NOMBRE_ROL[r]}
+            {opcionesRol.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.nombre}
               </option>
             ))}
           </Campo>
@@ -352,7 +359,7 @@ export default function Usuarios() {
                       </span>
                       <div className="min-w-0">
                         <p className="text-xs font-semibold uppercase tracking-wide text-inacap">
-                          {NOMBRE_ROL[u.rol]}
+                          {nombreRol(datos, u.rol)}
                         </p>
                         <div className="mt-0.5 flex flex-wrap items-center gap-2">
                           <h3 className="font-semibold text-slate-900">
@@ -397,9 +404,9 @@ export default function Usuarios() {
                           : setCambioRol({ id: u.id, rol: e.target.value })
                       }
                     >
-                      {Object.keys(NOMBRE_ROL).map((r) => (
-                        <option key={r} value={r}>
-                          {NOMBRE_ROL[r]}
+                      {opcionesRol.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.nombre}
                         </option>
                       ))}
                     </Campo>
@@ -420,7 +427,9 @@ export default function Usuarios() {
                         {Object.entries(ETIQUETA_PERMISO).map(
                           ([permiso, etiqueta]) => {
                             const deshabilitado =
-                              esYo && permiso === PERMISOS.GESTIONAR_USUARIOS;
+                              esYo &&
+                              (permiso === PERMISOS.GESTIONAR_USUARIOS ||
+                                permiso === PERMISOS.GESTIONAR_ROLES);
                             return (
                               <label
                                 key={permiso}
@@ -475,8 +484,8 @@ export default function Usuarios() {
                           </>
                         }
                       >
-                        ¿Cambiar a {u.nombre} de {NOMBRE_ROL[u.rol]} a{" "}
-                        <strong>{NOMBRE_ROL[pendiente.rol]}</strong>? Sus
+                        ¿Cambiar a {u.nombre} de {nombreRol(datos, u.rol)} a{" "}
+                        <strong>{nombreRol(datos, pendiente.rol)}</strong>? Sus
                         permisos se reemplazarán por los del nuevo rol.
                       </Alerta>
                     )}
