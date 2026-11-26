@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../store.jsx";
-import { validarRut, formatearRut } from "../lib/rut.js";
+import { validarRut, formatearRut, mismoRut } from "../lib/rut.js";
 import { normalizar, normalizarTelefono } from "../lib/texto.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
@@ -66,6 +66,16 @@ const FORMULARIO_VACIO = {
   comuna: "",
   aceptaTerminos: false,
 };
+
+// Datos personales que se autocompletan si el RUT ya estaba inscrito
+const DATOS_PERSONALES = [
+  "nombre",
+  "apellidoPaterno",
+  "apellidoMaterno",
+  "correo",
+  "telefono",
+  "comuna",
+];
 
 const EQUIPO_VACIO = { tipo: "", problema: "" };
 
@@ -238,6 +248,43 @@ export default function FormInscripcion({ enPanel = false }) {
   const [error, setError] = useState("");
   const [errorEquipo, setErrorEquipo] = useState("");
   const [inscrito, setInscrito] = useState(null);
+  // Propietario ya inscrito cuyos datos se autocompletaron
+  const [existenteId, setExistenteId] = useState(null);
+
+  const buscarPropietario = (rut) =>
+    validarRut(rut)
+      ? ((datos.propietarios ?? []).find((p) => mismoRut(p.rut, rut)) ?? null)
+      : null;
+
+  // Al escribir el RUT: si ya está inscrito se rellenan sus datos (editables).
+  // Si el RUT cambia a otro, se quitan los datos rellenados de la persona anterior
+  const cambiarRut = (e) => {
+    const rut = e.target.value;
+    const encontrado = buscarPropietario(rut);
+    if (encontrado) {
+      if (encontrado.id === existenteId) {
+        setForm((prev) => ({ ...prev, rut }));
+        return;
+      }
+      setExistenteId(encontrado.id);
+      setForm((prev) => ({
+        ...prev,
+        rut,
+        ...Object.fromEntries(
+          DATOS_PERSONALES.map((c) => [c, encontrado[c] ?? ""]),
+        ),
+      }));
+    } else if (existenteId) {
+      setExistenteId(null);
+      setForm((prev) => ({
+        ...prev,
+        rut,
+        ...Object.fromEntries(DATOS_PERSONALES.map((c) => [c, ""])),
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, rut }));
+    }
+  };
 
   // Si hay sesión, es un registro presencial; si no, vino por el QR
   const origen = usuario ? "presencial" : "QR";
@@ -303,14 +350,9 @@ export default function FormInscripcion({ enPanel = false }) {
       return setError("Agrega al menos un PC antes de inscribir.");
     if (!esPresencial && !form.aceptaTerminos)
       return setError("Debes aceptar los términos y condiciones.");
-    if ((datos.propietarios ?? []).some((p) => p.rut === rut))
-      return setError("Ese RUT ya está inscrito.");
-
     setError("");
     const ahora = new Date().toISOString();
-
-    const propietario = {
-      id: crypto.randomUUID(),
+    const personales = {
       rut,
       nombre,
       apellidoPaterno,
@@ -318,13 +360,30 @@ export default function FormInscripcion({ enPanel = false }) {
       correo,
       telefono,
       comuna: form.comuna,
-      // Presencial: queda pendiente hasta que acepte desde el correo (simulado)
-      aceptaTerminos: !esPresencial,
-      fechaAceptacion: esPresencial ? null : ahora,
-      ...(esPresencial && { correoTerminosEnviadoEn: ahora }),
-      origen,
-      creadoEn: ahora,
     };
+
+    // Si el RUT ya estaba inscrito se actualizan sus datos y se le suman los PC
+    const existente = buscarPropietario(form.rut);
+    // Presencial sin términos aceptados: se envía el correo para aceptarlos (simulado)
+    const enviaCorreo = esPresencial && !existente?.aceptaTerminos;
+
+    const propietario = existente
+      ? {
+          ...existente,
+          ...personales,
+          ...(!esPresencial && { aceptaTerminos: true, fechaAceptacion: ahora }),
+          ...(enviaCorreo && { correoTerminosEnviadoEn: ahora }),
+        }
+      : {
+          id: crypto.randomUUID(),
+          ...personales,
+          // Presencial: queda pendiente hasta que acepte desde el correo (simulado)
+          aceptaTerminos: !esPresencial,
+          fechaAceptacion: esPresencial ? null : ahora,
+          ...(enviaCorreo && { correoTerminosEnviadoEn: ahora }),
+          origen,
+          creadoEn: ahora,
+        };
 
     // El propietario indica el problema; los datos técnicos (marca, modelo,
     // serie, accesorios y servicio) los completa después el técnico
@@ -344,12 +403,22 @@ export default function FormInscripcion({ enPanel = false }) {
 
     actualizar((d) => ({
       ...d,
-      propietarios: [...(d.propietarios ?? []), propietario],
+      propietarios: existente
+        ? (d.propietarios ?? []).map((p) =>
+            p.id === propietario.id ? propietario : p,
+          )
+        : [...(d.propietarios ?? []), propietario],
       equipos: [...(d.equipos ?? []), ...nuevosEquipos],
     }));
 
-    const registrado = { propietario, equipos: nuevosEquipos };
+    const registrado = {
+      propietario,
+      equipos: nuevosEquipos,
+      actualizado: Boolean(existente),
+      enviaCorreo,
+    };
     setForm(FORMULARIO_VACIO);
+    setExistenteId(null);
     setEquipo(EQUIPO_VACIO);
     setEquipos([]);
     setInscrito(registrado);
@@ -365,7 +434,9 @@ export default function FormInscripcion({ enPanel = false }) {
                 <IconoCheckCircle className="h-8 w-8" />
               </span>
               <h1 className="mt-4 text-2xl font-bold tracking-tight text-tinta">
-                Inscripción registrada
+                {inscrito.actualizado
+                  ? "Inscripción actualizada"
+                  : "Inscripción registrada"}
               </h1>
               <p className="mt-1 text-sm text-neutral-600">
                 Gracias, {inscrito.propietario.nombre}{" "}
@@ -374,7 +445,7 @@ export default function FormInscripcion({ enPanel = false }) {
             </div>
 
             <div className="space-y-5 p-5 sm:p-7">
-              {inscrito.propietario.origen === "presencial" && (
+              {inscrito.enviaCorreo && (
                 <Alerta variante="info" titulo="Correo enviado" role="status">
                   Se envió un correo a{" "}
                   <strong>{inscrito.propietario.correo}</strong> para que el
@@ -513,7 +584,7 @@ export default function FormInscripcion({ enPanel = false }) {
                 etiqueta="RUT"
                 placeholder="12.345.678-9"
                 value={form.rut}
-                onChange={cambiar("rut")}
+                onChange={cambiarRut}
                 onBlur={() =>
                   setForm((prev) => ({ ...prev, rut: formatearRut(prev.rut) }))
                 }
@@ -583,6 +654,13 @@ export default function FormInscripcion({ enPanel = false }) {
                 />
               </div>
             </div>
+
+            {existenteId && (
+              <Alerta variante="info" role="status">
+                Este RUT ya tiene una inscripción previa. Completamos sus datos;
+                revísalos y corrígelos si cambiaron.
+              </Alerta>
+            )}
           </section>
 
           {/* Equipos */}
