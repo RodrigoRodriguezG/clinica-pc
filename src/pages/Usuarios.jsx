@@ -130,7 +130,7 @@ export default function Usuarios() {
     <div className="space-y-6">
       <Encabezado
         titulo="Usuarios y permisos"
-        descripcion="Los técnicos se registran solos desde el login. Aquí puedes cambiar el rol de una cuenta, ajustar permisos o dar de baja."
+        descripcion="Crea las cuentas del equipo, cambia su rol, ajusta permisos o da de baja."
       />
 
       <Tarjeta className="p-4 sm:p-5">

@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { crearDatosIniciales } from "./data/seed.js";
-import { PERMISOS_POR_ROL, ROLES } from "./constantes.js";
 
 const CLAVE_DATOS = "clinica-pc-datos";
 const CLAVE_SESION = "clinica-pc-sesion";
@@ -60,32 +59,6 @@ export function AppProvider({ children }) {
     setSesionId(null);
   };
 
-  // Registro abierto: la cuenta siempre nace como técnico, sin importar lo que se reciba.
-  // Devuelve un mensaje de error, o null si el registro fue exitoso
-  const registrar = ({ nombre, correo, clave }) => {
-    const correoLimpio = String(correo ?? "")
-      .trim()
-      .toLowerCase();
-    if (datos.usuarios.some((u) => u.correo === correoLimpio))
-      return "Ese correo ya está registrado.";
-
-    const nuevo = {
-      id: crypto.randomUUID(),
-      nombre: String(nombre ?? "").trim(),
-      correo: correoLimpio,
-      clave,
-      rol: ROLES.TECNICO,
-      permisos: PERMISOS_POR_ROL[ROLES.TECNICO],
-      activo: true,
-    };
-    setDatos((d) => ({ ...d, usuarios: [...d.usuarios, nuevo] }));
-
-    // Queda con la sesión iniciada
-    sessionStorage.setItem(CLAVE_SESION, nuevo.id);
-    setSesionId(nuevo.id);
-    return null;
-  };
-
   return (
     <AppContext.Provider
       value={{
@@ -95,7 +68,6 @@ export function AppProvider({ children }) {
         usuario,
         ingresar,
         salir,
-        registrar,
       }}
     >
       {children}
