@@ -103,7 +103,6 @@ export default function DetalleFicha({ ficha }) {
   const [accion, setAccion] = useState(null); // 'rechazar' | 'cerrar' | null
   const [confirmarCierre, setConfirmarCierre] = useState(false);
   const [confirmarEntrega, setConfirmarEntrega] = useState(false);
-  const [errorCierre, setErrorCierre] = useState("");
   const [motivo, setMotivo] = useState("");
   const [errorAccion, setErrorAccion] = useState("");
   const [datosForm, setDatosForm] = useState({
@@ -214,15 +213,6 @@ export default function DetalleFicha({ ficha }) {
   // Cerrar la ficha la deja "Listo". El correo al propietario aún no se
   // envía de verdad (prototipo solo front end): por ahora solo se informa
   const pedirCierre = () => {
-    if (!datosCompletos)
-      return setErrorCierre(
-        "Guarda los datos técnicos antes de cerrar la ficha.",
-      );
-    if (!checklistCompleto)
-      return setErrorCierre(
-        `Completa el checklist antes de cerrar la ficha (${revisados}/${ficha.checklist.length} revisados).`,
-      );
-    setErrorCierre("");
     setAccion(null);
     setConfirmarCierre(true);
   };
@@ -261,7 +251,6 @@ export default function DetalleFicha({ ficha }) {
   const abrirAccion = (tipo) => {
     setAccion(tipo);
     setConfirmarCierre(false);
-    setErrorCierre("");
     setMotivo("");
     setErrorAccion("");
   };
@@ -665,8 +654,11 @@ export default function DetalleFicha({ ficha }) {
         </section>
       )}
 
-      {/* Cerrar la ficha: el trabajo terminó y el equipo queda Listo */}
-      {puedeRechazarOCerrar(usuario, ficha) && (
+      {/* Cerrar la ficha: el trabajo terminó y el equipo queda Listo.
+          Solo aparece con los datos técnicos guardados y el checklist completo */}
+      {puedeRechazarOCerrar(usuario, ficha) &&
+        datosCompletos &&
+        checklistCompleto && (
         <section className="space-y-3 border-t border-slate-200 pt-4">
           <h3 className="font-semibold text-slate-900">
             ¿Terminaste el trabajo?
@@ -697,11 +689,6 @@ export default function DetalleFicha({ ficha }) {
             >
               La ficha quedará en estado Listo y en solo lectura, y se enviará
               un correo al propietario para que retire su equipo.
-            </Alerta>
-          )}
-          {errorCierre && (
-            <Alerta variante="error" role="alert">
-              {errorCierre}
             </Alerta>
           )}
         </section>

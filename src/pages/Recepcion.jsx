@@ -170,21 +170,9 @@ export default function Recepcion() {
             </div>
           </dl>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Boton
-              onClick={() => {
-                setCreada(null);
-                setEquipoElegido(null);
-              }}
-              bloque
-              className="sm:w-auto"
-            >
-              Recibir otro equipo de este propietario
-            </Boton>
-            <Boton variante="secundario" onClick={reiniciar}>
-              Volver a la lista
-            </Boton>
-          </div>
+          <Boton onClick={reiniciar} bloque className="sm:w-auto">
+            Volver a la lista
+          </Boton>
         </Tarjeta>
       </div>
     );
