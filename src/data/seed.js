@@ -11,7 +11,7 @@ export const crearDatosIniciales = () => ({
   usuarios: [
     {
       id: "u1",
-      nombre: "Administrador Sistema",
+      nombre: "Pablo Pesce",
       correo: "pablo@pesce.cl",
       clave: "Demo1234",
       rol: "admin",

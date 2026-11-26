@@ -5,7 +5,7 @@ import { normalizar } from "./texto.js";
 const ALIAS_NOMBRE = ["nombre", "nombre completo", "nombres"];
 const ALIAS_CORREO = ["correo", "email", "e-mail", "correo electronico", "mail"];
 
-const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // SheetJS se carga solo cuando se usa, para no agrandar la carga inicial
 const cargarXlsx = () => import("xlsx");

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
 import { nombreRol } from "../lib/roles.js";
+import { crearDatosIniciales } from "../data/seed.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -10,6 +11,12 @@ import {
   IconoEscudo,
   IconoMonitor,
 } from "../components/ui/iconos.jsx";
+
+// Claves originales de las cuentas demo. Se toman de los datos iniciales y no
+// de los guardados, para no mostrar contraseñas que alguien ya cambió.
+const CLAVES_DEMO = new Map(
+  crearDatosIniciales().usuarios.map((u) => [u.id, u.clave]),
+);
 
 export default function Login() {
   const { ingresar, datos } = useApp();
@@ -127,7 +134,7 @@ export default function Login() {
 
                   <details className="group rounded-control border border-neutral-200 bg-neutral-50">
                     <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-xs font-semibold text-neutral-600 transition-colors duration-150 hover:text-tinta [&::-webkit-details-marker]:hidden">
-                      Cuentas de demostración (clave: Demo1234)
+                      Cuentas de demostración
                       <IconoChevronAbajo className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" />
                     </summary>
                     <ul className="space-y-1 border-t border-neutral-200 px-3 py-2.5">
@@ -141,6 +148,9 @@ export default function Login() {
                           </span>
                           <span className="text-neutral-500">
                             {nombreRol(datos, u.rol)}
+                            {CLAVES_DEMO.has(u.id) && (
+                              <> · clave: {CLAVES_DEMO.get(u.id)}</>
+                            )}
                           </span>
                         </li>
                       ))}

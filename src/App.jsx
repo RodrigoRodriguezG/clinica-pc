@@ -3,9 +3,11 @@ import {
   HashRouter,
   Routes,
   Route,
+  Link,
   NavLink,
   Navigate,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { AppProvider, useApp } from "./store.jsx";
 import { PERMISOS } from "./constantes.js";
@@ -21,6 +23,7 @@ import Fichas from "./pages/Fichas.jsx";
 import ClinicaDetalle from "./pages/ClinicaDetalle.jsx";
 import GenerarQR from "./pages/GenerarQR.jsx";
 import Roles from "./pages/Roles.jsx";
+import MiCuenta from "./pages/MiCuenta.jsx";
 import Boton from "./components/ui/Boton.jsx";
 import Tarjeta from "./components/ui/Tarjeta.jsx";
 import { cx } from "./components/ui/cx.js";
@@ -181,6 +184,7 @@ function Iniciales({ nombre, oscuro = true }) {
 
 function Navegacion({ grupos, usuario, onNavegar }) {
   const { datos, salir, restablecer } = useApp();
+  const navigate = useNavigate();
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -230,17 +234,29 @@ function Navegacion({ grupos, usuario, onNavegar }) {
       </nav>
 
       <div className="mt-4 shrink-0 space-y-3 border-t border-white/10 pt-4">
-        <div className="flex items-center gap-3 rounded-control bg-white/5 p-3">
+        <NavLink
+          to="/cuenta"
+          onClick={onNavegar}
+          title="Mi cuenta"
+          className={({ isActive }) =>
+            cx(
+              "flex items-center gap-3 rounded-control p-3 transition-colors duration-150",
+              isActive
+                ? "bg-white/15 ring-1 ring-white/20"
+                : "bg-white/5 hover:bg-white/10",
+            )
+          }
+        >
           <Iniciales nombre={usuario.nombre} />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-white">
               {usuario.nombre}
             </p>
             <p className="truncate text-xs text-neutral-400">
-              {nombreRol(datos, usuario.rol)}
+              {nombreRol(datos, usuario.rol)} · Mi cuenta
             </p>
           </div>
-        </div>
+        </NavLink>
 
         <div className="space-y-1">
           <button
@@ -253,7 +269,13 @@ function Navegacion({ grupos, usuario, onNavegar }) {
           </button>
           <button
             type="button"
-            onClick={salir}
+            onClick={() => {
+              // Cierra el drawer móvil y deja la URL en la raíz: sin esto
+              // quedaría la última sección visitada y "atrás" volvería a ella
+              onNavegar?.();
+              navigate("/", { replace: true });
+              salir();
+            }}
             className="flex min-h-11 w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm font-semibold text-neutral-200 transition-colors duration-150 hover:bg-white/10 hover:text-white"
           >
             <IconoSalir className="h-4 w-4 shrink-0" />
@@ -352,7 +374,13 @@ function Panel() {
           </Boton>
           <Marca compacta />
         </div>
-        <Iniciales nombre={usuario.nombre} oscuro={false} />
+        <Link
+          to="/cuenta"
+          aria-label="Mi cuenta"
+          className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-inacap/30"
+        >
+          <Iniciales nombre={usuario.nombre} oscuro={false} />
+        </Link>
       </header>
 
       {/* Drawer móvil */}
@@ -416,6 +444,8 @@ function Panel() {
               }
             />
             <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Disponible para cualquier usuario con sesión */}
+            <Route path="/cuenta" element={<MiCuenta />} />
             <Route
               path="/usuarios"
               element={
