@@ -29,7 +29,9 @@ export default function ImportarUsuarios({ onCerrar }) {
 
   const validas = filas?.filter((f) => !f.error) ?? [];
   const conError = (filas?.length ?? 0) - validas.length;
-  const puedeCrear = validas.length > 0 && clave.length >= 8;
+  // Los roles se pueden eliminar: sin el rol Técnico no hay con qué crear las cuentas
+  const hayRolTecnico = datos.roles.some((r) => r.id === ROLES.TECNICO);
+  const puedeCrear = hayRolTecnico && validas.length > 0 && clave.length >= 8;
 
   const limpiar = () => {
     setFilas(null);
@@ -195,6 +197,13 @@ export default function ImportarUsuarios({ onCerrar }) {
           </div>
         )}
       </Paso>
+
+      {filas && !hayRolTecnico && (
+        <Alerta variante="aviso" role="alert" className="mt-5">
+          El rol Técnico fue eliminado, así que no se pueden importar técnicos.
+          Créalo de nuevo en Roles o crea las cuentas una por una.
+        </Alerta>
+      )}
 
       {filas && (
         <PieAcciones>

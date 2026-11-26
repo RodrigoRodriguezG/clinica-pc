@@ -39,61 +39,85 @@ import {
   IconoUsuarios,
 } from "./components/ui/iconos.jsx";
 
+// Menú lateral agrupado en secciones. Un grupo solo aparece si el usuario
+// tiene al menos una de sus opciones; el orden define la vista de inicio.
 const MENU = [
   {
-    ruta: "/clinicas",
-    texto: "Clínicas",
-    permiso: PERMISOS.CREAR_CLINICAS,
-    Icono: IconoClinicas,
+    grupo: "Gestión de clínicas",
+    opciones: [
+      {
+        ruta: "/clinicas",
+        texto: "Clínicas",
+        permiso: PERMISOS.CREAR_CLINICAS,
+        Icono: IconoClinicas,
+      },
+      {
+        ruta: "/checklists",
+        texto: "Checklists",
+        permiso: PERMISOS.EDITAR_CHECKLISTS,
+        Icono: IconoChecklist,
+      },
+    ],
   },
   {
-    ruta: "/recepcion",
-    texto: "Recepción",
-    permiso: PERMISOS.RECEPCIONAR,
-    Icono: IconoRecepcion,
+    grupo: "Atención",
+    opciones: [
+      {
+        ruta: "/recepcion",
+        texto: "Recepción",
+        permiso: PERMISOS.RECEPCIONAR,
+        Icono: IconoRecepcion,
+      },
+      {
+        ruta: "/inscripcion",
+        texto: "Inscribir propietario",
+        permiso: PERMISOS.RECEPCIONAR,
+        Icono: IconoInscripcion,
+      },
+      {
+        ruta: "/qr",
+        texto: "QR de inscripción",
+        permiso: PERMISOS.GENERAR_QR,
+        Icono: IconoQR,
+      },
+      {
+        ruta: "/fichas",
+        texto: "Fichas",
+        permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
+        Icono: IconoFichas,
+      },
+    ],
   },
   {
-    ruta: "/fichas",
-    texto: "Fichas",
-    permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
-    Icono: IconoFichas,
-  },
-  {
-    ruta: "/checklists",
-    texto: "Checklists",
-    permiso: PERMISOS.EDITAR_CHECKLISTS,
-    Icono: IconoChecklist,
-  },
-  {
-    ruta: "/usuarios",
-    texto: "Usuarios y permisos",
-    permiso: PERMISOS.GESTIONAR_USUARIOS,
-    Icono: IconoUsuarios,
-  },
-  {
-    ruta: "/roles",
-    texto: "Roles",
-    permiso: PERMISOS.GESTIONAR_ROLES,
-    Icono: IconoEscudo,
-  },
-  {
-    ruta: "/inscripcion",
-    texto: "Inscribir propietario",
-    permiso: PERMISOS.RECEPCIONAR,
-    Icono: IconoInscripcion,
-  },
-  {
-    ruta: "/qr",
-    texto: "QR de inscripción",
-    permiso: PERMISOS.GENERAR_QR,
-    Icono: IconoQR,
+    grupo: "Administración",
+    opciones: [
+      {
+        ruta: "/usuarios",
+        texto: "Usuarios y permisos",
+        permiso: PERMISOS.GESTIONAR_USUARIOS,
+        Icono: IconoUsuarios,
+      },
+      {
+        ruta: "/roles",
+        texto: "Roles",
+        permiso: PERMISOS.GESTIONAR_ROLES,
+        Icono: IconoEscudo,
+      },
+    ],
   },
 ];
 
+// ¿Tiene el usuario alguno de estos permisos? (acepta uno o una lista)
+const tieneAlguno = (usuario, permiso) =>
+  [].concat(permiso).some((p) => puede(usuario, p));
+
 function Protegida({ permiso, children }) {
   const { usuario } = useApp();
-  const permitido = [].concat(permiso).some((p) => puede(usuario, p));
-  return permitido ? children : <Navigate to="/" replace />;
+  return tieneAlguno(usuario, permiso) ? (
+    children
+  ) : (
+    <Navigate to="/" replace />
+  );
 }
 
 function Marca({ compacta = false }) {
@@ -154,44 +178,54 @@ function Iniciales({ nombre, oscuro = true }) {
   );
 }
 
-function Navegacion({ opciones, usuario, onNavegar }) {
+function Navegacion({ grupos, usuario, onNavegar }) {
   const { datos, salir, restablecer } = useApp();
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <nav aria-label="Navegación principal" className="min-h-0 flex-1">
-        <ul className="space-y-1">
-          {opciones.map((m) => (
-            <li key={m.ruta}>
-              <NavLink
-                to={m.ruta}
-                onClick={onNavegar}
-                className={({ isActive }) =>
-                  cx(
-                    "group flex min-h-11 items-center gap-3 rounded-control px-3 py-2.5 text-sm font-medium transition-colors duration-150",
-                    isActive
-                      ? "bg-inacap text-white shadow-sm"
-                      : "text-neutral-300 hover:bg-white/10 hover:text-white",
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <m.Icono
-                      className={cx(
-                        "h-5 w-5 shrink-0",
+      <nav
+        aria-label="Navegación principal"
+        className="-mx-1 min-h-0 flex-1 space-y-5 overflow-y-auto px-1"
+      >
+        {grupos.map(({ grupo, opciones }) => (
+          <div key={grupo}>
+            <h3 className="mb-1.5 px-3 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-neutral-500">
+              {grupo}
+            </h3>
+            <ul className="space-y-1">
+              {opciones.map((m) => (
+                <li key={m.ruta}>
+                  <NavLink
+                    to={m.ruta}
+                    onClick={onNavegar}
+                    className={({ isActive }) =>
+                      cx(
+                        "group flex min-h-11 items-center gap-3 rounded-control px-3 py-2.5 text-sm font-medium transition-colors duration-150",
                         isActive
-                          ? "text-white"
-                          : "text-neutral-400 group-hover:text-white",
-                      )}
-                    />
-                    <span className="truncate">{m.texto}</span>
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+                          ? "bg-inacap text-white shadow-sm"
+                          : "text-neutral-300 hover:bg-white/10 hover:text-white",
+                      )
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <m.Icono
+                          className={cx(
+                            "h-5 w-5 shrink-0",
+                            isActive
+                              ? "text-white"
+                              : "text-neutral-400 group-hover:text-white",
+                          )}
+                        />
+                        <span className="truncate">{m.texto}</span>
+                      </>
+                    )}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       <div className="mt-4 shrink-0 space-y-3 border-t border-white/10 pt-4">
@@ -237,14 +271,14 @@ function Panel() {
   const refCerrar = useRef(null);
   const refAbrir = useRef(null);
 
-  const opciones = usuario
-    ? MENU.filter((m) =>
-        [].concat(m.permiso).some((p) => puede(usuario, p)),
-      )
+  const grupos = usuario
+    ? MENU.map((g) => ({
+        ...g,
+        opciones: g.opciones.filter((m) => tieneAlguno(usuario, m.permiso)),
+      })).filter((g) => g.opciones.length > 0)
     : [];
 
-  // La inscripción es una página pública sin menú lateral: nunca puede ser la vista de inicio
-  const inicio = opciones.find((m) => m.ruta !== "/inscripcion")?.ruta;
+  const inicio = grupos[0]?.opciones[0]?.ruta;
 
   useEffect(() => {
     if (!menuAbierto) return undefined;
@@ -298,7 +332,7 @@ function Panel() {
         <div className="mb-8 shrink-0">
           <Marca />
         </div>
-        <Navegacion opciones={opciones} usuario={usuario} />
+        <Navegacion grupos={grupos} usuario={usuario} />
       </aside>
 
       {/* Barra superior en móvil */}
@@ -354,7 +388,7 @@ function Panel() {
               </button>
             </div>
             <Navegacion
-              opciones={opciones}
+              grupos={grupos}
               usuario={usuario}
               onNavegar={cerrarMenu}
             />
@@ -386,6 +420,14 @@ function Panel() {
               element={
                 <Protegida permiso={PERMISOS.GESTIONAR_USUARIOS}>
                   <Usuarios />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/inscripcion"
+              element={
+                <Protegida permiso={PERMISOS.RECEPCIONAR}>
+                  <FormInscripcion enPanel />
                 </Protegida>
               }
             />
@@ -454,13 +496,19 @@ function Panel() {
   );
 }
 
+// El QR lleva aquí sin iniciar sesión (página pública). Con sesión y permiso
+// de recepción, el formulario se muestra dentro del panel como una sección más.
+function Inscripcion() {
+  const { usuario } = useApp();
+  return puede(usuario, PERMISOS.RECEPCIONAR) ? <Panel /> : <FormInscripcion />;
+}
+
 export default function App() {
   return (
     <AppProvider>
       <HashRouter>
         <Routes>
-          {/* Pública: el QR lleva aquí sin iniciar sesión */}
-          <Route path="/inscripcion" element={<FormInscripcion />} />
+          <Route path="/inscripcion" element={<Inscripcion />} />
           {/* Todo lo demás sigue pasando por el panel con login */}
           <Route path="*" element={<Panel />} />
         </Routes>

@@ -30,7 +30,6 @@ export function validarNombreRol(datos, nombre, idActual = null) {
 
 // Motivo por el que no se puede eliminar un rol (null si se puede)
 export function motivoBloqueoEliminar(datos, rol) {
-  if (rol.sistema) return "Los roles del sistema no se pueden eliminar.";
   const n = usuariosConRol(datos, rol.id).length;
   if (n > 0)
     return `Tiene ${n} ${n === 1 ? "usuario asignado" : "usuarios asignados"}. Cámbialos de rol primero.`;
@@ -41,7 +40,6 @@ export const crearRol = (nombre, permisos) => ({
   id: crypto.randomUUID(),
   nombre: nombre.trim(),
   permisos: [...permisos],
-  sistema: false,
 });
 
 // Guarda los cambios de un rol. Si aplicarAUsuarios, quienes tienen el rol
@@ -60,7 +58,7 @@ export function guardarRol(datos, rolId, { nombre, permisos }, aplicarAUsuarios,
       r.id === rolId
         ? {
             ...r,
-            nombre: r.sistema ? r.nombre : nombre.trim(),
+            nombre: nombre.trim(),
             permisos: nuevosPermisos,
           }
         : r,

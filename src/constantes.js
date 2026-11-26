@@ -37,14 +37,12 @@ export const ETIQUETA_PERMISO = {
 export const PERMISOS_FIJOS_ADMIN = ["gestionarUsuarios", "gestionarRoles"];
 
 // Roles con los que parte el sistema. Se copian a datos.roles, donde el
-// administrador puede editar sus permisos y crear roles nuevos.
-// Los marcados "sistema" no se pueden eliminar ni renombrar.
+// administrador puede editarlos, renombrarlos o eliminarlos como cualquier otro.
 export const ROLES_BASE = [
   {
     id: "admin",
     nombre: "Administrador de sistema",
     permisos: ["gestionarUsuarios", "gestionarRoles", "verReportes"],
-    sistema: true,
   },
   {
     id: "encargado",
@@ -57,19 +55,16 @@ export const ROLES_BASE = [
       "verRetroalimentacion",
       "generarQr",
     ],
-    sistema: true,
   },
   {
     id: "recepcionista",
     nombre: "Servicio al cliente",
     permisos: ["recepcionar", "generarQr"],
-    sistema: true,
   },
   {
     id: "tecnico",
     nombre: "Técnico",
     permisos: ["revisarEquipos"],
-    sistema: true,
   },
 ];
 

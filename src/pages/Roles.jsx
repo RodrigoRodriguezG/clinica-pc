@@ -14,7 +14,6 @@ import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
 import Encabezado from "../components/ui/Encabezado.jsx";
-import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
 import Seccion from "../components/ui/Seccion.jsx";
 import Paso from "../components/ui/Paso.jsx";
@@ -187,7 +186,7 @@ function TarjetaRol({ rol }) {
   };
 
   const guardar = () => {
-    const motivo = rol.sistema ? null : validarNombreRol(datos, nombre, rol.id);
+    const motivo = validarNombreRol(datos, nombre, rol.id);
     if (motivo) return setError(motivo);
     setError("");
     actualizar((d) =>
@@ -212,30 +211,25 @@ function TarjetaRol({ rol }) {
             <IconoEscudo className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="font-semibold text-slate-900">{rol.nombre}</h3>
-              {rol.sistema && <Insignia tono="neutral">Del sistema</Insignia>}
-            </div>
+            <h3 className="font-semibold text-slate-900">{rol.nombre}</h3>
             <p className="text-sm tabular-nums text-slate-600">
               {usuarios.length} {usuarios.length === 1 ? "usuario" : "usuarios"}{" "}
               · {rol.permisos.length} de {TOTAL_PERMISOS} permisos
             </p>
           </div>
         </div>
-        {!rol.sistema && (
-          <Boton
-            variante="peligro-enlace"
-            onClick={() => setConfirmarBorrar(true)}
-            disabled={Boolean(bloqueoBorrar)}
-            className="self-start sm:self-auto"
-          >
-            <IconoBasura className="h-4 w-4" />
-            Eliminar
-          </Boton>
-        )}
+        <Boton
+          variante="peligro-enlace"
+          onClick={() => setConfirmarBorrar(true)}
+          disabled={Boolean(bloqueoBorrar)}
+          className="self-start sm:self-auto"
+        >
+          <IconoBasura className="h-4 w-4" />
+          Eliminar
+        </Boton>
       </div>
 
-      {!rol.sistema && bloqueoBorrar && (
+      {bloqueoBorrar && (
         <p className="-mt-2 px-4 pb-3 text-xs text-slate-500 sm:px-5">
           No se puede eliminar: {bloqueoBorrar}
         </p>
@@ -269,19 +263,17 @@ function TarjetaRol({ rol }) {
 
         <details className="group rounded-control border border-slate-200">
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-control px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors duration-150 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
-            Editar {rol.sistema ? "permisos" : "nombre y permisos"}
+            Editar nombre y permisos
             <IconoChevronAbajo className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" />
           </summary>
           <div className="space-y-3 border-t border-slate-200 p-2">
-            {!rol.sistema && (
-              <Campo
-                etiqueta="Nombre del rol"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                autoComplete="off"
-                className="px-2 pt-2 sm:max-w-sm"
-              />
-            )}
+            <Campo
+              etiqueta="Nombre del rol"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              autoComplete="off"
+              className="px-2 pt-2 sm:max-w-sm"
+            />
             <CasillasPermisos
               rolId={rol.id}
               permisos={permisos}
@@ -343,10 +335,8 @@ export default function Roles() {
   const { datos } = useApp();
   const [creando, setCreando] = useState(false);
 
-  // Primero los del sistema, luego los creados, por nombre
-  const roles = [...datos.roles].sort(
-    (a, b) =>
-      Number(b.sistema) - Number(a.sistema) || a.nombre.localeCompare(b.nombre),
+  const roles = [...datos.roles].sort((a, b) =>
+    a.nombre.localeCompare(b.nombre),
   );
 
   return (

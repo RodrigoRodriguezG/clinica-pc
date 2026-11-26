@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { validarRut, formatearRut } from "../lib/rut.js";
 import { normalizar, normalizarTelefono } from "../lib/texto.js";
@@ -11,7 +11,6 @@ import Tarjeta from "../components/ui/Tarjeta.jsx";
 import {
   IconoCheckCircle,
   IconoDocumento,
-  IconoFlechaIzquierda,
   IconoMas,
   IconoMonitor,
   IconoUsuarios,
@@ -191,7 +190,12 @@ function SelectorComuna({ valor, onChange, error }) {
   );
 }
 
-function MarcoInscripcion({ children }) {
+// Dentro del panel el formulario va junto a la barra lateral, como cualquier
+// sección; desde el QR (sin sesión) se muestra en su propia página con la marca
+function MarcoInscripcion({ enPanel, children }) {
+  if (enPanel)
+    return <div className="mx-auto w-full max-w-3xl">{children}</div>;
+
   return (
     <div className="min-h-screen bg-neutral-100">
       <header className="border-b border-neutral-200 bg-white">
@@ -224,14 +228,9 @@ function MarcoInscripcion({ children }) {
   );
 }
 
-export default function FormInscripcion() {
+export default function FormInscripcion({ enPanel = false }) {
   const { datos, actualizar, usuario } = useApp();
   const navegar = useNavigate();
-  const ubicacion = useLocation();
-
-  // Vuelve a la vista anterior; si se abrió el formulario directo, va al panel
-  const volver = () =>
-    ubicacion.key === "default" ? navegar("/") : navegar(-1);
 
   const [form, setForm] = useState(FORMULARIO_VACIO);
   const [equipo, setEquipo] = useState(EQUIPO_VACIO);
@@ -358,7 +357,7 @@ export default function FormInscripcion() {
 
   if (inscrito) {
     return (
-      <MarcoInscripcion>
+      <MarcoInscripcion enPanel={enPanel}>
         <div className="mx-auto w-full max-w-2xl">
           <Tarjeta className="overflow-hidden">
             <div className="border-b border-green-200 bg-exito-tenue px-5 py-7 text-center sm:px-8">
@@ -453,12 +452,12 @@ export default function FormInscripcion() {
                 >
                   Inscribir a otra persona
                 </Boton>
-                {usuario && (
+                {enPanel && (
                   <Boton
                     variante="secundario"
-                    onClick={() => navegar("/")}
+                    onClick={() => navegar("/recepcion")}
                   >
-                    Volver al panel
+                    Ir a recepción
                   </Boton>
                 )}
               </div>
@@ -470,17 +469,7 @@ export default function FormInscripcion() {
   }
 
   return (
-    <MarcoInscripcion>
-      {usuario && (
-        <button
-          type="button"
-          onClick={volver}
-          className="-mt-2 mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:text-inacap sm:-mt-4"
-        >
-          <IconoFlechaIzquierda className="h-4 w-4" />
-          Volver
-        </button>
-      )}
+    <MarcoInscripcion enPanel={enPanel}>
       <Tarjeta className="overflow-hidden">
         <div className="border-b border-neutral-200 bg-white p-5 sm:p-7">
           <div className="flex items-start gap-3">
@@ -743,8 +732,11 @@ export default function FormInscripcion() {
               <IconoDocumento className="h-5 w-5" />
               Inscribirme
             </Boton>
-            {usuario && (
-              <Boton variante="secundario" onClick={() => navegar("/")}>
+            {enPanel && (
+              <Boton
+                variante="secundario"
+                onClick={() => navegar("/recepcion")}
+              >
                 Cancelar
               </Boton>
             )}
