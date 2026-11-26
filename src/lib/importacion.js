@@ -10,11 +10,12 @@ const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // SheetJS se carga solo cuando se usa, para no agrandar la carga inicial
 const cargarXlsx = () => import("xlsx");
 
-const buscarColumna = (encabezados, alias) =>
-  encabezados.find((e) => alias.includes(normalizar(e).trim()));
+const buscarIndice = (encabezados, alias) =>
+  encabezados.findIndex((e) => alias.includes(normalizar(e).trim()));
 
-// Lee la primera hoja del archivo. Devuelve { filas } o { error }
-export async function leerFilasExcel(archivo) {
+// Lee la primera hoja buscando las columnas pedidas por sus alias.
+// columnas = { clave: { alias: [...], etiqueta } }. Devuelve { filas } o { error }
+export async function leerTablaExcel(archivo, columnas) {
   try {
     const XLSX = await cargarXlsx();
     const libro = XLSX.read(await archivo.arrayBuffer());
@@ -23,30 +24,43 @@ export async function leerFilasExcel(archivo) {
 
     const tabla = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: "" });
     const encabezados = (tabla[0] ?? []).map((e) => String(e));
-    const colNombre = buscarColumna(encabezados, ALIAS_NOMBRE);
-    const colCorreo = buscarColumna(encabezados, ALIAS_CORREO);
+    const claves = Object.keys(columnas);
+    const indices = Object.fromEntries(
+      claves.map((c) => [c, buscarIndice(encabezados, columnas[c].alias)]),
+    );
 
-    if (!colNombre || !colCorreo)
+    if (claves.some((c) => indices[c] === -1)) {
+      const nombres = claves.map((c) => `"${columnas[c].etiqueta}"`);
+      const lista = `${nombres.slice(0, -1).join(", ")} y ${nombres.at(-1)}`;
       return {
-        error:
-          'No se encontraron las columnas "Nombre" y "Correo" en la primera fila. Usa la plantilla.',
+        error: `No se encontraron las columnas ${lista} en la primera fila. Usa la plantilla.`,
       };
+    }
 
-    const iNombre = encabezados.indexOf(colNombre);
-    const iCorreo = encabezados.indexOf(colCorreo);
     const filas = tabla.slice(1).map((celdas, i) => ({
       fila: i + 2, // número de fila tal como se ve en Excel
-      nombre: String(celdas[iNombre] ?? "").trim(),
-      correo: String(celdas[iCorreo] ?? "")
-        .trim()
-        .toLowerCase(),
+      ...Object.fromEntries(
+        claves.map((c) => [c, String(celdas[indices[c]] ?? "").trim()]),
+      ),
     }));
-    return { filas: filas.filter((f) => f.nombre || f.correo) };
+    return { filas: filas.filter((f) => claves.some((c) => f[c])) };
   } catch {
     return {
       error: "No se pudo leer el archivo. Verifica que sea un Excel o CSV válido.",
     };
   }
+}
+
+// Lee técnicos (columnas Nombre y Correo). Devuelve { filas } o { error }
+export async function leerFilasExcel(archivo) {
+  const resultado = await leerTablaExcel(archivo, {
+    nombre: { alias: ALIAS_NOMBRE, etiqueta: "Nombre" },
+    correo: { alias: ALIAS_CORREO, etiqueta: "Correo" },
+  });
+  if (resultado.error) return resultado;
+  return {
+    filas: resultado.filas.map((f) => ({ ...f, correo: f.correo.toLowerCase() })),
+  };
 }
 
 // Marca cada fila con el motivo por el que no se puede crear (o null)
@@ -76,14 +90,23 @@ export const crearTecnico = ({ nombre, correo }, clave, permisos) => ({
   activo: true,
 });
 
-export async function descargarPlantilla() {
+// Genera y descarga un .xlsx de una hoja con las filas dadas
+export async function descargarXlsx(filas, anchos, nombreHoja, nombreArchivo) {
   const XLSX = await cargarXlsx();
-  const hoja = XLSX.utils.aoa_to_sheet([
-    ["Nombre", "Correo"],
-    ["Juan Pérez", "juan.perez@inacap.cl"],
-  ]);
-  hoja["!cols"] = [{ wch: 30 }, { wch: 34 }];
+  const hoja = XLSX.utils.aoa_to_sheet(filas);
+  hoja["!cols"] = anchos.map((wch) => ({ wch }));
   const libro = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(libro, hoja, "Técnicos");
-  XLSX.writeFile(libro, "plantilla-tecnicos.xlsx");
+  XLSX.utils.book_append_sheet(libro, hoja, nombreHoja);
+  XLSX.writeFile(libro, nombreArchivo);
 }
+
+export const descargarPlantilla = () =>
+  descargarXlsx(
+    [
+      ["Nombre", "Correo"],
+      ["Juan Pérez", "juan.perez@inacap.cl"],
+    ],
+    [30, 34],
+    "Técnicos",
+    "plantilla-tecnicos.xlsx",
+  );

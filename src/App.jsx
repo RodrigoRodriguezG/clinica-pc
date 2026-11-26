@@ -5,6 +5,7 @@ import {
   Route,
   NavLink,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { AppProvider, useApp } from "./store.jsx";
 import { PERMISOS } from "./constantes.js";
@@ -496,22 +497,24 @@ function Panel() {
   );
 }
 
-// El QR lleva aquí sin iniciar sesión (página pública). Con sesión y permiso
-// de recepción, el formulario se muestra dentro del panel como una sección más.
-function Inscripcion() {
+// El QR lleva a /inscripcion sin iniciar sesión (página pública). Con sesión y
+// permiso de recepción, el formulario se muestra dentro del panel como una
+// sección más. Se decide con la URL en vez de una ruta propia: si el panel se
+// renderizara bajo <Route path="/inscripcion">, sus rutas internas quedarían
+// relativas a ella y "/" redirigiría al inicio.
+function Raiz() {
   const { usuario } = useApp();
-  return puede(usuario, PERMISOS.RECEPCIONAR) ? <Panel /> : <FormInscripcion />;
+  const { pathname } = useLocation();
+  const publica =
+    pathname === "/inscripcion" && !puede(usuario, PERMISOS.RECEPCIONAR);
+  return publica ? <FormInscripcion /> : <Panel />;
 }
 
 export default function App() {
   return (
     <AppProvider>
       <HashRouter>
-        <Routes>
-          <Route path="/inscripcion" element={<Inscripcion />} />
-          {/* Todo lo demás sigue pasando por el panel con login */}
-          <Route path="*" element={<Panel />} />
-        </Routes>
+        <Raiz />
       </HashRouter>
     </AppProvider>
   );
