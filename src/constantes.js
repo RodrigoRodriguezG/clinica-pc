@@ -58,6 +58,7 @@ export const ESTADO_POR_REASIGNAR = "Por reasignar";
 
 export const ESTADO_EN_REPARACION = "En reparación";
 export const ESTADO_LISTO = "Listo";
+export const ESTADO_ENTREGADO = "Entregado"; // desde Listo o Cierre anticipado
 
 export const ESTADOS_FICHA = [
   "Recibido",

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
-import { ESTADOS_FICHA, PERMISOS } from "../constantes.js";
+import {
+  ESTADOS_FICHA,
+  ESTADO_POR_REASIGNAR,
+  PERMISOS,
+} from "../constantes.js";
 import { puede } from "../lib/permisos.js";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha, fechaLocal } from "../lib/fechas.js";
@@ -22,31 +26,62 @@ import {
   IconoMonitor,
 } from "../components/ui/iconos.jsx";
 
-const FILTROS_VACIOS = {
+// Estados en los que el técnico tiene el equipo en su poder
+const ESTADOS_EN_PODER = ["Recibido", "En reparación", "Listo"];
+const EN_PODER = "en-poder";
+
+const filtrosIniciales = (estado) => ({
   texto: "",
-  estado: "",
+  estado,
   clinicaId: "",
   fecha: "",
-  asignacion: "todas",
+});
+
+const posicionEstado = (estado) => {
+  const i = ESTADOS_FICHA.indexOf(estado);
+  return i === -1 ? ESTADOS_FICHA.length : i;
 };
 
 export default function Fichas() {
   const { datos, usuario } = useApp();
-  const [filtros, setFiltros] = useState(FILTROS_VACIOS);
+  const esTecnico = puede(usuario, PERMISOS.REVISAR_EQUIPOS);
+  const verTodas = puede(usuario, PERMISOS.VER_TODAS_FICHAS);
+  const soloTecnico = esTecnico && !verTodas;
+  const estadoPorDefecto = soloTecnico ? EN_PODER : "";
+
+  const [filtros, setFiltros] = useState(() =>
+    filtrosIniciales(estadoPorDefecto),
+  );
   const [abierta, setAbierta] = useState(null);
+  const limpiar = () => setFiltros(filtrosIniciales(estadoPorDefecto));
 
   const cambiar = (campo) => (e) =>
     setFiltros({ ...filtros, [campo]: e.target.value });
-  const esTecnico = puede(usuario, PERMISOS.REVISAR_EQUIPOS);
-  const verTodas = puede(usuario, PERMISOS.VER_TODAS_FICHAS);
+
+  const opcionesEstado = soloTecnico
+    ? [
+        { valor: EN_PODER, texto: "En mi poder" },
+        ...ESTADOS_FICHA.filter((s) => s !== ESTADO_POR_REASIGNAR).map(
+          (s) => ({ valor: s, texto: s }),
+        ),
+        { valor: "", texto: "Todas" },
+      ]
+    : [
+        { valor: "", texto: "Todas" },
+        ...ESTADOS_FICHA.map((s) => ({ valor: s, texto: s })),
+      ];
 
   const q = normalizar(filtros.texto.trim());
   const lista = fichasVisibles(datos, usuario)
     .filter((f) => {
       const eq = datos.equipos.find((e) => e.id === f.equipoId);
-      if (filtros.asignacion === "mias" && !f.tecnicosIds.includes(usuario.id))
-        return false;
-      if (filtros.estado && f.estado !== filtros.estado) return false;
+      if (filtros.estado === EN_PODER) {
+        if (
+          !ESTADOS_EN_PODER.includes(f.estado) ||
+          !f.tecnicosIds.includes(usuario.id)
+        )
+          return false;
+      } else if (filtros.estado && f.estado !== filtros.estado) return false;
       if (filtros.clinicaId && f.clinicaId !== filtros.clinicaId) return false;
       if (filtros.fecha && fechaLocal(f.creada) !== filtros.fecha) return false;
       if (q) {
@@ -63,14 +98,17 @@ export default function Fichas() {
       }
       return true;
     })
-    .sort((a, b) => b.creada.localeCompare(a.creada));
+    .sort(
+      (a, b) =>
+        posicionEstado(a.estado) - posicionEstado(b.estado) ||
+        b.creada.localeCompare(a.creada),
+    );
 
   const hayFiltros =
     filtros.texto ||
-    filtros.estado ||
+    filtros.estado !== estadoPorDefecto ||
     filtros.clinicaId ||
-    filtros.fecha ||
-    filtros.asignacion !== "todas";
+    filtros.fecha;
 
   return (
     <div className="space-y-8">
@@ -86,16 +124,13 @@ export default function Fichas() {
       <Seccion titulo="Resultados" contador={lista.length}>
         <BarraFiltros
           hayFiltros={Boolean(hayFiltros)}
-          onLimpiar={() => setFiltros(FILTROS_VACIOS)}
+          onLimpiar={limpiar}
           chips={
             <Chips
               etiqueta="Filtrar por estado"
               valor={filtros.estado}
               onChange={(v) => setFiltros({ ...filtros, estado: v })}
-              opciones={[
-                { valor: "", texto: "Todas" },
-                ...ESTADOS_FICHA.map((s) => ({ valor: s, texto: s })),
-              ]}
+              opciones={opcionesEstado}
             />
           }
         >
@@ -129,18 +164,6 @@ export default function Fichas() {
             onChange={cambiar("fecha")}
             aria-label="Filtrar por fecha de recepción"
           />
-          {esTecnico && (
-            <Campo
-              as="select"
-              etiqueta="Asignación"
-              value={filtros.asignacion}
-              onChange={cambiar("asignacion")}
-              aria-label="Alcance"
-            >
-              <option value="todas">Todas las visibles</option>
-              <option value="mias">Solo asignadas a mí</option>
-            </Campo>
-          )}
         </BarraFiltros>
 
         {lista.length === 0 ? (
@@ -156,7 +179,7 @@ export default function Fichas() {
               hayFiltros ? (
                 <Boton
                   variante="secundario"
-                  onClick={() => setFiltros(FILTROS_VACIOS)}
+                  onClick={limpiar}
                 >
                   Limpiar filtros
                 </Boton>
@@ -174,65 +197,76 @@ export default function Fichas() {
                 <Tarjeta
                   as="li"
                   key={f.id}
+                  interactiva
                   className={cx(
                     "overflow-hidden",
                     expandida && "shadow-tarjeta-hover",
                   )}
                 >
-                  <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                    <div className="flex min-w-0 items-start gap-3">
+                  {/* Toda la cabecera abre y cierra el detalle */}
+                  <button
+                    type="button"
+                    onClick={() => setAbierta(expandida ? null : f.id)}
+                    aria-expanded={expandida}
+                    aria-controls={`detalle-${f.id}`}
+                    className={cx(
+                      "group flex w-full cursor-pointer items-center justify-between gap-4 p-4 text-left [-webkit-tap-highlight-color:transparent] transition-colors duration-150 hover:bg-slate-50 sm:p-5",
+                      expandida ? "rounded-t-tarjeta" : "rounded-tarjeta",
+                    )}
+                  >
+                    <span className="flex min-w-0 items-start gap-3">
                       <span
                         aria-hidden="true"
                         className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-inacap-tenue text-inacap-oscuro sm:flex"
                       >
                         <IconoMonitor className="h-5 w-5" />
                       </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-semibold uppercase tracking-wide text-inacap">
+                      <span className="block min-w-0">
+                        <span className="block truncate text-xs font-semibold uppercase tracking-wide text-inacap">
                           {clinica?.nombre ?? "Clínica no disponible"}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2">
-                          <h3 className="font-semibold leading-snug text-slate-900">
+                        </span>
+                        <span className="mt-1 flex flex-wrap items-center gap-2">
+                          <span className="font-semibold leading-snug text-slate-900">
                             {[eq?.tipo, eq?.marca, eq?.modelo]
                               .filter(Boolean)
                               .join(" · ")}
-                          </h3>
+                          </span>
                           <Insignia estado={f.estado} />
-                          {esTecnico &&
-                            (asignada ? (
-                              <Insignia tono="inacap">Asignada a ti</Insignia>
-                            ) : (
-                              <Insignia tono="blanco" punto={false}>
-                                Historial del equipo
-                              </Insignia>
-                            ))}
-                        </div>
-                        <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                          {esTecnico && !asignada && (
+                            <Insignia tono="blanco" punto={false}>
+                              Historial del equipo
+                            </Insignia>
+                          )}
+                        </span>
+                        <span className="mt-1 block text-xs leading-relaxed text-slate-600">
                           <span className="font-medium tabular-nums text-slate-700">
                             {f.numero}
                           </span>{" "}
                           · {formatearFecha(fechaLocal(f.creada))}
-                        </p>
-                      </div>
-                    </div>
-                    <Boton
-                      variante="secundario"
-                      onClick={() => setAbierta(expandida ? null : f.id)}
-                      aria-expanded={expandida}
-                      className="shrink-0 pr-4.5"
+                        </span>
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={cx(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition-colors duration-150 group-hover:bg-white group-hover:text-slate-900",
+                        expandida && "bg-slate-100 text-slate-900",
+                      )}
                     >
-                      {expandida ? "Cerrar" : "Ver detalle"}
                       <IconoChevronAbajo
                         className={cx(
-                          "h-4 w-4 transition-transform duration-150",
+                          "h-5 w-5 transition-transform duration-150",
                           expandida && "rotate-180",
                         )}
                       />
-                    </Boton>
-                  </div>
+                    </span>
+                  </button>
 
                   {expandida && (
-                    <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5">
+                    <div
+                      id={`detalle-${f.id}`}
+                      className="border-t border-slate-200 bg-slate-50 p-4 sm:p-5"
+                    >
                       <DetalleFicha ficha={f} />
                     </div>
                   )}

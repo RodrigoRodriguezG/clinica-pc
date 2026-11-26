@@ -15,6 +15,8 @@ import {
   rechazarFicha,
   cerrarAnticipadamente,
   cerrarFicha,
+  entregarFicha,
+  puedeEntregarFicha,
   estadoTrasGuardarDatos,
 } from "../lib/fichas.js";
 import AtencionAnterior from "./AtencionAnterior.jsx";
@@ -100,6 +102,7 @@ export default function DetalleFicha({ ficha }) {
   const [confirmarReingreso, setConfirmarReingreso] = useState(false);
   const [accion, setAccion] = useState(null); // 'rechazar' | 'cerrar' | null
   const [confirmarCierre, setConfirmarCierre] = useState(false);
+  const [confirmarEntrega, setConfirmarEntrega] = useState(false);
   const [errorCierre, setErrorCierre] = useState("");
   const [motivo, setMotivo] = useState("");
   const [errorAccion, setErrorAccion] = useState("");
@@ -228,6 +231,12 @@ export default function DetalleFicha({ ficha }) {
     modificar((f) => cerrarFicha(f, usuario.id));
     setConfirmarCierre(false);
     setAviso("Ficha cerrada, correo enviado al cliente.");
+  };
+
+  const confirmarEntregarFicha = () => {
+    modificar((f) => entregarFicha(f, usuario.id));
+    setConfirmarEntrega(false);
+    setAviso("Equipo entregado. La atención quedó cerrada.");
   };
 
   const agregarObservacion = (e) => {
@@ -693,6 +702,47 @@ export default function DetalleFicha({ ficha }) {
           {errorCierre && (
             <Alerta variante="error" role="alert">
               {errorCierre}
+            </Alerta>
+          )}
+        </section>
+      )}
+
+      {/* Entregar: el propietario retiró el equipo */}
+      {puedeEntregarFicha(usuario, ficha) && (
+        <section className="space-y-3 border-t border-slate-200 pt-4">
+          <h3 className="font-semibold text-slate-900">
+            ¿El propietario retiró su equipo?
+          </h3>
+          {!confirmarEntrega ? (
+            <Boton
+              onClick={() => setConfirmarEntrega(true)}
+              bloque
+              className="sm:w-auto"
+            >
+              Marcar como entregado
+            </Boton>
+          ) : (
+            <Alerta
+              variante="aviso"
+              role="alert"
+              titulo="Marcar como entregado"
+              acciones={
+                <>
+                  <Boton tamano="sm" onClick={confirmarEntregarFicha}>
+                    Sí, marcar como entregado
+                  </Boton>
+                  <Boton
+                    variante="secundario"
+                    tamano="sm"
+                    onClick={() => setConfirmarEntrega(false)}
+                  >
+                    Cancelar
+                  </Boton>
+                </>
+              }
+            >
+              La ficha quedará en estado Entregado y la atención terminará. Ya
+              no podrás ver el contacto del propietario.
             </Alerta>
           )}
         </section>

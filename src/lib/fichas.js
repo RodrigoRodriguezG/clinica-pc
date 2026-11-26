@@ -3,6 +3,7 @@ import {
   ESTADOS_EN_TRABAJO,
   ESTADO_CIERRE_ANTICIPADO,
   ESTADO_EN_REPARACION,
+  ESTADO_ENTREGADO,
   ESTADO_LISTO,
   ESTADO_POR_REASIGNAR,
   PERMISOS,
@@ -46,6 +47,13 @@ export const puedeEditarFicha = (usuario, ficha) =>
 
 // Rechazar, cerrar anticipadamente o cerrar la ficha: mismas condiciones que editar
 export const puedeRechazarOCerrar = puedeEditarFicha;
+
+// Solo el técnico asignado entrega el equipo, cuando la ficha está "Listo"
+// o con cierre anticipado
+export const puedeEntregarFicha = (usuario, ficha) =>
+  puede(usuario, PERMISOS.REVISAR_EQUIPOS) &&
+  ficha.tecnicosIds.includes(usuario.id) &&
+  [ESTADO_LISTO, ESTADO_CIERRE_ANTICIPADO].includes(ficha.estado);
 
 // Fichas que el usuario puede ver
 export function fichasVisibles(datos, usuario) {
@@ -102,6 +110,16 @@ export const cerrarFicha = (ficha, tecnicoId) => ({
       tecnicoId,
       "Ficha cerrada. Se envió un correo al propietario para que retire su equipo.",
     ),
+  ],
+});
+
+// El propietario retiró su equipo: la atención termina
+export const entregarFicha = (ficha, tecnicoId) => ({
+  ...ficha,
+  estado: ESTADO_ENTREGADO,
+  observaciones: [
+    ...ficha.observaciones,
+    nuevaObservacion(tecnicoId, "Equipo entregado al propietario."),
   ],
 });
 
