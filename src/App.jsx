@@ -17,6 +17,7 @@ import FormInscripcion from "./pages/FormInscripcion.jsx";
 import Recepcion from "./pages/Recepcion.jsx";
 import Fichas from "./pages/Fichas.jsx";
 import ClinicaDetalle from "./pages/ClinicaDetalle.jsx";
+import GenerarQR from "./pages/GenerarQR.jsx";
 import Boton from "./components/ui/Boton.jsx";
 import Tarjeta from "./components/ui/Tarjeta.jsx";
 import { cx } from "./components/ui/cx.js";
@@ -28,6 +29,7 @@ import {
   IconoInscripcion,
   IconoMenu,
   IconoMonitor,
+  IconoQR,
   IconoRecepcion,
   IconoRestablecer,
   IconoSalir,
@@ -70,6 +72,12 @@ const MENU = [
     texto: "Inscribir propietario",
     permiso: PERMISOS.RECEPCIONAR,
     Icono: IconoInscripcion,
+  },
+  {
+    ruta: "/qr",
+    texto: "QR de inscripción",
+    permiso: PERMISOS.GENERAR_QR,
+    Icono: IconoQR,
   },
 ];
 
@@ -403,6 +411,14 @@ function Panel() {
                   permiso={[PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS]}
                 >
                   <Fichas />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/qr"
+              element={
+                <Protegida permiso={PERMISOS.GENERAR_QR}>
+                  <GenerarQR />
                 </Protegida>
               }
             />

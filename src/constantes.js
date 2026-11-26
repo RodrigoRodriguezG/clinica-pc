@@ -23,6 +23,7 @@ export const PERMISOS = {
   VER_RETROALIMENTACION: "verRetroalimentacion",
   RECEPCIONAR: "recepcionar",
   REVISAR_EQUIPOS: "revisarEquipos",
+  GENERAR_QR: "generarQr",
 };
 
 export const ETIQUETA_PERMISO = {
@@ -34,6 +35,7 @@ export const ETIQUETA_PERMISO = {
   verRetroalimentacion: "Ver retroalimentación",
   recepcionar: "Recepcionar equipos",
   revisarEquipos: "Revisar equipos",
+  generarQr: "Generar QR de inscripción",
 };
 
 // Permisos que recibe un usuario al crearse, según su rol
@@ -45,8 +47,9 @@ export const PERMISOS_POR_ROL = {
     "verTodasFichas",
     "verReportes",
     "verRetroalimentacion",
+    "generarQr",
   ],
-  recepcionista: ["recepcionar"],
+  recepcionista: ["recepcionar", "generarQr"],
   tecnico: ["revisarEquipos"],
 };
 

@@ -47,14 +47,21 @@ export default function Recepcion() {
 
   const propietario = datos.propietarios.find((p) => p.id === propietarioId);
   const equiposDe = (id) => datos.equipos.filter((e) => e.propietarioId === id);
-  const tieneFichas = (equipoId) =>
-    datos.fichas.some((f) => f.equipoId === equipoId);
   const fichasDe = (id) => {
     const ids = new Set(equiposDe(id).map((e) => e.id));
     return datos.fichas.filter((f) => ids.has(f.equipoId));
   };
+  // Por recibir: sin ficha abierta y sin atención en la clínica activa.
+  // Un reingreso (atendido solo en clínicas anteriores) también cuenta
+  const porRecibir = (equipoId) => {
+    const fichas = datos.fichas.filter((f) => f.equipoId === equipoId);
+    return (
+      !fichas.some(estaAbierta) &&
+      !fichas.some((f) => clinica && f.clinicaId === clinica.id)
+    );
+  };
   const pendientesDe = (id) =>
-    equiposDe(id).filter((e) => !tieneFichas(e.id)).length;
+    equiposDe(id).filter((e) => porRecibir(e.id)).length;
 
   const reiniciar = () => {
     setPropietarioId(null);
@@ -482,6 +489,10 @@ export default function Recepcion() {
                   const fichas = fichasDeEquipo(datos, e.id);
                   const abierta = fichas.find(estaAbierta);
                   const anterior = fichas.find((f) => !estaAbierta(f));
+                  // Ya atendido (y cerrado) en la clínica activa: no se vuelve a recibir
+                  const atendidaAqui =
+                    !abierta &&
+                    fichas.find((f) => clinica && f.clinicaId === clinica.id);
                   return (
                     <Tarjeta as="li" key={e.id} className="p-4 sm:p-5">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -530,7 +541,7 @@ export default function Recepcion() {
                               Quitar equipo
                             </Boton>
                           )}
-                          {!abierta && (
+                          {porRecibir(e.id) && (
                             <Boton
                               onClick={() => setEquipoElegido(e.id)}
                               disabled={!clinica}
@@ -578,6 +589,13 @@ export default function Recepcion() {
                         <Alerta variante="aviso" className="mt-4">
                           Ya tiene una ficha abierta: {abierta.numero} (
                           {abierta.estado}).
+                        </Alerta>
+                      )}
+
+                      {atendidaAqui && (
+                        <Alerta variante="info" className="mt-4">
+                          Ya se atendió en esta clínica: {atendidaAqui.numero}{" "}
+                          ({atendidaAqui.estado}).
                         </Alerta>
                       )}
 

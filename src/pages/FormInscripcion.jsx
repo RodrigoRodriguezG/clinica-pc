@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { validarRut, formatearRut } from "../lib/rut.js";
 import { normalizar, normalizarTelefono } from "../lib/texto.js";
@@ -11,6 +11,7 @@ import Tarjeta from "../components/ui/Tarjeta.jsx";
 import {
   IconoCheckCircle,
   IconoDocumento,
+  IconoFlechaIzquierda,
   IconoMas,
   IconoMonitor,
   IconoUsuarios,
@@ -226,6 +227,11 @@ function MarcoInscripcion({ children }) {
 export default function FormInscripcion() {
   const { datos, actualizar, usuario } = useApp();
   const navegar = useNavigate();
+  const ubicacion = useLocation();
+
+  // Vuelve a la vista anterior; si se abrió el formulario directo, va al panel
+  const volver = () =>
+    ubicacion.key === "default" ? navegar("/") : navegar(-1);
 
   const [form, setForm] = useState(FORMULARIO_VACIO);
   const [equipo, setEquipo] = useState(EQUIPO_VACIO);
@@ -236,6 +242,8 @@ export default function FormInscripcion() {
 
   // Si hay sesión, es un registro presencial; si no, vino por el QR
   const origen = usuario ? "presencial" : "QR";
+  // En el registro presencial el propietario acepta los términos por correo
+  const esPresencial = Boolean(usuario);
 
   const cambiar = (campo) => (e) => {
     const valor =
@@ -294,7 +302,7 @@ export default function FormInscripcion() {
       return setError("El teléfono debe tener 8 o 9 dígitos.");
     if (equipos.length === 0)
       return setError("Agrega al menos un PC antes de inscribir.");
-    if (!form.aceptaTerminos)
+    if (!esPresencial && !form.aceptaTerminos)
       return setError("Debes aceptar los términos y condiciones.");
     if ((datos.propietarios ?? []).some((p) => p.rut === rut))
       return setError("Ese RUT ya está inscrito.");
@@ -311,8 +319,10 @@ export default function FormInscripcion() {
       correo,
       telefono,
       comuna: form.comuna,
-      aceptaTerminos: true,
-      fechaAceptacion: ahora,
+      // Presencial: queda pendiente hasta que acepte desde el correo (simulado)
+      aceptaTerminos: !esPresencial,
+      fechaAceptacion: esPresencial ? null : ahora,
+      ...(esPresencial && { correoTerminosEnviadoEn: ahora }),
       origen,
       creadoEn: ahora,
     };
@@ -365,6 +375,14 @@ export default function FormInscripcion() {
             </div>
 
             <div className="space-y-5 p-5 sm:p-7">
+              {inscrito.propietario.origen === "presencial" && (
+                <Alerta variante="info" titulo="Correo enviado" role="status">
+                  Se envió un correo a{" "}
+                  <strong>{inscrito.propietario.correo}</strong> para que el
+                  propietario acepte los términos y condiciones.
+                </Alerta>
+              )}
+
               <Alerta variante="exito" titulo="Comprobante de inscripción">
                 Tu registro quedó guardado. Guarda este comprobante para
                 presentarlo cuando llegues con tu equipo.
@@ -453,6 +471,16 @@ export default function FormInscripcion() {
 
   return (
     <MarcoInscripcion>
+      {usuario && (
+        <button
+          type="button"
+          onClick={volver}
+          className="-mt-2 mb-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:text-inacap sm:-mt-4"
+        >
+          <IconoFlechaIzquierda className="h-4 w-4" />
+          Volver
+        </button>
+      )}
       <Tarjeta className="overflow-hidden">
         <div className="border-b border-neutral-200 bg-white p-5 sm:p-7">
           <div className="flex items-start gap-3">
@@ -686,21 +714,23 @@ export default function FormInscripcion() {
             </div>
           </section>
 
-          {/* Términos y condiciones */}
-          <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-neutral-200 bg-neutral-50 p-3.5 text-sm leading-relaxed text-neutral-700 transition-colors duration-150 hover:border-neutral-300">
-            <input
-              type="checkbox"
-              className="mt-0.5 h-4 w-4 shrink-0"
-              checked={form.aceptaTerminos}
-              onChange={cambiar("aceptaTerminos")}
-              required
-            />
-            <span>
-              Acepto los términos y condiciones. Autorizo el uso de mis datos
-              personales únicamente para la gestión de la Clínica del PC,
-              conforme a la Ley 19.628 sobre protección de la vida privada.
-            </span>
-          </label>
+          {/* Términos y condiciones: solo en la inscripción por QR */}
+          {!esPresencial && (
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-neutral-200 bg-neutral-50 p-3.5 text-sm leading-relaxed text-neutral-700 transition-colors duration-150 hover:border-neutral-300">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 shrink-0"
+                checked={form.aceptaTerminos}
+                onChange={cambiar("aceptaTerminos")}
+                required
+              />
+              <span>
+                Acepto los términos y condiciones. Autorizo el uso de mis datos
+                personales únicamente para la gestión de la Clínica del PC,
+                conforme a la Ley 19.628 sobre protección de la vida privada.
+              </span>
+            </label>
+          )}
 
           {error && (
             <Alerta variante="error" role="alert" titulo="Revisa el formulario">
