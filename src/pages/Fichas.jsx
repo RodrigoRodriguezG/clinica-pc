@@ -12,7 +12,14 @@ import Encabezado from "../components/ui/Encabezado.jsx";
 import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
-import { IconoFichas } from "../components/ui/iconos.jsx";
+import Seccion from "../components/ui/Seccion.jsx";
+import BarraFiltros from "../components/ui/BarraFiltros.jsx";
+import { cx } from "../components/ui/cx.js";
+import {
+  IconoChevronAbajo,
+  IconoFichas,
+  IconoMonitor,
+} from "../components/ui/iconos.jsx";
 
 const FILTROS_VACIOS = {
   texto: "",
@@ -65,7 +72,7 @@ export default function Fichas() {
     filtros.asignacion !== "todas";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Encabezado
         titulo={verTodas ? "Fichas" : "Mis fichas"}
         descripcion={
@@ -75,8 +82,11 @@ export default function Fichas() {
         }
       />
 
-      <Tarjeta className="p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <Seccion titulo="Resultados" contador={lista.length}>
+        <BarraFiltros
+          hayFiltros={Boolean(hayFiltros)}
+          onLimpiar={() => setFiltros(FILTROS_VACIOS)}
+        >
           <Campo
             etiqueta="Buscar"
             type="search"
@@ -133,106 +143,105 @@ export default function Fichas() {
               <option value="mias">Solo asignadas a mí</option>
             </Campo>
           )}
-        </div>
+        </BarraFiltros>
 
-        {hayFiltros && (
-          <div className="mt-3 flex justify-end border-t border-neutral-200 pt-3">
-            <Boton
-              variante="enlace"
-              onClick={() => setFiltros(FILTROS_VACIOS)}
-            >
-              Limpiar filtros
-            </Boton>
-          </div>
-        )}
-      </Tarjeta>
-
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-neutral-700">
-          Resultados
-        </h2>
-        <p className="text-sm text-neutral-600" aria-live="polite">
-          {lista.length} {lista.length === 1 ? "ficha" : "fichas"}
-        </p>
-      </div>
-
-      {lista.length === 0 ? (
-        <EstadoVacio
-          icono={<IconoFichas className="h-6 w-6" />}
-          titulo="No hay fichas que mostrar"
-          descripcion={
-            hayFiltros
-              ? "Ninguna ficha coincide con los filtros seleccionados."
-              : "Cuando se reciba un equipo aparecerá aquí con su estado y detalle."
-          }
-          accion={
-            hayFiltros ? (
-              <Boton
-                variante="secundario"
-                onClick={() => setFiltros(FILTROS_VACIOS)}
-              >
-                Limpiar filtros
-              </Boton>
-            ) : null
-          }
-        />
-      ) : (
-        <ul className="space-y-3">
-          {lista.map((f) => {
-            const eq = datos.equipos.find((e) => e.id === f.equipoId);
-            const clinica = datos.clinicas.find((c) => c.id === f.clinicaId);
-            const asignada = f.tecnicosIds.includes(usuario.id);
-            return (
-              <Tarjeta as="li" key={f.id} className="overflow-hidden">
-                <div className="p-4 sm:p-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0 space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-tinta">{f.numero}</p>
-                        <Insignia estado={f.estado} />
-                        {esTecnico &&
-                          (asignada ? (
-                            <Insignia tono="inacap">Asignada a ti</Insignia>
-                          ) : (
-                            <Insignia tono="neutral">
-                              Historial del equipo
-                            </Insignia>
-                          ))}
+        {lista.length === 0 ? (
+          <EstadoVacio
+            icono={<IconoFichas className="h-6 w-6" />}
+            titulo="No hay fichas que mostrar"
+            descripcion={
+              hayFiltros
+                ? "Ninguna ficha coincide con los filtros seleccionados."
+                : "Cuando se reciba un equipo aparecerá aquí con su estado y detalle."
+            }
+            accion={
+              hayFiltros ? (
+                <Boton
+                  variante="secundario"
+                  onClick={() => setFiltros(FILTROS_VACIOS)}
+                >
+                  Limpiar filtros
+                </Boton>
+              ) : null
+            }
+          />
+        ) : (
+          <ul className="space-y-3">
+            {lista.map((f) => {
+              const eq = datos.equipos.find((e) => e.id === f.equipoId);
+              const clinica = datos.clinicas.find((c) => c.id === f.clinicaId);
+              const asignada = f.tecnicosIds.includes(usuario.id);
+              const expandida = abierta === f.id;
+              return (
+                <Tarjeta
+                  as="li"
+                  key={f.id}
+                  className={cx(
+                    "overflow-hidden",
+                    expandida && "shadow-tarjeta-hover",
+                  )}
+                >
+                  <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600 sm:flex"
+                      >
+                        <IconoMonitor className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold tabular-nums text-tinta">
+                            {f.numero}
+                          </h3>
+                          <Insignia estado={f.estado} />
+                          {esTecnico &&
+                            (asignada ? (
+                              <Insignia tono="inacap">Asignada a ti</Insignia>
+                            ) : (
+                              <Insignia tono="neutral">
+                                Historial del equipo
+                              </Insignia>
+                            ))}
+                        </div>
+                        <p className="text-sm font-medium text-neutral-700">
+                          {[eq?.tipo, eq?.marca, eq?.modelo]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                        <p className="text-xs leading-relaxed text-neutral-500">
+                          {clinica?.nombre ?? "Clínica no disponible"} ·{" "}
+                          {formatearFecha(fechaLocal(f.creada))}
+                        </p>
                       </div>
-                      <p className="text-sm font-medium text-neutral-700">
-                        {[eq?.tipo, eq?.marca, eq?.modelo]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                      <p className="text-xs leading-relaxed text-neutral-500">
-                        {clinica?.nombre ?? "Clínica no disponible"} ·{" "}
-                        {formatearFecha(fechaLocal(f.creada))}
-                      </p>
                     </div>
                     <Boton
-                      variante={
-                        abierta === f.id ? "secundario" : "primario"
-                      }
-                      onClick={() =>
-                        setAbierta(abierta === f.id ? null : f.id)
-                      }
-                      aria-expanded={abierta === f.id}
+                      variante="secundario"
+                      onClick={() => setAbierta(expandida ? null : f.id)}
+                      aria-expanded={expandida}
+                      className="shrink-0 pr-3.5"
                     >
-                      {abierta === f.id ? "Cerrar" : "Abrir"}
+                      {expandida ? "Cerrar" : "Ver detalle"}
+                      <IconoChevronAbajo
+                        className={cx(
+                          "h-4 w-4 transition-transform duration-150",
+                          expandida && "rotate-180",
+                        )}
+                      />
                     </Boton>
                   </div>
 
-                  {abierta === f.id && (
-                    <div className="mt-4 border-t border-neutral-200 pt-4">
+                  {expandida && (
+                    <div className="border-t border-neutral-200 bg-neutral-50 p-4 sm:p-5">
                       <DetalleFicha ficha={f} />
                     </div>
                   )}
-                </div>
-              </Tarjeta>
-            );
-          })}
-        </ul>
-      )}
+                </Tarjeta>
+              );
+            })}
+          </ul>
+        )}
+      </Seccion>
     </div>
   );
 }

@@ -21,6 +21,8 @@ import Encabezado from "../components/ui/Encabezado.jsx";
 import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
+import Seccion from "../components/ui/Seccion.jsx";
+import BarraFiltros from "../components/ui/BarraFiltros.jsx";
 import {
   IconoFlechaIzquierda,
   IconoInscripcion,
@@ -181,61 +183,69 @@ export default function Recepcion() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Encabezado
         titulo="Recepción de equipos"
         descripcion="Busca al propietario, revisa sus equipos y crea la ficha de atención."
+        superior={
+          clinica && (
+            <Insignia tono="exito">Clínica activa: {clinica.nombre}</Insignia>
+          )
+        }
         acciones={
-          <Boton as={Link} to="/inscripcion" variante="secundario">
+          <Boton
+            as={Link}
+            to="/inscripcion"
+            variante="secundario"
+            className="pl-3.5"
+          >
             <IconoInscripcion className="h-4 w-4" />
             Inscribir propietario
           </Boton>
         }
       />
 
-      {clinica ? (
-        <Alerta variante="info">
-          Clínica activa: <strong>{clinica.nombre}</strong>
-        </Alerta>
-      ) : (
-        <Alerta variante="aviso" role="alert">
+      {!clinica && (
+        <Alerta
+          variante="aviso"
+          role="alert"
+          titulo="Sin clínica asignada"
+        >
           No estás asignado a la clínica de este año. Pídele al encargado que te
           asigne a una.
         </Alerta>
       )}
 
       {!propietario && porReasignar.length > 0 && (
-        <section className="space-y-3" aria-labelledby="por-reasignar">
-          <h2
-            id="por-reasignar"
-            className="text-sm font-semibold text-neutral-700"
-          >
-            Fichas por reasignar ({porReasignar.length})
-          </h2>
+        <Seccion
+          titulo="Fichas por reasignar"
+          descripcion="Fichas que un técnico rechazó y necesitan otra pareja."
+          contador={porReasignar.length}
+          className="rounded-tarjeta border border-amber-200 bg-aviso-tenue/60 p-4 sm:p-5"
+        >
           <ul className="space-y-3">
             {porReasignar.map((f) => (
               <ReasignarFicha key={f.id} ficha={f} clinica={clinica} />
             ))}
           </ul>
-        </section>
+        </Seccion>
       )}
 
       {!propietario && (
-        <section className="space-y-4" aria-labelledby="lista-propietarios">
-          <Tarjeta className="space-y-3 p-4 sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <Campo
-                etiqueta="Buscar propietario"
-                type="search"
-                className="flex-1"
-                placeholder="Buscar por nombre, RUT o N° de equipo"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                aria-label="Buscar propietario"
-                ayuda="Puedes buscar por nombre, RUT o número de equipo."
-                autoComplete="off"
-              />
-              <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700 transition-colors duration-150 hover:border-neutral-300 hover:bg-neutral-100 sm:mb-5">
+        <Seccion titulo="Propietarios inscritos" contador={lista.length}>
+          <BarraFiltros>
+            <Campo
+              etiqueta="Buscar propietario"
+              type="search"
+              className="sm:col-span-2"
+              placeholder="Nombre, RUT o N° de equipo"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              aria-label="Buscar propietario"
+              autoComplete="off"
+            />
+            <div className="flex flex-col justify-end gap-1 sm:col-span-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium text-neutral-700">
                 <input
                   type="checkbox"
                   className="h-4 w-4 shrink-0"
@@ -244,32 +254,19 @@ export default function Recepcion() {
                 />
                 Solo con equipos pendientes de recibir
               </label>
+              {ausentes.length > 0 && (
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm font-medium text-neutral-700">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 shrink-0"
+                    checked={verAusentes}
+                    onChange={(e) => setVerAusentes(e.target.checked)}
+                  />
+                  Mostrar quienes no se presentaron ({ausentes.length})
+                </label>
+              )}
             </div>
-            {ausentes.length > 0 && (
-              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-neutral-700">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 shrink-0"
-                  checked={verAusentes}
-                  onChange={(e) => setVerAusentes(e.target.checked)}
-                />
-                Mostrar quienes no se presentaron ({ausentes.length})
-              </label>
-            )}
-          </Tarjeta>
-
-          <div className="flex items-center justify-between gap-3">
-            <h2
-              id="lista-propietarios"
-              className="text-sm font-semibold text-neutral-700"
-            >
-              Propietarios inscritos
-            </h2>
-            <p className="text-sm text-neutral-600" aria-live="polite">
-              {lista.length}{" "}
-              {lista.length === 1 ? "propietario" : "propietarios"}
-            </p>
-          </div>
+          </BarraFiltros>
 
           {lista.length === 0 ? (
             <EstadoVacio
@@ -428,7 +425,7 @@ export default function Recepcion() {
               })}
             </ul>
           )}
-        </section>
+        </Seccion>
       )}
 
       {propietario && (
@@ -451,7 +448,11 @@ export default function Recepcion() {
                   </p>
                 </div>
               </div>
-              <Boton variante="secundario" onClick={reiniciar}>
+              <Boton
+                variante="secundario"
+                onClick={reiniciar}
+                className="pl-3.5"
+              >
                 <IconoFlechaIzquierda className="h-4 w-4" />
                 Volver a la lista
               </Boton>

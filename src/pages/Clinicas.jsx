@@ -11,8 +11,15 @@ import Encabezado from "../components/ui/Encabezado.jsx";
 import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
+import Seccion from "../components/ui/Seccion.jsx";
+import BarraFiltros from "../components/ui/BarraFiltros.jsx";
+import Paso from "../components/ui/Paso.jsx";
+import PanelCreacion, {
+  PieAcciones,
+} from "../components/ui/PanelCreacion.jsx";
 import {
   IconoCalendario,
+  IconoCerrar,
   IconoChevronDerecha,
   IconoClinicas,
   IconoMas,
@@ -33,6 +40,8 @@ export default function Clinicas() {
   const [filtro, setFiltro] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("");
   const [error, setError] = useState("");
+  // Solo visual: si el panel de creación está desplegado
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   // Actualiza un solo campo del formulario sin perder los demás
   const cambiar = (campo) => (e) =>
@@ -84,6 +93,7 @@ export default function Clinicas() {
     });
     setDias([]);
     setDia("");
+    setMostrarFormulario(false);
   };
 
   // Filtro en vivo por nombre o sede, y por fecha
@@ -109,119 +119,167 @@ export default function Clinicas() {
 
   const hayFiltros = Boolean(filtro || filtroFecha);
 
+  const limpiarFiltros = () => {
+    setFiltro("");
+    setFiltroFecha("");
+  };
+
+  const cerrarFormulario = () => {
+    setMostrarFormulario(false);
+    setError("");
+  };
+
+  const botonNueva = (
+    <Boton onClick={() => setMostrarFormulario(true)} className="pl-3.5">
+      <IconoMas className="h-4 w-4" />
+      Nueva clínica
+    </Boton>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Encabezado
         titulo="Clínicas"
         descripcion="Crea las jornadas de atención, define sus días y asigna la plantilla de checklist."
+        acciones={!mostrarFormulario && botonNueva}
       />
 
-      <Tarjeta className="p-4 sm:p-5">
-        <form onSubmit={crear} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 items-center justify-center rounded-control bg-inacap-tenue text-inacap-oscuro"
+      {mostrarFormulario && (
+        <PanelCreacion
+          titulo="Nueva clínica"
+          descripcion="Completa los tres pasos. El personal se asigna después, desde el detalle de la clínica."
+          icono={<IconoClinicas className="h-5 w-5" />}
+          onCerrar={cerrarFormulario}
+        >
+          <form onSubmit={crear}>
+            <Paso
+              numero={1}
+              titulo="Datos de la clínica"
+              ayuda="Cómo se identificará en el sistema."
             >
-              <IconoClinicas className="h-4 w-4" />
-            </span>
-            <h2 className="text-lg font-semibold text-tinta">Nueva clínica</h2>
-          </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo
+                  etiqueta="Nombre"
+                  placeholder="Ej. Clínica PC 2026"
+                  value={form.nombre}
+                  onChange={cambiar("nombre")}
+                  required
+                />
+                <Campo
+                  etiqueta="Sede"
+                  placeholder="Ej. Santiago Centro"
+                  value={form.sede}
+                  onChange={cambiar("sede")}
+                  required
+                />
+              </div>
+            </Paso>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Campo
-              etiqueta="Nombre"
-              placeholder="Nombre de la clínica"
-              value={form.nombre}
-              onChange={cambiar("nombre")}
-              required
-            />
-            <Campo
-              etiqueta="Sede"
-              placeholder="Sede"
-              value={form.sede}
-              onChange={cambiar("sede")}
-              required
-            />
-            <Campo
-              as="select"
-              etiqueta="Plantilla de checklist"
-              value={form.plantillaId}
-              onChange={cambiar("plantillaId")}
+            <Paso
+              numero={2}
+              titulo="Días de atención"
+              ayuda="Agrega cada día en que se recibirán equipos. Se necesita al menos uno."
             >
-              {datos.plantillas.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                </option>
-              ))}
-            </Campo>
-            <div className="flex items-end">
-              <Boton type="submit" bloque>
-                Crear clínica
-              </Boton>
-            </div>
-          </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <Campo
+                  etiqueta="Fecha"
+                  type="date"
+                  className="sm:w-56"
+                  value={dia}
+                  onChange={(e) => setDia(e.target.value)}
+                  aria-label="Día de la clínica"
+                />
+                <Boton
+                  type="button"
+                  variante="secundario"
+                  onClick={agregarDia}
+                  disabled={!dia}
+                  className="pl-3.5"
+                >
+                  <IconoMas className="h-4 w-4" />
+                  Agregar día
+                </Boton>
+              </div>
 
-          <div className="rounded-control border border-neutral-200 bg-neutral-50 p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <Campo
-                etiqueta="Días de atención"
-                type="date"
-                className="sm:max-w-xs"
-                value={dia}
-                onChange={(e) => setDia(e.target.value)}
-                aria-label="Día de la clínica"
-              />
-              <Boton type="button" variante="secundario" onClick={agregarDia}>
-                <IconoMas className="h-4 w-4" />
-                Agregar día
-              </Boton>
-            </div>
-
-            {dias.length > 0 ? (
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {dias.map((fecha) => (
-                  <li
-                    key={fecha}
-                    className="flex min-h-11 items-center gap-1 rounded-control border border-neutral-200 bg-white py-1 pl-3 pr-1 text-sm"
-                  >
-                    <IconoCalendario
-                      className="h-4 w-4 text-neutral-500"
-                      aria-hidden="true"
-                    />
-                    {formatearFecha(fecha)}
-                    <button
-                      type="button"
-                      onClick={() => quitarDia(fecha)}
-                      aria-label={`Quitar ${fecha}`}
-                      className="flex h-11 w-11 items-center justify-center rounded-control text-lg leading-none text-neutral-500 transition-colors duration-150 hover:bg-neutral-100 hover:text-error"
+              {dias.length > 0 ? (
+                <ul
+                  aria-label="Días agregados"
+                  className="mt-4 flex flex-wrap gap-2"
+                >
+                  {dias.map((fecha) => (
+                    <li
+                      key={fecha}
+                      className="flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 py-0.5 pl-3 pr-0.5 text-sm font-medium text-tinta"
                     >
-                      ×
-                    </button>
-                  </li>
+                      <IconoCalendario className="h-4 w-4 text-neutral-500" />
+                      {formatearFecha(fecha)}
+                      <button
+                        type="button"
+                        onClick={() => quitarDia(fecha)}
+                        aria-label={`Quitar ${formatearFecha(fecha)}`}
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 transition-colors duration-150 hover:bg-neutral-200 hover:text-error"
+                      >
+                        <IconoCerrar className="h-4 w-4" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm text-neutral-500">
+                  Aún no agregas días.
+                </p>
+              )}
+            </Paso>
+
+            <Paso
+              numero={3}
+              titulo="Checklist"
+              ayuda="La plantilla que completarán los técnicos al revisar cada equipo."
+            >
+              <Campo
+                as="select"
+                etiqueta="Plantilla de checklist"
+                className="sm:max-w-sm"
+                value={form.plantillaId}
+                onChange={cambiar("plantillaId")}
+              >
+                {datos.plantillas.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
                 ))}
-              </ul>
-            ) : (
-              <p className="mt-2 text-xs text-neutral-500">
-                Agrega al menos un día para poder crear la clínica.
-              </p>
+              </Campo>
+            </Paso>
+
+            {error && (
+              <Alerta variante="error" role="alert" className="mt-5">
+                {error}
+              </Alerta>
             )}
-          </div>
 
-          {error && (
-            <Alerta variante="error" role="alert">
-              {error}
-            </Alerta>
-          )}
-        </form>
-      </Tarjeta>
+            <PieAcciones>
+              <Boton variante="secundario" onClick={cerrarFormulario}>
+                Cancelar
+              </Boton>
+              <Boton type="submit">Crear clínica</Boton>
+            </PieAcciones>
+          </form>
+        </PanelCreacion>
+      )}
 
-      <Tarjeta className="p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+      <Seccion
+        titulo="Clínicas registradas"
+        contador={
+          hayFiltros
+            ? `${clinicasVisibles.length} de ${datos.clinicas.length}`
+            : clinicasVisibles.length
+        }
+      >
+        <BarraFiltros hayFiltros={hayFiltros} onLimpiar={limpiarFiltros}>
           <Campo
             etiqueta="Buscar clínica"
             type="search"
-            placeholder="Filtrar por nombre o sede"
+            placeholder="Nombre o sede"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             aria-label="Filtrar clínicas por nombre o sede"
@@ -236,102 +294,97 @@ export default function Clinicas() {
             aria-label="Filtrar clínicas por día"
             autoComplete="off"
           />
-          {hayFiltros && (
-            <Boton
-              variante="enlace"
-              onClick={() => {
-                setFiltro("");
-                setFiltroFecha("");
-              }}
-            >
-              Limpiar filtros
-            </Boton>
-          )}
-        </div>
-      </Tarjeta>
+        </BarraFiltros>
 
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-neutral-700">
-          Clínicas registradas
-        </h2>
-        <p className="text-sm text-neutral-600" aria-live="polite">
-          {clinicasVisibles.length}{" "}
-          {clinicasVisibles.length === 1 ? "clínica" : "clínicas"}
-        </p>
-      </div>
-
-      {clinicasVisibles.length === 0 ? (
-        <EstadoVacio
-          icono={<IconoClinicas className="h-6 w-6" />}
-          titulo="No hay clínicas que coincidan"
-          descripcion={
-            hayFiltros
-              ? "Prueba con otro nombre, sede o día."
-              : "Crea la primera clínica para comenzar a recibir equipos."
-          }
-          accion={
-            hayFiltros ? (
-              <Boton
-                variante="secundario"
-                onClick={() => {
-                  setFiltro("");
-                  setFiltroFecha("");
-                }}
-              >
-                Limpiar filtros
-              </Boton>
-            ) : null
-          }
-        />
-      ) : (
-        <ul className="space-y-3">
-          {clinicasVisibles.map((c) => (
-            <li key={c.id}>
-              <Tarjeta
-                as={Link}
-                to={`/clinicas/${c.id}`}
-                interactiva
-                className="group block p-4 hover:border-inacap/40 sm:p-5"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 space-y-1.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-semibold text-tinta">
-                        {c.nombre}
-                      </h2>
-                      {clinicaEsActiva(c) && (
-                        <Insignia tono="exito">Clínica activa</Insignia>
-                      )}
+        {clinicasVisibles.length === 0 ? (
+          <EstadoVacio
+            icono={<IconoClinicas className="h-6 w-6" />}
+            titulo={
+              hayFiltros ? "No hay clínicas que coincidan" : "Aún no hay clínicas"
+            }
+            descripcion={
+              hayFiltros
+                ? "Prueba con otro nombre, sede o día."
+                : "Crea la primera clínica para comenzar a recibir equipos."
+            }
+            accion={
+              hayFiltros ? (
+                <Boton variante="secundario" onClick={limpiarFiltros}>
+                  Limpiar filtros
+                </Boton>
+              ) : (
+                !mostrarFormulario && botonNueva
+              )
+            }
+          />
+        ) : (
+          <ul className="grid gap-3">
+            {clinicasVisibles.map((c) => (
+              <li key={c.id}>
+                <Tarjeta
+                  as={Link}
+                  to={`/clinicas/${c.id}`}
+                  interactiva
+                  className="group block"
+                >
+                  <div className="flex items-start justify-between gap-4 p-4 sm:p-5">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600 sm:flex"
+                      >
+                        <IconoClinicas className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold text-tinta">
+                            {c.nombre}
+                          </h3>
+                          {clinicaEsActiva(c) && (
+                            <Insignia tono="exito">Clínica activa</Insignia>
+                          )}
+                        </div>
+                        <p className="text-sm leading-relaxed text-neutral-600">
+                          {c.sede}
+                          <span
+                            aria-hidden="true"
+                            className="px-1.5 text-neutral-300"
+                          >
+                            |
+                          </span>
+                          Plantilla: {nombrePlantilla(c.plantillaId)}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm leading-relaxed text-neutral-600">
-                      {c.sede} · Plantilla: {nombrePlantilla(c.plantillaId)}
-                    </p>
-                  </div>
-                  <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-inacap">
-                    Ver detalle
-                    <IconoChevronDerecha className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
-                  </span>
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {c.dias.length > 0 ? (
-                    c.dias.map((fecha) => (
-                      <Insignia key={fecha} tono="neutral" punto={false}>
-                        <IconoCalendario className="h-3.5 w-3.5" />
-                        {formatearFecha(fecha)}
-                      </Insignia>
-                    ))
-                  ) : (
-                    <span className="text-sm text-neutral-500">
-                      Sin días definidos
+                    <span className="inline-flex min-h-10 shrink-0 items-center gap-1 text-sm font-semibold text-inacap">
+                      <span className="hidden sm:inline">Ver detalle</span>
+                      <IconoChevronDerecha className="h-5 w-5 transition-transform duration-150 group-hover:translate-x-0.5" />
                     </span>
-                  )}
-                </div>
-              </Tarjeta>
-            </li>
-          ))}
-        </ul>
-      )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 border-t border-neutral-100 px-4 py-3 sm:px-5">
+                    <span className="mr-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                      Días
+                    </span>
+                    {c.dias.length > 0 ? (
+                      c.dias.map((fecha) => (
+                        <Insignia key={fecha} tono="neutral" punto={false}>
+                          <IconoCalendario className="h-3.5 w-3.5" />
+                          {formatearFecha(fecha)}
+                        </Insignia>
+                      ))
+                    ) : (
+                      <span className="text-sm text-neutral-500">
+                        Sin días definidos
+                      </span>
+                    )}
+                  </div>
+                </Tarjeta>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Seccion>
     </div>
   );
 }

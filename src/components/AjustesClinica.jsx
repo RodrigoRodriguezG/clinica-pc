@@ -6,7 +6,8 @@ import {
   clinicaEsActiva,
   asignacionEnOtraClinica,
 } from "../lib/clinicas.js";
-import Insignia from "./ui/Insignia.jsx";
+import Alerta from "./ui/Alerta.jsx";
+import { cx } from "./ui/cx.js";
 
 export default function AjustesClinica({ clinica }) {
   const { datos, actualizar } = useApp();
@@ -41,38 +42,30 @@ export default function AjustesClinica({ clinica }) {
   };
 
   return (
-    <section className="space-y-4 rounded-control border border-neutral-200 bg-white p-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <h2 className="text-base font-semibold text-tinta">
-            Configuración de la clínica
-          </h2>
-          <p className="text-sm text-neutral-600">
-            Define quién puede trabajar en esta clínica.
-          </p>
-        </div>
-        <Insignia tono={activa ? "exito" : "neutral"}>
-          {activa ? "Activa" : "Inactiva"}
-        </Insignia>
-      </div>
-
-      <p className="rounded-control border border-neutral-200 bg-neutral-50 p-3.5 text-sm leading-relaxed text-neutral-700">
+    <div className="space-y-5">
+      <Alerta
+        variante={activa ? "exito" : "info"}
+        titulo={activa ? "Clínica activa" : "Clínica inactiva"}
+      >
         {anio === null
           ? "Esta clínica no tiene días definidos, por lo que no puede estar activa."
           : activa
             ? `Está activa porque es la clínica de ${anio}, el año en curso.`
             : `Está inactiva: corresponde a ${anio} y el año en curso es ${anioActual}.`}
-      </p>
+      </Alerta>
 
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-semibold text-tinta">
+      <fieldset className="space-y-3">
+        <legend className="text-base font-semibold text-tinta">
           Personal asignado
+          <span className="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-semibold tabular-nums text-neutral-700">
+            {ids.length}
+          </span>
         </legend>
-        <p className="text-xs leading-relaxed text-neutral-600">
-          Selecciona a las personas que podrán recepcionar o revisar equipos en
-          esta clínica. Cada persona trabaja en una sola sede por año.
+        <p className="text-sm leading-relaxed text-neutral-600">
+          Marca a las personas que podrán recepcionar o revisar equipos en esta
+          clínica. Cada persona trabaja en una sola sede por año.
         </p>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {personal.map((u) => {
             const marcado = ids.includes(u.id);
             const otra = !marcado
@@ -81,11 +74,15 @@ export default function AjustesClinica({ clinica }) {
             return (
               <label
                 key={u.id}
-                className={`flex min-h-11 items-center gap-3 rounded-control border border-neutral-200 px-3 py-2 text-sm transition-colors duration-150 ${
-                  otra
-                    ? "cursor-not-allowed bg-neutral-50 text-neutral-500"
-                    : "cursor-pointer bg-white hover:border-neutral-300 hover:bg-neutral-50"
-                }`}
+                className={cx(
+                  "flex min-h-14 items-center gap-3 rounded-control border px-3 py-2.5 text-sm transition-colors duration-150",
+                  marcado
+                    ? "border-neutral-400 bg-white shadow-sm"
+                    : otra
+                      ? "cursor-not-allowed border-neutral-200 bg-neutral-50 text-neutral-500"
+                      : "cursor-pointer border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50",
+                  marcado && "cursor-pointer",
+                )}
               >
                 <input
                   type="checkbox"
@@ -96,17 +93,13 @@ export default function AjustesClinica({ clinica }) {
                   aria-label={`Asignar a ${u.nombre}`}
                 />
                 <span className="min-w-0">
-                  <span className="font-medium text-neutral-800">
+                  <span className="block font-medium text-neutral-800">
                     {u.nombre}
-                  </span>{" "}
-                  <span className="text-neutral-500">
-                    ({NOMBRE_ROL[u.rol]})
                   </span>
-                  {otra && (
-                    <span className="block text-xs text-neutral-500">
-                      Ya asignado a {otra.sede}
-                    </span>
-                  )}
+                  <span className="block text-xs text-neutral-500">
+                    {NOMBRE_ROL[u.rol]}
+                    {otra && ` · Ya asignado a ${otra.sede}`}
+                  </span>
                 </span>
               </label>
             );
@@ -118,6 +111,6 @@ export default function AjustesClinica({ clinica }) {
           )}
         </div>
       </fieldset>
-    </section>
+    </div>
   );
 }

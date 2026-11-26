@@ -16,8 +16,20 @@ import Encabezado from "../components/ui/Encabezado.jsx";
 import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
+import Seccion from "../components/ui/Seccion.jsx";
+import BarraFiltros from "../components/ui/BarraFiltros.jsx";
+import Paso from "../components/ui/Paso.jsx";
+import PanelCreacion, {
+  PieAcciones,
+} from "../components/ui/PanelCreacion.jsx";
 import { cx } from "../components/ui/cx.js";
-import { IconoChevronAbajo, IconoUsuarios } from "../components/ui/iconos.jsx";
+import {
+  IconoChevronAbajo,
+  IconoDocumento,
+  IconoInscripcion,
+  IconoMas,
+  IconoUsuarios,
+} from "../components/ui/iconos.jsx";
 
 const FORMULARIO_VACIO = { nombre: "", correo: "", clave: "", rol: "tecnico" };
 const POR_PAGINA = 20;
@@ -31,6 +43,8 @@ export default function Usuarios() {
   const [filtroEstado, setFiltroEstado] = useState("");
   const [limite, setLimite] = useState(POR_PAGINA);
   const [cambioRol, setCambioRol] = useState(null); // { id, rol } pendiente de confirmar
+  // Solo visual: panel desplegado ("crear", "importar" o ninguno)
+  const [panel, setPanel] = useState(null);
 
   // Al cambiar un filtro se vuelve a la primera página
   const conFiltro = (setter) => (valor) => {
@@ -87,6 +101,7 @@ export default function Usuarios() {
     };
     actualizar((d) => ({ ...d, usuarios: [...d.usuarios, nuevo] }));
     setForm(FORMULARIO_VACIO);
+    setPanel(null);
   };
 
   // Activa o desactiva un permiso de un usuario
@@ -127,86 +142,131 @@ export default function Usuarios() {
     setCambioRol(null);
   };
 
+  const cerrarPanel = () => {
+    setPanel(null);
+    setError("");
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Encabezado
         titulo="Usuarios y permisos"
         descripcion="Crea las cuentas del equipo una por una o impórtalas desde Excel, cambia su rol, ajusta permisos o da de baja."
+        acciones={
+          <>
+            <Boton
+              variante="secundario"
+              onClick={() => {
+                setPanel("importar");
+                setError("");
+              }}
+              aria-pressed={panel === "importar"}
+              className="pl-3.5"
+            >
+              <IconoDocumento className="h-4 w-4" />
+              Importar desde Excel
+            </Boton>
+            <Boton
+              onClick={() => setPanel("crear")}
+              aria-pressed={panel === "crear"}
+              className="pl-3.5"
+            >
+              <IconoMas className="h-4 w-4" />
+              Nuevo usuario
+            </Boton>
+          </>
+        }
       />
 
-      <Tarjeta className="p-4 sm:p-5">
-        <form onSubmit={crear} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 items-center justify-center rounded-control bg-inacap-tenue text-inacap-oscuro"
+      {panel === "crear" && (
+        <PanelCreacion
+          titulo="Nuevo usuario"
+          descripcion="La persona podrá ingresar con este correo y la contraseña inicial."
+          icono={<IconoInscripcion className="h-5 w-5" />}
+          onCerrar={cerrarPanel}
+        >
+          <form onSubmit={crear}>
+            <Paso
+              numero={1}
+              titulo="Datos de la persona"
+              ayuda="Nombre y correo institucional."
             >
-              <IconoUsuarios className="h-4 w-4" />
-            </span>
-            <h2 className="text-lg font-semibold text-tinta">Nuevo usuario</h2>
-          </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo
+                  etiqueta="Nombre"
+                  placeholder="Nombre completo"
+                  value={form.nombre}
+                  onChange={cambiar("nombre")}
+                  required
+                  autoComplete="name"
+                />
+                <Campo
+                  etiqueta="Correo"
+                  type="email"
+                  placeholder="correo@inacap.cl"
+                  value={form.correo}
+                  onChange={cambiar("correo")}
+                  required
+                  inputMode="email"
+                  autoComplete="off"
+                />
+              </div>
+            </Paso>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Campo
-              etiqueta="Nombre"
-              placeholder="Nombre completo"
-              value={form.nombre}
-              onChange={cambiar("nombre")}
-              required
-              autoComplete="name"
-            />
-            <Campo
-              etiqueta="Correo"
-              type="email"
-              placeholder="correo@inacap.cl"
-              value={form.correo}
-              onChange={cambiar("correo")}
-              required
-              inputMode="email"
-              autoComplete="off"
-            />
-            <Campo
-              etiqueta="Contraseña inicial"
-              type="password"
-              placeholder="Mínimo 8 caracteres"
-              value={form.clave}
-              onChange={cambiar("clave")}
-              required
-              autoComplete="new-password"
-              ayuda="Mínimo 8 caracteres."
-            />
-            <Campo
-              as="select"
-              etiqueta="Rol"
-              value={form.rol}
-              onChange={cambiar("rol")}
+            <Paso
+              numero={2}
+              titulo="Acceso"
+              ayuda="El rol define sus permisos iniciales; luego puedes ajustarlos."
             >
-              {Object.keys(NOMBRE_ROL).map((r) => (
-                <option key={r} value={r}>
-                  {NOMBRE_ROL[r]}
-                </option>
-              ))}
-            </Campo>
-          </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Campo
+                  etiqueta="Contraseña inicial"
+                  type="password"
+                  placeholder="Mínimo 8 caracteres"
+                  value={form.clave}
+                  onChange={cambiar("clave")}
+                  required
+                  autoComplete="new-password"
+                  ayuda="Mínimo 8 caracteres."
+                />
+                <Campo
+                  as="select"
+                  etiqueta="Rol"
+                  value={form.rol}
+                  onChange={cambiar("rol")}
+                >
+                  {Object.keys(NOMBRE_ROL).map((r) => (
+                    <option key={r} value={r}>
+                      {NOMBRE_ROL[r]}
+                    </option>
+                  ))}
+                </Campo>
+              </div>
+            </Paso>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Boton type="submit" bloque className="sm:w-auto">
-              Crear usuario
-            </Boton>
-          </div>
+            {error && (
+              <Alerta variante="error" role="alert" className="mt-5">
+                {error}
+              </Alerta>
+            )}
 
-          {error && (
-            <Alerta variante="error" role="alert">
-              {error}
-            </Alerta>
-          )}
-        </form>
-      </Tarjeta>
+            <PieAcciones>
+              <Boton variante="secundario" onClick={cerrarPanel}>
+                Cancelar
+              </Boton>
+              <Boton type="submit">Crear usuario</Boton>
+            </PieAcciones>
+          </form>
+        </PanelCreacion>
+      )}
 
-      <ImportarUsuarios />
+      {panel === "importar" && <ImportarUsuarios onCerrar={cerrarPanel} />}
 
-      <Tarjeta className="p-4 sm:p-5">
-        <div className="grid gap-4 sm:grid-cols-3">
+      <Seccion
+        titulo="Usuarios registrados"
+        contador={`${usuariosFiltrados.length} de ${datos.usuarios.length}`}
+      >
+        <BarraFiltros hayFiltros={hayFiltros} onLimpiar={limpiarFiltros}>
           <Campo
             etiqueta="Buscar usuario"
             type="search"
@@ -238,195 +298,199 @@ export default function Usuarios() {
             <option value="activos">Activos</option>
             <option value="inactivos">Inactivos</option>
           </Campo>
-        </div>
-      </Tarjeta>
+        </BarraFiltros>
 
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-neutral-700">
-          Usuarios registrados
-        </h2>
-        <div className="flex items-center gap-3">
-          <p className="text-sm text-neutral-600" aria-live="polite">
-            {usuariosFiltrados.length} de {datos.usuarios.length}
-          </p>
-          {hayFiltros && (
-            <button
-              type="button"
-              onClick={limpiarFiltros}
-              className="text-sm font-medium text-inacap underline"
-            >
-              Limpiar filtros
-            </button>
-          )}
-        </div>
-      </div>
+        {usuariosFiltrados.length === 0 ? (
+          <EstadoVacio
+            icono={<IconoUsuarios className="h-6 w-6" />}
+            titulo="No hay usuarios que coincidan"
+            descripcion={
+              hayFiltros
+                ? "Prueba con otros filtros."
+                : "Aún no hay usuarios registrados."
+            }
+            accion={
+              hayFiltros ? (
+                <Boton variante="secundario" onClick={limpiarFiltros}>
+                  Limpiar filtros
+                </Boton>
+              ) : null
+            }
+          />
+        ) : (
+          <div className="space-y-3">
+            {usuariosMostrados.map((u) => {
+              const esYo = u.id === yo.id;
+              const bloqueoRol = motivoBloqueoCambioRol(datos, u, yo);
+              const pendiente = cambioRol?.id === u.id ? cambioRol : null;
+              const permisosActivos = u.permisos.length;
 
-      {usuariosFiltrados.length === 0 ? (
-        <EstadoVacio
-          icono={<IconoUsuarios className="h-6 w-6" />}
-          titulo="No hay usuarios que coincidan"
-          descripcion={
-            hayFiltros
-              ? "Prueba con otros filtros."
-              : "Aún no hay usuarios registrados."
-          }
-          accion={
-            hayFiltros ? (
-              <Boton variante="secundario" onClick={limpiarFiltros}>
-                Limpiar filtros
-              </Boton>
-            ) : null
-          }
-        />
-      ) : (
-        <div className="space-y-4">
-          {usuariosMostrados.map((u) => {
-            const esYo = u.id === yo.id;
-            const bloqueoRol = motivoBloqueoCambioRol(datos, u, yo);
-            const pendiente = cambioRol?.id === u.id ? cambioRol : null;
-            const permisosActivos = u.permisos.length;
-
-            return (
-              <Tarjeta
-                key={u.id}
-                className={cx("p-4 sm:p-5", !u.activo && "opacity-70")}
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span
-                      aria-hidden="true"
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600"
-                    >
-                      <IconoUsuarios className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-semibold text-tinta">
-                          {u.nombre} {esYo && "(tú)"}
-                        </h2>
-                        <Insignia tono={u.activo ? "exito" : "neutral"}>
-                          {u.activo ? "Activo" : "Inactivo"}
-                        </Insignia>
-                      </div>
-                      <p className="break-all text-sm text-neutral-600">
-                        {u.correo}
-                      </p>
-                    </div>
-                  </div>
-                  {!esYo && (
-                    <Boton
-                      variante="secundario"
-                      onClick={() => alternarActivo(u.id)}
-                    >
-                      {u.activo ? "Dar de baja" : "Reactivar"}
-                    </Boton>
-                  )}
-                </div>
-
-                {/* Rol */}
-                <div className="mt-4 space-y-3 border-t border-neutral-200 pt-4">
-                  <Campo
-                    as="select"
-                    etiqueta="Rol"
-                    className="sm:max-w-xs"
-                    value={pendiente ? pendiente.rol : u.rol}
-                    disabled={Boolean(bloqueoRol)}
-                    ayuda={bloqueoRol ?? undefined}
-                    onChange={(e) =>
-                      e.target.value === u.rol
-                        ? setCambioRol(null)
-                        : setCambioRol({ id: u.id, rol: e.target.value })
-                    }
-                  >
-                    {Object.keys(NOMBRE_ROL).map((r) => (
-                      <option key={r} value={r}>
-                        {NOMBRE_ROL[r]}
-                      </option>
-                    ))}
-                  </Campo>
-
-                  {pendiente && (
+              return (
+                <Tarjeta
+                  key={u.id}
+                  className={cx(!u.activo && "bg-neutral-50")}
+                >
+                  {/* Identidad y acción principal */}
+                  <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                     <div
-                      role="alert"
-                      className="space-y-3 rounded-control border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+                      className={cx(
+                        "flex min-w-0 items-center gap-3",
+                        !u.activo && "opacity-70",
+                      )}
                     >
-                      <p>
+                      <span
+                        aria-hidden="true"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-600"
+                      >
+                        <IconoUsuarios className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-tinta">
+                            {u.nombre}{" "}
+                            {esYo && (
+                              <span className="font-normal text-neutral-500">
+                                (tú)
+                              </span>
+                            )}
+                          </h3>
+                          <Insignia tono={u.activo ? "exito" : "neutral"}>
+                            {u.activo ? "Activo" : "Inactivo"}
+                          </Insignia>
+                        </div>
+                        <p className="break-all text-sm text-neutral-600">
+                          {u.correo}
+                        </p>
+                      </div>
+                    </div>
+                    {!esYo && (
+                      <Boton
+                        variante={u.activo ? "peligro-enlace" : "secundario"}
+                        onClick={() => alternarActivo(u.id)}
+                        className="self-start sm:self-auto"
+                      >
+                        {u.activo ? "Dar de baja" : "Reactivar"}
+                      </Boton>
+                    )}
+                  </div>
+
+                  {/* Rol y permisos */}
+                  <div className="grid gap-4 border-t border-neutral-100 px-4 py-4 sm:grid-cols-[16rem_minmax(0,1fr)] sm:items-start sm:px-5">
+                    <Campo
+                      as="select"
+                      etiqueta="Rol"
+                      value={pendiente ? pendiente.rol : u.rol}
+                      disabled={Boolean(bloqueoRol)}
+                      ayuda={bloqueoRol ?? undefined}
+                      onChange={(e) =>
+                        e.target.value === u.rol
+                          ? setCambioRol(null)
+                          : setCambioRol({ id: u.id, rol: e.target.value })
+                      }
+                    >
+                      {Object.keys(NOMBRE_ROL).map((r) => (
+                        <option key={r} value={r}>
+                          {NOMBRE_ROL[r]}
+                        </option>
+                      ))}
+                    </Campo>
+
+                    {/* Permisos, plegados para que la lista sea manejable */}
+                    <details className="group rounded-control border border-neutral-200 sm:mt-[1.625rem]">
+                      <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 rounded-control px-3 py-2.5 text-sm font-semibold text-neutral-700 transition-colors duration-150 hover:bg-neutral-50 [&::-webkit-details-marker]:hidden">
+                        <span>
+                          Permisos{" "}
+                          <span className="font-normal tabular-nums text-neutral-500">
+                            · {permisosActivos} de{" "}
+                            {Object.keys(ETIQUETA_PERMISO).length} activos
+                          </span>
+                        </span>
+                        <IconoChevronAbajo className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" />
+                      </summary>
+                      <div className="grid gap-1 border-t border-neutral-200 p-2 sm:grid-cols-2">
+                        {Object.entries(ETIQUETA_PERMISO).map(
+                          ([permiso, etiqueta]) => {
+                            const deshabilitado =
+                              esYo && permiso === PERMISOS.GESTIONAR_USUARIOS;
+                            return (
+                              <label
+                                key={permiso}
+                                className={cx(
+                                  "flex min-h-11 items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors duration-150",
+                                  deshabilitado
+                                    ? "cursor-not-allowed opacity-60"
+                                    : "cursor-pointer hover:bg-neutral-50",
+                                )}
+                                title={
+                                  deshabilitado
+                                    ? "No puedes quitarte este permiso"
+                                    : undefined
+                                }
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="h-4 w-4 shrink-0"
+                                  checked={u.permisos.includes(permiso)}
+                                  onChange={() =>
+                                    alternarPermiso(u.id, permiso)
+                                  }
+                                  disabled={deshabilitado}
+                                  aria-label={`${etiqueta} de ${u.nombre}`}
+                                />
+                                {etiqueta}
+                              </label>
+                            );
+                          },
+                        )}
+                      </div>
+                    </details>
+
+                    {pendiente && (
+                      <Alerta
+                        variante="aviso"
+                        role="alert"
+                        titulo="Confirmar cambio de rol"
+                        className="sm:col-span-2"
+                        acciones={
+                          <>
+                            <Boton tamano="sm" onClick={confirmarRol}>
+                              Sí, cambiar rol
+                            </Boton>
+                            <Boton
+                              variante="secundario"
+                              tamano="sm"
+                              onClick={() => setCambioRol(null)}
+                            >
+                              Cancelar
+                            </Boton>
+                          </>
+                        }
+                      >
                         ¿Cambiar a {u.nombre} de {NOMBRE_ROL[u.rol]} a{" "}
                         <strong>{NOMBRE_ROL[pendiente.rol]}</strong>? Sus
                         permisos se reemplazarán por los del nuevo rol.
-                      </p>
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        <Boton onClick={confirmarRol}>Sí, cambiar rol</Boton>
-                        <Boton
-                          variante="secundario"
-                          onClick={() => setCambioRol(null)}
-                        >
-                          Cancelar
-                        </Boton>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Permisos, plegados para que la lista sea manejable */}
-                <details className="group mt-4 rounded-control border border-neutral-200 bg-neutral-50">
-                  <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 py-2.5 text-sm font-semibold text-neutral-700 [&::-webkit-details-marker]:hidden">
-                    Permisos ({permisosActivos} de{" "}
-                    {Object.keys(ETIQUETA_PERMISO).length} activos)
-                    <IconoChevronAbajo className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" />
-                  </summary>
-                  <div className="grid gap-2 border-t border-neutral-200 p-3 sm:grid-cols-2">
-                    {Object.entries(ETIQUETA_PERMISO).map(
-                      ([permiso, etiqueta]) => {
-                        const deshabilitado =
-                          esYo && permiso === PERMISOS.GESTIONAR_USUARIOS;
-                        return (
-                          <label
-                            key={permiso}
-                            className={cx(
-                              "flex min-h-11 items-center gap-3 rounded-control border border-neutral-200 bg-white px-3 py-2 text-sm transition-colors duration-150",
-                              deshabilitado
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer hover:border-neutral-300 hover:bg-neutral-50",
-                            )}
-                            title={
-                              deshabilitado
-                                ? "No puedes quitarte este permiso"
-                                : undefined
-                            }
-                          >
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 shrink-0"
-                              checked={u.permisos.includes(permiso)}
-                              onChange={() => alternarPermiso(u.id, permiso)}
-                              disabled={deshabilitado}
-                              aria-label={`${etiqueta} de ${u.nombre}`}
-                            />
-                            {etiqueta}
-                          </label>
-                        );
-                      },
+                      </Alerta>
                     )}
                   </div>
-                </details>
-              </Tarjeta>
-            );
-          })}
+                </Tarjeta>
+              );
+            })}
 
-          {usuariosFiltrados.length > usuariosMostrados.length && (
-            <div className="text-center">
-              <Boton
-                variante="secundario"
-                onClick={() => setLimite(limite + POR_PAGINA)}
-              >
-                Mostrar más (
-                {usuariosFiltrados.length - usuariosMostrados.length} restantes)
-              </Boton>
-            </div>
-          )}
-        </div>
-      )}
+            {usuariosFiltrados.length > usuariosMostrados.length && (
+              <div className="pt-2 text-center">
+                <Boton
+                  variante="secundario"
+                  onClick={() => setLimite(limite + POR_PAGINA)}
+                >
+                  Mostrar más (
+                  {usuariosFiltrados.length - usuariosMostrados.length}{" "}
+                  restantes)
+                </Boton>
+              </div>
+            )}
+          </div>
+        )}
+      </Seccion>
     </div>
   );
 }

@@ -7,6 +7,10 @@ import Encabezado from "../components/ui/Encabezado.jsx";
 import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
+import Seccion from "../components/ui/Seccion.jsx";
+import PanelCreacion, {
+  PieAcciones,
+} from "../components/ui/PanelCreacion.jsx";
 import {
   IconoBasura,
   IconoChecklist,
@@ -37,24 +41,31 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
     onCambiar((p) => ({ ...p, items: p.items.filter((i) => i.id !== itemId) }));
 
   return (
-    <Tarjeta as="article" className="p-4 sm:p-5">
-      <header className="flex flex-col gap-3 border-b border-neutral-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold text-tinta">
+    <Tarjeta as="article">
+      <header className="flex flex-col gap-3 border-b border-neutral-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-control bg-neutral-100 text-neutral-600 sm:flex"
+          >
+            <IconoChecklist className="h-5 w-5" />
+          </span>
+          <div className="min-w-0 space-y-1">
+            <h3 className="text-base font-semibold text-tinta">
               {plantilla.nombre}
-            </h2>
-            <Insignia tono="neutral">{plantilla.items.length} ítems</Insignia>
-            {enUso && (
-              <Insignia tono="aviso">En uso por una clínica</Insignia>
-            )}
+            </h3>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Insignia tono="neutral" punto={false}>
+                {plantilla.items.length} ítems
+              </Insignia>
+              {enUso && (
+                <Insignia tono="aviso">En uso por una clínica</Insignia>
+              )}
+            </div>
           </div>
-          <p className="text-sm text-neutral-600">
-            Edita los ítems que verán los técnicos al revisar cada equipo.
-          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1">
-          <Boton variante="enlace" onClick={onDuplicar}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Boton variante="secundario" tamano="sm" onClick={onDuplicar}>
             Duplicar
           </Boton>
           <Boton
@@ -68,57 +79,63 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
         </div>
       </header>
 
-      <ul className="mt-4 space-y-2">
-        {plantilla.items.map((item, indice) => (
-          <li
-            key={item.id}
-            className="flex flex-col gap-2 rounded-control border border-neutral-200 bg-neutral-50 p-2.5 sm:flex-row sm:items-center"
-          >
-            <span className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-neutral-500 ring-1 ring-neutral-200 sm:flex">
-              {indice + 1}
-            </span>
-            <Campo
-              etiqueta={`Ítem ${indice + 1}`}
-              className="flex-1"
-              classNameControl="min-h-11 bg-white"
-              value={item.texto}
-              maxLength={80}
-              onChange={(e) => editarItem(item.id, e.target.value)}
-              aria-label={`Texto del ítem ${indice + 1}`}
-            />
-            <Boton
-              variante="peligro-enlace"
-              onClick={() => quitarItem(item.id)}
-              className="self-end sm:self-auto"
-            >
-              <IconoBasura className="h-4 w-4" />
-              Quitar
-            </Boton>
-          </li>
-        ))}
+      <div className="p-4 sm:px-5">
+        <p className="mb-3 text-sm text-neutral-600">
+          Ítems que verán los técnicos al revisar cada equipo.
+        </p>
+
+        <ol className="divide-y divide-neutral-100">
+          {plantilla.items.map((item, indice) => (
+            <li key={item.id} className="flex items-center gap-2 py-2">
+              <span
+                aria-hidden="true"
+                className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-semibold tabular-nums text-neutral-500"
+              >
+                {indice + 1}
+              </span>
+              <label htmlFor={`item-${item.id}`} className="sr-only">
+                Texto del ítem {indice + 1}
+              </label>
+              <input
+                id={`item-${item.id}`}
+                className="block min-h-11 w-full min-w-0 flex-1 rounded-control border border-neutral-300 bg-white px-3 py-2 text-base text-tinta transition-[border-color,box-shadow] duration-150 hover:border-neutral-400 focus:border-inacap focus:outline-none focus:ring-4 focus:ring-inacap/15"
+                value={item.texto}
+                maxLength={80}
+                onChange={(e) => editarItem(item.id, e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => quitarItem(item.id)}
+                aria-label={`Quitar ítem ${indice + 1}`}
+                title="Quitar ítem"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control text-neutral-500 transition-colors duration-150 hover:bg-error-tenue hover:text-error"
+              >
+                <IconoBasura className="h-5 w-5" />
+              </button>
+            </li>
+          ))}
+        </ol>
         {plantilla.items.length === 0 && (
-          <li>
-            <Alerta variante="info">
-              Esta plantilla no tiene ítems. Agrega el primero abajo.
-            </Alerta>
-          </li>
+          <Alerta variante="info">
+            Esta plantilla no tiene ítems. Agrega el primero abajo.
+          </Alerta>
         )}
-      </ul>
+      </div>
 
       <form
         onSubmit={agregarItem}
-        className="mt-4 flex flex-col gap-3 border-t border-neutral-200 pt-4 sm:flex-row sm:items-end"
+        className="flex flex-col gap-3 rounded-b-tarjeta border-t border-neutral-100 bg-neutral-50 p-4 sm:flex-row sm:items-end sm:px-5"
       >
         <Campo
           etiqueta="Nuevo ítem"
           className="flex-1"
-          placeholder="Nuevo ítem, por ejemplo: Ventilador sin ruido"
+          placeholder="Por ejemplo: Ventilador sin ruido"
           value={nuevoItem}
           maxLength={80}
           onChange={(e) => setNuevoItem(e.target.value)}
           aria-label="Nuevo ítem de la plantilla"
         />
-        <Boton type="submit" variante="secundario">
+        <Boton type="submit" variante="secundario" className="pl-3.5">
           <IconoMas className="h-4 w-4" />
           Agregar ítem
         </Boton>
@@ -131,6 +148,8 @@ export default function Checklists() {
   const { datos, actualizar } = useApp();
   const [nombre, setNombre] = useState("");
   const [error, setError] = useState("");
+  // Solo visual: si el panel de creación está desplegado
+  const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const crear = (e) => {
     e.preventDefault();
@@ -151,6 +170,7 @@ export default function Checklists() {
       ],
     }));
     setNombre("");
+    setMostrarFormulario(false);
   };
 
   // Aplica una función de cambio a una sola plantilla
@@ -182,67 +202,82 @@ export default function Checklists() {
 
   const usaClinica = (id) => datos.clinicas.some((c) => c.plantillaId === id);
 
+  const cerrarFormulario = () => {
+    setMostrarFormulario(false);
+    setError("");
+  };
+
+  const botonNueva = (
+    <Boton onClick={() => setMostrarFormulario(true)} className="pl-3.5">
+      <IconoMas className="h-4 w-4" />
+      Nueva plantilla
+    </Boton>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <Encabezado
         titulo="Plantillas de checklist"
         descripcion="Cada clínica elige una plantilla. Los técnicos la completan al revisar cada equipo."
+        acciones={!mostrarFormulario && botonNueva}
       />
 
-      <Tarjeta className="p-4 sm:p-5">
-        <form onSubmit={crear} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 items-center justify-center rounded-control bg-inacap-tenue text-inacap-oscuro"
-            >
-              <IconoChecklist className="h-4 w-4" />
-            </span>
-            <h2 className="text-lg font-semibold text-tinta">
-              Nueva plantilla
-            </h2>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+      {mostrarFormulario && (
+        <PanelCreacion
+          titulo="Nueva plantilla"
+          descripcion="Se crea vacía; luego agregas sus ítems en la lista de abajo."
+          icono={<IconoChecklist className="h-5 w-5" />}
+          onCerrar={cerrarFormulario}
+        >
+          <form onSubmit={crear}>
             <Campo
               etiqueta="Nombre de la plantilla"
-              className="flex-1"
-              placeholder="Nombre de la nueva plantilla"
+              className="sm:max-w-md"
+              placeholder="Ej. Revisión de notebooks"
               value={nombre}
               maxLength={60}
               onChange={(e) => setNombre(e.target.value)}
             />
-            <Boton type="submit">Crear plantilla</Boton>
-          </div>
 
-          {error && (
-            <Alerta variante="error" role="alert">
-              {error}
-            </Alerta>
-          )}
-        </form>
-      </Tarjeta>
+            {error && (
+              <Alerta variante="error" role="alert" className="mt-4">
+                {error}
+              </Alerta>
+            )}
 
-      {datos.plantillas.length === 0 ? (
-        <EstadoVacio
-          icono={<IconoChecklist className="h-6 w-6" />}
-          titulo="Aún no hay plantillas"
-          descripcion="Crea la primera plantilla para que las clínicas puedan revisar equipos."
-        />
-      ) : (
-        <div className="space-y-4">
-          {datos.plantillas.map((p) => (
-            <Plantilla
-              key={p.id}
-              plantilla={p}
-              enUso={usaClinica(p.id)}
-              onCambiar={(fn) => cambiar(p.id, fn)}
-              onDuplicar={() => duplicar(p)}
-              onEliminar={() => eliminar(p.id)}
-            />
-          ))}
-        </div>
+            <PieAcciones>
+              <Boton variante="secundario" onClick={cerrarFormulario}>
+                Cancelar
+              </Boton>
+              <Boton type="submit">Crear plantilla</Boton>
+            </PieAcciones>
+          </form>
+        </PanelCreacion>
       )}
+
+      <Seccion titulo="Plantillas" contador={datos.plantillas.length}>
+        {datos.plantillas.length === 0 ? (
+          <EstadoVacio
+            icono={<IconoChecklist className="h-6 w-6" />}
+            titulo="Aún no hay plantillas"
+            descripcion="Crea la primera plantilla para que las clínicas puedan revisar equipos."
+            accion={!mostrarFormulario && botonNueva}
+          />
+        ) : (
+          <div className="space-y-4">
+            {datos.plantillas.map((p) => (
+              <Plantilla
+                key={p.id}
+                plantilla={p}
+                enUso={usaClinica(p.id)}
+                onCambiar={(fn) => cambiar(p.id, fn)}
+                onDuplicar={() => duplicar(p)}
+                onEliminar={() => eliminar(p.id)}
+              />
+            ))}
+          </div>
+        )}
+      </Seccion>
     </div>
   );
 }

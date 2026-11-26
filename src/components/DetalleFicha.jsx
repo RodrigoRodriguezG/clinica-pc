@@ -275,7 +275,7 @@ export default function DetalleFicha({ ficha }) {
       )}
 
       {/* Resumen siempre visible */}
-      <section className="space-y-3 rounded-control border border-neutral-200 bg-neutral-50 p-4">
+      <section className="space-y-3 rounded-control border border-neutral-200 bg-white p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <dl className="grid flex-1 gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -499,9 +499,11 @@ export default function DetalleFicha({ ficha }) {
                 </Alerta>
               )}
 
-              <Boton type="submit" bloque className="sm:w-auto">
-                Guardar datos técnicos
-              </Boton>
+              <div className="flex justify-end border-t border-neutral-200 pt-4">
+                <Boton type="submit" bloque className="sm:w-auto">
+                  Guardar datos técnicos
+                </Boton>
+              </div>
             </form>
           ) : (
             <dl className="grid gap-3 rounded-control border border-neutral-200 bg-white p-4 sm:grid-cols-2">
@@ -642,9 +644,11 @@ export default function DetalleFicha({ ficha }) {
                 aria-label="Nueva observación"
                 autoComplete="off"
               />
-              <Boton type="submit" bloque className="sm:w-auto">
-                Agregar
-              </Boton>
+              <div className="flex justify-end">
+                <Boton type="submit" bloque className="sm:w-auto">
+                  Agregar observación
+                </Boton>
+              </div>
             </form>
           )}
         </section>

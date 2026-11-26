@@ -12,9 +12,10 @@ export default function Tarjeta({
     Componente,
     {
       className: cx(
-        "rounded-tarjeta border border-neutral-200 bg-white shadow-tarjeta",
+        // Borde transparente bajo el anillo de sombra: se ve en colores forzados
+        "rounded-tarjeta border border-transparent bg-white shadow-tarjeta",
         interactiva &&
-          "transition-[border-color,box-shadow] duration-150 hover:border-neutral-300 hover:shadow-elevada",
+          "transition-shadow duration-150 hover:shadow-tarjeta-hover",
         className,
       ),
       ...props,
