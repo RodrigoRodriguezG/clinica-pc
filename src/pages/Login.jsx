@@ -13,7 +13,7 @@ import {
 } from "../components/ui/iconos.jsx";
 
 // Claves originales de las cuentas demo. Se toman de los datos iniciales y no
-// de los guardados, para no mostrar contraseñas que alguien ya cambió.
+// de los guardados, para no exponer contraseñas que alguien ya cambió.
 const CLAVES_DEMO = new Map(
   crearDatosIniciales().usuarios.map((u) => [u.id, u.clave]),
 );
@@ -27,6 +27,13 @@ export default function Login() {
   const enviar = (e) => {
     e.preventDefault();
     setError(ingresar(correo, clave));
+  };
+
+  // Completa el formulario con una cuenta demo (la clave no se muestra)
+  const usarCuentaDemo = (u) => {
+    setCorreo(u.correo);
+    setClave(CLAVES_DEMO.get(u.id) ?? "");
+    setError("");
   };
 
   return (
@@ -121,21 +128,23 @@ export default function Login() {
                       Cuentas de demostración
                       <IconoChevronAbajo className="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" />
                     </summary>
-                    <ul className="space-y-1 border-t border-neutral-200 px-3 py-2.5">
+                    <ul className="space-y-0.5 border-t border-neutral-200 p-1.5">
                       {datos.usuarios.map((u) => (
-                        <li
-                          key={u.id}
-                          className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-1 text-xs"
-                        >
-                          <span className="break-all text-neutral-700">
-                            {u.correo}
-                          </span>
-                          <span className="text-neutral-500">
-                            {nombreRol(datos, u.rol)}
-                            {CLAVES_DEMO.has(u.id) && (
-                              <> · clave: {CLAVES_DEMO.get(u.id)}</>
-                            )}
-                          </span>
+                        <li key={u.id}>
+                          <button
+                            type="button"
+                            onClick={() => usarCuentaDemo(u)}
+                            aria-pressed={correo === u.correo}
+                            title="Completar el formulario con esta cuenta"
+                            className="flex min-h-9 w-full cursor-pointer flex-wrap items-center justify-between gap-x-3 gap-y-0.5 rounded-md px-1.5 py-1.5 text-left text-xs transition-colors duration-150 hover:bg-white aria-pressed:bg-white aria-pressed:ring-1 aria-pressed:ring-neutral-200 focus-visible:outline-2 focus-visible:outline-inacap"
+                          >
+                            <span className="break-all text-neutral-700">
+                              {u.correo}
+                            </span>
+                            <span className="text-neutral-500">
+                              {nombreRol(datos, u.rol)}
+                            </span>
+                          </button>
                         </li>
                       ))}
                     </ul>
