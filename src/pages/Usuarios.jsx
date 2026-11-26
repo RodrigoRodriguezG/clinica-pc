@@ -8,6 +8,7 @@ import {
 } from "../constantes.js";
 import { normalizar } from "../lib/texto.js";
 import { aplicarRol, motivoBloqueoCambioRol } from "../lib/usuarios.js";
+import ImportarUsuarios from "../components/ImportarUsuarios.jsx";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -130,7 +131,7 @@ export default function Usuarios() {
     <div className="space-y-6">
       <Encabezado
         titulo="Usuarios y permisos"
-        descripcion="Crea las cuentas del equipo, cambia su rol, ajusta permisos o da de baja."
+        descripcion="Crea las cuentas del equipo una por una o impórtalas desde Excel, cambia su rol, ajusta permisos o da de baja."
       />
 
       <Tarjeta className="p-4 sm:p-5">
@@ -201,6 +202,8 @@ export default function Usuarios() {
           )}
         </form>
       </Tarjeta>
+
+      <ImportarUsuarios />
 
       <Tarjeta className="p-4 sm:p-5">
         <div className="grid gap-4 sm:grid-cols-3">
