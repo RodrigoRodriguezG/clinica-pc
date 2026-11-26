@@ -70,7 +70,12 @@ export default function Usuarios() {
         normalizar(u.correo).includes(busqueda)
       );
     })
-    .sort((a, b) => a.nombre.localeCompare(b.nombre));
+    // La cuenta con sesión iniciada va primero; el resto, por nombre
+    .sort(
+      (a, b) =>
+        (b.id === yo.id) - (a.id === yo.id) ||
+        a.nombre.localeCompare(b.nombre),
+    );
 
   const usuariosMostrados = usuariosFiltrados.slice(0, limite);
   const hayFiltros = Boolean(filtro.trim() || filtroRol || filtroEstado);
