@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import { nombreClinica } from "../lib/clinicas.js";
 import {
   MAX_ITEM,
   MAX_NOMBRE_PLANTILLA,
@@ -317,7 +318,7 @@ export default function Checklists() {
       >
         {clinicas.map((c) => (
           <option key={c.id} value={c.id}>
-            {c.nombre} · {c.sede}
+            {nombreClinica(c)}
           </option>
         ))}
       </Campo>
@@ -421,7 +422,7 @@ export default function Checklists() {
       )}
 
       <Seccion
-        titulo={`Plantillas de ${clinica.nombre} · ${clinica.sede}`}
+        titulo={`Plantillas de ${nombreClinica(clinica)}`}
         contador={plantillas.length}
       >
         {plantillas.length === 0 ? (

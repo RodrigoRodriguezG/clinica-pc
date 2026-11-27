@@ -1,3 +1,13 @@
+import { SIGLA_SEDE } from "../constantes.js";
+
+// Nombre para mostrar: lleva la sigla de la sede para distinguir clínicas con
+// el mismo nombre en distintas sedes ("Clínica del PC 2026 · LA")
+export const nombreClinica = (clinica) => {
+  if (!clinica) return "Clínica no disponible";
+  const sigla = SIGLA_SEDE[clinica.sede];
+  return sigla ? `${clinica.nombre} · ${sigla}` : clinica.nombre;
+};
+
 // Año de una clínica: el año de su primer día (null si no tiene días)
 export const anioDeClinica = (clinica) => {
   const primero = [...(clinica.dias ?? [])].sort()[0];

@@ -1,4 +1,5 @@
 import { useApp } from "../store.jsx";
+import { nombreClinica } from "../lib/clinicas.js";
 import { formatearFecha } from "../lib/fechas.js";
 import Boton from "./ui/Boton.jsx";
 import Insignia from "./ui/Insignia.jsx";
@@ -23,7 +24,7 @@ export default function AtencionAnterior({ ficha, onCerrar }) {
             <Insignia estado={ficha.estado} />
           </div>
           <p className="text-sm text-slate-600">
-            {clinica?.nombre ?? "Clínica no disponible"} ·{" "}
+            {nombreClinica(clinica)} ·{" "}
             {formatearFecha(ficha.creada.slice(0, 10))}
           </p>
         </div>

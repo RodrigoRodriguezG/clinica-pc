@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha, hoyLocal, mananaLocal } from "../lib/fechas.js";
-import { clinicaEsActiva } from "../lib/clinicas.js";
+import { clinicaEsActiva, nombreClinica } from "../lib/clinicas.js";
 import { plantillasBaseDe, SEDES } from "../constantes.js";
 import {
   alcanceTodas,
@@ -349,7 +349,7 @@ export default function Clinicas() {
                       <Insignia tono="neutral">Inactiva</Insignia>
                     )
                   }
-                  titulo={c.nombre}
+                  titulo={nombreClinica(c)}
                   pie={
                     <span className="flex flex-wrap items-center gap-1.5">
                       <span className="sr-only">Días:</span>

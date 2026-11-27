@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import { nombreClinica } from "../lib/clinicas.js";
 import { siguienteCodigo } from "../lib/codigos.js";
 import { aplicarPlantilla, plantillaPorServicio } from "../lib/checklists.js";
 import Alerta from "./ui/Alerta.jsx";
@@ -96,7 +97,7 @@ export default function FormularioFicha({
           <h3 className="font-semibold text-slate-900">
             Recepción de {equipo.numeroEquipo} · {equipo.tipo}
           </h3>
-          <p className="text-sm text-slate-600">Clínica: {clinica.nombre}</p>
+          <p className="text-sm text-slate-600">Clínica: {nombreClinica(clinica)}</p>
         </div>
       </header>
 

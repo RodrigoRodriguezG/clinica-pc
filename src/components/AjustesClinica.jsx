@@ -6,6 +6,7 @@ import {
   anioDeClinica,
   clinicaEsActiva,
   asignacionEnOtraClinica,
+  nombreClinica,
 } from "../lib/clinicas.js";
 import Alerta from "./ui/Alerta.jsx";
 import { cx } from "./ui/cx.js";
@@ -103,7 +104,7 @@ export default function AjustesClinica({ clinica }) {
                   </span>
                   <span className="block text-xs text-slate-500">
                     {nombreRol(datos, u.rol)}
-                    {otra && ` · Ya asignado a ${otra.nombre}`}
+                    {otra && ` · Ya asignado a ${nombreClinica(otra)}`}
                     {u.sede !== clinica.sede && " · De otra sede"}
                   </span>
                 </span>

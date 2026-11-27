@@ -2,6 +2,7 @@ import { ESTADO_CIERRE_ANTICIPADO, ESTADO_ENTREGADO } from "../constantes.js";
 import { notaPromedio, porcentaje, respuestaDeFicha } from "./encuestas.js";
 import { fechaLocal, formatearFecha } from "./fechas.js";
 import { descargarLibroXlsx } from "./importacion.js";
+import { nombreClinica } from "./clinicas.js";
 
 // Informes de equipos (RF-14). Una fila por ficha (atención), con los datos
 // del equipo. Solo se usa la comuna del propietario: los reportes no incluyen
@@ -31,7 +32,7 @@ export function filasReporte(datos, idsClinicas) {
       const respuesta = respuestaDeFicha(datos, f.id);
       return {
         ficha: f.numero,
-        clinica: clinica ? `${clinica.nombre} · ${clinica.sede}` : SIN_DATO,
+        clinica: clinica ? nombreClinica(clinica) : SIN_DATO,
         fecha: formatearFecha(fechaLocal(f.creada)),
         numeroEquipo: equipo?.numeroEquipo ?? "",
         tipo: equipo?.tipo || SIN_DATO,
@@ -100,11 +101,11 @@ const COLUMNAS_DETALLE = [
   ["Nota encuesta", "nota", 14],
 ];
 
-export function exportarReporte(filas, nombreClinica) {
+export function exportarReporte(filas, etiquetaClinica) {
   const r = resumen(filas);
   const filasResumen = [
     ["Reporte de equipos · Clínica del PC"],
-    ["Clínica", nombreClinica],
+    ["Clínica", etiquetaClinica],
     ["Generado", new Date().toLocaleString("es-CL")],
     [],
     ["Fichas", r.total],

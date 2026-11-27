@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useApp } from "../store.jsx";
+import { nombreClinica } from "../lib/clinicas.js";
 import {
   agruparPlantillas,
   descargarPlantillaChecklist,
@@ -92,7 +93,7 @@ export default function ImportarChecklists({ clinica, onCerrar }) {
   return (
     <PanelCreacion
       titulo="Importar checklists desde Excel"
-      descripcion={`Crea varias plantillas a la vez en ${clinica.nombre}.`}
+      descripcion={`Crea varias plantillas a la vez en ${nombreClinica(clinica)}.`}
       icono={<IconoDocumento className="h-5 w-5" />}
       onCerrar={onCerrar}
     >

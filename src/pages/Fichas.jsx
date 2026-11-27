@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import { nombreClinica } from "../lib/clinicas.js";
 import {
   ESTADOS_FICHA,
   ESTADO_POR_REASIGNAR,
@@ -164,7 +165,7 @@ export default function Fichas() {
             <option value="">Todas las clínicas</option>
             {clinicasFiltro.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.nombre}
+                {nombreClinica(c)}
               </option>
             ))}
           </Campo>
@@ -234,7 +235,7 @@ export default function Fichas() {
                       </span>
                       <span className="block min-w-0">
                         <span className="block truncate text-xs font-semibold uppercase tracking-wide text-inacap">
-                          {clinica?.nombre ?? "Clínica no disponible"}
+                          {nombreClinica(clinica)}
                         </span>
                         <span className="mt-1 flex flex-wrap items-center gap-2">
                           <span className="font-semibold leading-snug text-slate-900">

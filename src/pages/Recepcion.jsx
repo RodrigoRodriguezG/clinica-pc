@@ -5,7 +5,7 @@ import { ESTADO_POR_REASIGNAR } from "../constantes.js";
 import { limpiarRut, enmascararRut } from "../lib/rut.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { estaAbierta, fichasDeEquipo } from "../lib/fichas.js";
-import { clinicaActivaDe } from "../lib/clinicas.js";
+import { clinicaActivaDe, nombreClinica } from "../lib/clinicas.js";
 import { sedeDeClinica } from "../lib/sedes.js";
 import {
   estaAusente,
@@ -202,7 +202,7 @@ export default function Recepcion() {
       <Encabezado
         titulo="Recepción de equipos"
         descripcion="Recibe los equipos inscritos y crea sus fichas."
-        eyebrow={clinica ? `Clínica activa · ${clinica.nombre}` : undefined}
+        eyebrow={clinica ? `Clínica activa · ${nombreClinica(clinica)}` : undefined}
         acciones={
           <Boton
             as={Link}
@@ -396,7 +396,7 @@ export default function Recepcion() {
                         }
                       >
                         ¿Marcar a {nombreCompleto(p)} como que no se presentó a{" "}
-                        {clinica?.nombre}? Dejará de aparecer en esta lista,
+                        {nombreClinica(clinica)}? Dejará de aparecer en esta lista,
                         pero sus datos y su historial se conservan. Puedes
                         restaurarla cuando quieras.
                       </Alerta>

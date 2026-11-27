@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import { nombreClinica } from "../lib/clinicas.js";
 import {
   alcanceTodas,
   clinicasPermitidas,
@@ -21,7 +22,6 @@ import EstadoVacio from "../components/ui/EstadoVacio.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
 import { IconoDescargar, IconoGrafico } from "../components/ui/iconos.jsx";
 
-const nombreClinica = (c) => `${c.nombre} · ${c.sede}`;
 
 // Indicador: número grande con su etiqueta (y un detalle opcional)
 function Indicador({ etiqueta, valor, detalle }) {

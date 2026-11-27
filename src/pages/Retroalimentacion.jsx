@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import { nombreClinica } from "../lib/clinicas.js";
 import {
   alcanceTodas,
   clinicasPermitidas,
@@ -81,7 +82,7 @@ export default function Retroalimentacion() {
           </option>
           {clinicas.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.nombre} · {c.sede}
+              {nombreClinica(c)}
             </option>
           ))}
         </Campo>
@@ -142,7 +143,7 @@ export default function Retroalimentacion() {
                       </div>
                     </div>
                     <p className="text-xs text-slate-500">
-                      {clinica && `${clinica.nombre} · ${clinica.sede} · `}
+                      {clinica && `${nombreClinica(clinica)} · `}
                       {fechaHora(r.fecha)}
                     </p>
                     {r.comentario && (

@@ -6,7 +6,7 @@ import { nombreRol } from "../lib/roles.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
 import { limpiarRut, enmascararRut } from "../lib/rut.js";
-import { clinicaEsActiva } from "../lib/clinicas.js";
+import { clinicaEsActiva, nombreClinica } from "../lib/clinicas.js";
 import AjustesClinica from "../components/AjustesClinica.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -231,7 +231,7 @@ export default function ClinicaDetalle() {
               {clinica.sede}
             </p>
             <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-slate-900">
-              {clinica.nombre}
+              {nombreClinica(clinica)}
             </h1>
           </div>
           {clinicaEsActiva(clinica) ? (
