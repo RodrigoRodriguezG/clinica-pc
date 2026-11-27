@@ -212,7 +212,7 @@ export default function MiCuenta() {
     <div className="space-y-8">
       <Encabezado
         titulo="Mi cuenta"
-        descripcion="Actualiza tu nombre, tu correo de ingreso o tu contraseña."
+        descripcion="Tu nombre, correo de ingreso y contraseña."
       />
       <DatosPersonales />
       <CambioClave />

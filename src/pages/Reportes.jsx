@@ -121,7 +121,7 @@ export default function Reportes() {
     <div className="space-y-6">
       <Encabezado
         titulo="Reportes"
-        descripcion="Resumen de los equipos atendidos para análisis posterior. Los reportes no incluyen RUT, nombre ni contacto de los propietarios."
+        descripcion="Resumen de los equipos atendidos, exportable a Excel."
         acciones={
           <Boton
             onClick={exportar}

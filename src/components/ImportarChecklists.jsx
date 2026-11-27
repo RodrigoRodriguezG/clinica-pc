@@ -92,7 +92,7 @@ export default function ImportarChecklists({ clinica, onCerrar }) {
   return (
     <PanelCreacion
       titulo="Importar checklists desde Excel"
-      descripcion={`Crea varias plantillas a la vez en ${clinica.nombre} · ${clinica.sede}, cada una con sus ítems.`}
+      descripcion={`Crea varias plantillas a la vez en ${clinica.nombre}.`}
       icono={<IconoDocumento className="h-5 w-5" />}
       onCerrar={onCerrar}
     >

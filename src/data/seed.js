@@ -149,7 +149,6 @@ export const crearDatosIniciales = () => ({
   propietarios: [
     {
       id: "p1",
-      sede: "Sede San Pedro de la Paz",
       rut: "15.234.567-4",
       nombre: "Javiera",
       apellidoPaterno: "Fuentes",
@@ -164,7 +163,6 @@ export const crearDatosIniciales = () => ({
     },
     {
       id: "p2",
-      sede: "Sede San Pedro de la Paz",
       rut: "17.345.678-6",
       nombre: "Matías",
       apellidoPaterno: "Vega",
@@ -179,7 +177,6 @@ export const crearDatosIniciales = () => ({
     },
     {
       id: "p3",
-      sede: "Sede San Pedro de la Paz",
       rut: "18.456.789-K",
       nombre: "Rosa",
       apellidoPaterno: "Muñoz",
@@ -194,7 +191,6 @@ export const crearDatosIniciales = () => ({
     },
     {
       id: "p4",
-      sede: "Sede San Pedro de la Paz",
       rut: "19.567.890-1",
       nombre: "Tomás",
       apellidoPaterno: "Ibáñez",
@@ -207,10 +203,9 @@ export const crearDatosIniciales = () => ({
       origen: "QR",
       creadoEn: "2026-11-11T16:20:00.000Z",
     },
-    // Propietarios de la Sede Los Ángeles
+    // Inscritos en la Sede Los Ángeles
     {
       id: "p5",
-      sede: "Sede Los Ángeles",
       rut: "16.789.012-1",
       nombre: "Valentina",
       apellidoPaterno: "Cárcamo",
@@ -225,7 +220,6 @@ export const crearDatosIniciales = () => ({
     },
     {
       id: "p6",
-      sede: "Sede Los Ángeles",
       rut: "20.123.456-5",
       nombre: "Ignacio",
       apellidoPaterno: "Sepúlveda",
@@ -243,6 +237,7 @@ export const crearDatosIniciales = () => ({
     // Javiera trae dos equipos recién inscritos (para probar la selección)
     {
       id: "e1",
+      sede: "Sede San Pedro de la Paz",
       propietarioId: "p1",
       tipo: "Notebook",
       marca: "",
@@ -256,6 +251,7 @@ export const crearDatosIniciales = () => ({
     },
     {
       id: "e2",
+      sede: "Sede San Pedro de la Paz",
       propietarioId: "p1",
       tipo: "All-in-One (AIO)",
       marca: "",
@@ -270,6 +266,7 @@ export const crearDatosIniciales = () => ({
     // Matías: este equipo ya pasó por la Clínica 2025 (reingreso)
     {
       id: "e3",
+      sede: "Sede San Pedro de la Paz",
       propietarioId: "p2",
       tipo: "PC de escritorio",
       marca: "Dell",
@@ -284,6 +281,7 @@ export const crearDatosIniciales = () => ({
     // Rosa: este equipo tiene una ficha abierta
     {
       id: "e4",
+      sede: "Sede San Pedro de la Paz",
       propietarioId: "p3",
       tipo: "Notebook",
       marca: "HP",
@@ -298,6 +296,7 @@ export const crearDatosIniciales = () => ({
     // Tomás: equipo nuevo, sin fichas
     {
       id: "e5",
+      sede: "Sede San Pedro de la Paz",
       propietarioId: "p4",
       tipo: "Notebook",
       marca: "",
@@ -312,6 +311,7 @@ export const crearDatosIniciales = () => ({
     // Valentina (Los Ángeles): equipo con ficha en reparación
     {
       id: "e6",
+      sede: "Sede Los Ángeles",
       propietarioId: "p5",
       tipo: "Notebook",
       marca: "Lenovo",
@@ -326,6 +326,7 @@ export const crearDatosIniciales = () => ({
     // Ignacio (Los Ángeles): recién inscrito por QR, sin ficha
     {
       id: "e7",
+      sede: "Sede Los Ángeles",
       propietarioId: "p6",
       tipo: "PC de escritorio",
       marca: "",
@@ -336,6 +337,22 @@ export const crearDatosIniciales = () => ({
       accesorios: "",
       servicio: "Mantención física",
       creadoEn: "2026-11-13T18:45:00.000Z",
+    },
+    // Javiera también se inscribió en Los Ángeles: esta atención es de esa
+    // sede, mientras sus otros equipos siguen en San Pedro de la Paz
+    {
+      id: "e8",
+      sede: "Sede Los Ángeles",
+      propietarioId: "p1",
+      tipo: "Notebook",
+      marca: "",
+      modelo: "",
+      numeroSerie: "",
+      numeroEquipo: "EQ-008",
+      problema: "La batería no carga.",
+      accesorios: "",
+      servicio: "",
+      creadoEn: "2026-11-14T11:00:00.000Z",
     },
   ],
   fichas: [

@@ -343,7 +343,7 @@ export default function Roles() {
     <div className="space-y-8">
       <Encabezado
         titulo="Roles"
-        descripcion="Crea roles con los permisos que necesites. Al asignar un rol a un usuario, este recibe sus permisos."
+        descripcion="Conjuntos de permisos que se asignan a los usuarios."
         acciones={
           <Boton
             onClick={() => setCreando(true)}

@@ -55,7 +55,7 @@ export default function GenerarQR() {
       <Encabezado
         eyebrow={sede}
         titulo="QR de inscripción"
-        descripcion="Comparte este código con los propietarios: al escanearlo llegan al formulario de inscripción de esta sede sin iniciar sesión."
+        descripcion="Código para que los propietarios se inscriban desde su celular."
       />
 
       {!usuario.sede && (

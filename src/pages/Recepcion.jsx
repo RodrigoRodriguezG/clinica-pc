@@ -47,7 +47,11 @@ export default function Recepcion() {
   const [confirmar, setConfirmar] = useState(null);
 
   const propietario = datos.propietarios.find((p) => p.id === propietarioId);
-  const equiposDe = (id) => datos.equipos.filter((e) => e.propietarioId === id);
+  // Cada equipo inscrito pertenece a una sede: aquí solo los de esta sede
+  const equiposDe = (id) =>
+    datos.equipos.filter(
+      (e) => e.propietarioId === id && clinica && e.sede === clinica.sede,
+    );
   const fichasDe = (id) => {
     const ids = new Set(equiposDe(id).map((e) => e.id));
     return datos.fichas.filter((f) => ids.has(f.equipoId));
@@ -94,14 +98,23 @@ export default function Recepcion() {
     }));
   };
 
-  // Solo para inscripciones que nunca tuvieron atenciones (por ejemplo, duplicadas)
+  // Solo para inscripciones que nunca tuvieron atenciones (por ejemplo,
+  // duplicadas). Quita los equipos de esta sede; el propietario se borra solo
+  // si no le quedan equipos inscritos en otra sede
   const eliminarDefinitivo = (id) => {
     if (fichasDe(id).length > 0) return;
-    actualizar((d) => ({
-      ...d,
-      propietarios: d.propietarios.filter((p) => p.id !== id),
-      equipos: d.equipos.filter((e) => e.propietarioId !== id),
-    }));
+    const deEstaSede = new Set(equiposDe(id).map((e) => e.id));
+    actualizar((d) => {
+      const equipos = d.equipos.filter((e) => !deEstaSede.has(e.id));
+      const quedan = equipos.some((e) => e.propietarioId === id);
+      return {
+        ...d,
+        equipos,
+        propietarios: quedan
+          ? d.propietarios
+          : d.propietarios.filter((p) => p.id !== id),
+      };
+    });
     if (propietarioId === id) reiniciar();
     setConfirmar(null);
   };
@@ -114,9 +127,10 @@ export default function Recepcion() {
     setConfirmar(null);
   };
 
-  // Solo los propietarios inscritos en la sede de la clínica activa
+  // Los propietarios no tienen sede: aparecen aquí si tienen algún equipo
+  // inscrito en la sede de la clínica activa
   const propietariosSede = datos.propietarios.filter(
-    (p) => clinica && p.sede === clinica.sede,
+    (p) => equiposDe(p.id).length > 0,
   );
   const ausentes = propietariosSede.filter((p) =>
     estaAusente(p, clinica?.id),
@@ -149,7 +163,7 @@ export default function Recepcion() {
       <div className="mx-auto max-w-2xl space-y-6">
         <Encabezado
           titulo={`Ficha ${creada.numero} creada`}
-          descripcion="La recepción quedó registrada y el equipo ya tiene técnicos asignados."
+          descripcion="El equipo quedó recibido y con técnicos asignados."
         />
 
         <Tarjeta className="space-y-5 p-5 sm:p-6">
@@ -187,7 +201,7 @@ export default function Recepcion() {
     <div className="space-y-8">
       <Encabezado
         titulo="Recepción de equipos"
-        descripcion="Busca al propietario, revisa sus equipos y crea la ficha de atención."
+        descripcion="Recibe los equipos inscritos y crea sus fichas."
         eyebrow={clinica ? `Clínica activa · ${clinica.nombre}` : undefined}
         acciones={
           <Boton
@@ -416,7 +430,8 @@ export default function Recepcion() {
                         ¿Eliminar la inscripción de {nombreCompleto(p)} y sus{" "}
                         {equiposDe(p.id).length}{" "}
                         {equiposDe(p.id).length === 1 ? "equipo" : "equipos"}?
-                        Nunca tuvo atenciones. Esta acción no se puede deshacer.
+                        Nunca tuvo atenciones en esta sede. Esta acción no se puede
+                        deshacer.
                       </Alerta>
                     )}
                   </Tarjeta>

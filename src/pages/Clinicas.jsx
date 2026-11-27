@@ -163,11 +163,7 @@ export default function Clinicas() {
     <div className="space-y-8">
       <Encabezado
         titulo="Clínicas"
-        descripcion={
-          todas
-            ? "Crea las jornadas de atención de todas las sedes y define sus días. Cada clínica parte con los checklists de los tres servicios."
-            : `Crea las jornadas de atención de ${usuario.sede || "tu sede"} y define sus días. Cada clínica parte con los checklists de los tres servicios.`
-        }
+        descripcion="Jornadas de atención de cada sede y sus días."
         acciones={!mostrarFormulario && botonNueva}
       />
 

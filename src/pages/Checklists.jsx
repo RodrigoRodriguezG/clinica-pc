@@ -275,7 +275,7 @@ export default function Checklists() {
     <div className="space-y-8">
       <Encabezado
         titulo="Plantillas de checklist"
-        descripcion="Cada clínica tiene sus propios checklists y cada uno corresponde a un servicio. Los tres servicios base los puede elegir el propietario al inscribirse; los checklists adicionales los elige el técnico, y su nombre queda como el servicio de la ficha."
+        descripcion="Ítems que revisan los técnicos según el servicio, para cada clínica."
         acciones={
           clinica && (
           <>

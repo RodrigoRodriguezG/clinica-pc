@@ -127,8 +127,8 @@ export default function Fichas() {
         titulo={verTodas ? "Fichas" : "Mis fichas"}
         descripcion={
           verTodas
-            ? "Consulta el estado de todos los equipos y abre el detalle de cada atención."
-            : "Revisa las fichas asignadas a ti y el historial de tus equipos."
+            ? "Estado y detalle de cada atención."
+            : "Tus fichas asignadas y su historial."
         }
       />
 

@@ -61,7 +61,7 @@ export default function Retroalimentacion() {
     <div className="space-y-6">
       <Encabezado
         titulo="Retroalimentación"
-        descripcion="Respuestas de los propietarios a la encuesta de satisfacción. Cada respuesta es la constancia de que recibió su equipo."
+        descripcion="Respuestas de la encuesta de satisfacción."
       />
 
       <BarraFiltros

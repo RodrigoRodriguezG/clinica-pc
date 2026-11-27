@@ -63,20 +63,25 @@ const migrarServicios = (datos) => {
     usuarios: datos.usuarios.map((u) =>
       u.sede === undefined ? { ...u, sede: "" } : u,
     ),
-    // Propietarios sin sede: la de la clínica de su ficha más reciente
-    // (sin fichas, la primera sede)
-    propietarios: datos.propietarios.map((p) => {
-      if (p.sede) return p;
-      const equipos = new Set(
-        datos.equipos.filter((e) => e.propietarioId === p.id).map((e) => e.id),
-      );
+    // La sede es de cada atención, no del propietario: el equipo sin sede toma
+    // la de la clínica de su ficha más reciente; sin fichas, la que tenía su
+    // propietario en una versión anterior o, si no, la primera sede
+    equipos: datos.equipos.map((e) => {
+      if (e.sede) return e;
       const ultima = datos.fichas
-        .filter((f) => equipos.has(f.equipoId))
+        .filter((f) => f.equipoId === e.id)
         .sort((a, b) => b.creada.localeCompare(a.creada))[0];
-      const sede = ultima
-        ? datos.clinicas.find((c) => c.id === ultima.clinicaId)?.sede
-        : null;
-      return { ...p, sede: sede ?? SEDES[0] };
+      const sede =
+        (ultima &&
+          datos.clinicas.find((c) => c.id === ultima.clinicaId)?.sede) ||
+        datos.propietarios.find((p) => p.id === e.propietarioId)?.sede ||
+        SEDES[0];
+      return { ...e, sede };
+    }),
+    propietarios: datos.propietarios.map((p) => {
+      if (p.sede === undefined) return p;
+      const { sede: _sede, ...resto } = p;
+      return resto;
     }),
     fichas: datos.fichas.map((f) =>
       f.plantillaId !== undefined

@@ -335,7 +335,6 @@ export default function FormInscripcion({ enPanel = false }) {
     setError("");
     const ahora = new Date().toISOString();
     const personales = {
-      sede, // un propietario que se inscribe en otra sede pasa a esa sede
       rut,
       nombre,
       apellidoPaterno,
@@ -381,6 +380,9 @@ export default function FormInscripcion({ enPanel = false }) {
       numeroEquipo: e.numeroEquipo,
       accesorios: "",
       servicio: e.servicio,
+      // La atención queda en la sede donde se inscribió (el propietario no
+      // tiene sede: puede tener equipos inscritos en ambas)
+      sede,
       creadoEn: ahora,
     }));
 

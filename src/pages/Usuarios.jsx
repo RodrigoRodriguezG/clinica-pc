@@ -187,7 +187,7 @@ export default function Usuarios() {
     <div className="space-y-8">
       <Encabezado
         titulo="Usuarios y permisos"
-        descripcion="Crea las cuentas del equipo una por una o impórtalas desde Excel, cambia su rol, ajusta permisos o da de baja."
+        descripcion="Cuentas del equipo, con su rol, sede y permisos."
         acciones={
           <>
             <Boton
