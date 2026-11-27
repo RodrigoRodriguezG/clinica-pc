@@ -257,6 +257,7 @@ export const crearDatosIniciales = () => ({
       ],
       creada: "2025-10-09T10:15:00.000Z",
       cerrada: "2025-10-09T16:40:00.000Z",
+      tokenEncuesta: "7f3c2a9e-4b1d-4e8a-9c55-2d6f0b8e1a47",
     },
     {
       id: "f2",
@@ -343,5 +344,15 @@ export const crearDatosIniciales = () => ({
       cerrada: null,
     },
   ],
-  retros: [],
+  // Respuestas a la encuesta de satisfacción (constancia de recepción)
+  retros: [
+    {
+      id: "r1",
+      fichaId: "f1",
+      fecha: "2025-10-09T17:05:00.000Z",
+      nota: 5,
+      conforme: true,
+      comentario: "Muy buena atención, el equipo volvió a encender.",
+    },
+  ],
 });

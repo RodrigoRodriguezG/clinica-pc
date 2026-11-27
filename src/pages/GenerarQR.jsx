@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import QRCode from "qrcode";
+import { useCodigoQR } from "../lib/useCodigoQR.js";
+import CodigoQR from "../components/CodigoQR.jsx";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Encabezado from "../components/ui/Encabezado.jsx";
@@ -20,24 +21,10 @@ const esLocal = () =>
 
 export default function GenerarQR() {
   const enlace = enlaceInscripcion();
-  const [imagen, setImagen] = useState("");
-  const [error, setError] = useState("");
+  const { imagen, error: errorQR } = useCodigoQR(enlace);
+  const [errorCopia, setErrorCopia] = useState("");
+  const error = errorQR || errorCopia;
   const [copiado, setCopiado] = useState(false);
-
-  useEffect(() => {
-    let vigente = true;
-    QRCode.toDataURL(enlace, {
-      width: 1024,
-      margin: 2,
-      errorCorrectionLevel: "M",
-      color: { dark: "#1a1a1a", light: "#ffffff" },
-    })
-      .then((url) => vigente && setImagen(url))
-      .catch(() => vigente && setError("No se pudo generar el código QR."));
-    return () => {
-      vigente = false;
-    };
-  }, [enlace]);
 
   useEffect(() => {
     if (!copiado) return undefined;
@@ -50,7 +37,7 @@ export default function GenerarQR() {
       await navigator.clipboard.writeText(enlace);
       setCopiado(true);
     } catch {
-      setError("No se pudo copiar el enlace. Cópialo manualmente.");
+      setErrorCopia("No se pudo copiar el enlace. Cópialo manualmente.");
     }
   };
 
@@ -76,17 +63,11 @@ export default function GenerarQR() {
       )}
 
       <Tarjeta className="grid gap-6 p-5 sm:p-7 md:grid-cols-[auto_1fr] md:items-center">
-        <div className="mx-auto w-full max-w-72 rounded-control border border-neutral-200 bg-white p-3 shadow-sm">
-          {imagen ? (
-            <img
-              src={imagen}
-              alt="Código QR del formulario de inscripción a la Clínica del PC"
-              className="aspect-square w-full"
-            />
-          ) : (
-            <div className="aspect-square w-full animate-pulse rounded bg-neutral-100" />
-          )}
-        </div>
+        <CodigoQR
+          imagen={imagen}
+          alt="Código QR del formulario de inscripción a la Clínica del PC"
+          className="max-w-72"
+        />
 
         <div className="min-w-0 space-y-4">
           <div className="space-y-1">

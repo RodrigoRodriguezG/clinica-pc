@@ -91,12 +91,18 @@ export const crearTecnico = ({ nombre, correo }, clave, permisos) => ({
 });
 
 // Genera y descarga un .xlsx de una hoja con las filas dadas
-export async function descargarXlsx(filas, anchos, nombreHoja, nombreArchivo) {
+export const descargarXlsx = (filas, anchos, nombreHoja, nombreArchivo) =>
+  descargarLibroXlsx([{ nombre: nombreHoja, filas, anchos }], nombreArchivo);
+
+// Genera y descarga un .xlsx con varias hojas: [{ nombre, filas, anchos }]
+export async function descargarLibroXlsx(hojas, nombreArchivo) {
   const XLSX = await cargarXlsx();
-  const hoja = XLSX.utils.aoa_to_sheet(filas);
-  hoja["!cols"] = anchos.map((wch) => ({ wch }));
   const libro = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(libro, hoja, nombreHoja);
+  for (const { nombre, filas, anchos } of hojas) {
+    const hoja = XLSX.utils.aoa_to_sheet(filas);
+    hoja["!cols"] = anchos.map((wch) => ({ wch }));
+    XLSX.utils.book_append_sheet(libro, hoja, nombre);
+  }
   XLSX.writeFile(libro, nombreArchivo);
 }
 

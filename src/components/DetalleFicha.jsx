@@ -2,6 +2,7 @@ import { createElement, useState } from "react";
 import { useApp } from "../store.jsx";
 import {
   ESTADO_CIERRE_ANTICIPADO,
+  ESTADO_ENTREGADO,
   ESTADO_LISTO,
   NO_APLICA,
 } from "../constantes.js";
@@ -20,6 +21,7 @@ import {
   estadoTrasGuardarDatos,
 } from "../lib/fichas.js";
 import AtencionAnterior from "./AtencionAnterior.jsx";
+import EncuestaFicha from "./EncuestaFicha.jsx";
 import Alerta from "./ui/Alerta.jsx";
 import Boton from "./ui/Boton.jsx";
 import Campo from "./ui/Campo.jsx";
@@ -226,7 +228,9 @@ export default function DetalleFicha({ ficha }) {
   const confirmarEntregarFicha = () => {
     modificar((f) => entregarFicha(f, usuario.id));
     setConfirmarEntrega(false);
-    setAviso("Equipo entregado. La atención quedó cerrada.");
+    setAviso(
+      "Equipo entregado. Muestra al propietario el QR de la encuesta para que confirme la recepción.",
+    );
   };
 
   const agregarObservacion = (e) => {
@@ -733,6 +737,11 @@ export default function DetalleFicha({ ficha }) {
             </Alerta>
           )}
         </section>
+      )}
+
+      {/* Encuesta de satisfacción: constancia de recepción del propietario */}
+      {ficha.estado === ESTADO_ENTREGADO && ficha.tokenEncuesta && (
+        <EncuestaFicha ficha={ficha} />
       )}
 
       {/* Rechazar o cerrar anticipadamente */}

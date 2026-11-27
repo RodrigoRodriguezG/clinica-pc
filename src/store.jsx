@@ -27,12 +27,18 @@ const migrarRoles = (datos) =>
       };
 
 // Ajusta datos guardados con versiones anteriores: "En diagnóstico" ya no existe
+// y las fichas entregadas antes de la encuesta reciben su token
 const migrar = (datos) =>
   migrarRoles({
     ...datos,
-    fichas: datos.fichas.map((f) =>
-      f.estado === "En diagnóstico" ? { ...f, estado: "En reparación" } : f,
-    ),
+    retros: datos.retros ?? [],
+    fichas: datos.fichas.map((f) => {
+      const ficha =
+        f.estado === "En diagnóstico" ? { ...f, estado: "En reparación" } : f;
+      return ficha.estado === "Entregado" && !ficha.tokenEncuesta
+        ? { ...ficha, tokenEncuesta: crypto.randomUUID() }
+        : ficha;
+    }),
   });
 
 // Lee los datos guardados; si no hay (o están dañados), usa los de ejemplo

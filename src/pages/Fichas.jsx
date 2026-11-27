@@ -74,6 +74,9 @@ export default function Fichas() {
   const q = normalizar(filtros.texto.trim());
   const lista = fichasVisibles(datos, usuario)
     .filter((f) => {
+      // La ficha abierta no desaparece si cambia de estado (por ejemplo, al
+      // entregarla debe seguir a la vista para mostrar el QR de la encuesta)
+      if (f.id === abierta) return true;
       const eq = datos.equipos.find((e) => e.id === f.equipoId);
       if (filtros.estado === EN_PODER) {
         if (

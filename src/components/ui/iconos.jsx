@@ -306,3 +306,19 @@ export function IconoCopiar(props) {
     </Icono>
   );
 }
+
+export function IconoGrafico(props) {
+  return (
+    <Icono {...props}>
+      <path d="M4 20h16M7 16v-5M12 16V6M17 16v-8" />
+    </Icono>
+  );
+}
+
+export function IconoEstrella(props) {
+  return (
+    <Icono {...props}>
+      <path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z" />
+    </Icono>
+  );
+}

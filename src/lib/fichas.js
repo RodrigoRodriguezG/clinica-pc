@@ -113,10 +113,12 @@ export const cerrarFicha = (ficha, tecnicoId) => ({
   ],
 });
 
-// El propietario retiró su equipo: la atención termina
+// El propietario retiró su equipo: la atención termina. Se crea el token de
+// la encuesta de satisfacción, que el propietario responde por QR
 export const entregarFicha = (ficha, tecnicoId) => ({
   ...ficha,
   estado: ESTADO_ENTREGADO,
+  tokenEncuesta: ficha.tokenEncuesta ?? crypto.randomUUID(),
   observaciones: [
     ...ficha.observaciones,
     nuevaObservacion(tecnicoId, "Equipo entregado al propietario."),

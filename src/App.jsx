@@ -24,6 +24,9 @@ import ClinicaDetalle from "./pages/ClinicaDetalle.jsx";
 import GenerarQR from "./pages/GenerarQR.jsx";
 import Roles from "./pages/Roles.jsx";
 import MiCuenta from "./pages/MiCuenta.jsx";
+import Reportes from "./pages/Reportes.jsx";
+import Retroalimentacion from "./pages/Retroalimentacion.jsx";
+import Encuesta from "./pages/Encuesta.jsx";
 import Boton from "./components/ui/Boton.jsx";
 import Tarjeta from "./components/ui/Tarjeta.jsx";
 import { cx } from "./components/ui/cx.js";
@@ -33,7 +36,9 @@ import {
   IconoChecklist,
   IconoClinicas,
   IconoEscudo,
+  IconoEstrella,
   IconoFichas,
+  IconoGrafico,
   IconoInscripcion,
   IconoMenu,
   IconoQR,
@@ -89,6 +94,23 @@ const MENU = [
         texto: "Fichas",
         permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
         Icono: IconoFichas,
+      },
+    ],
+  },
+  {
+    grupo: "Análisis",
+    opciones: [
+      {
+        ruta: "/reportes",
+        texto: "Reportes",
+        permiso: PERMISOS.VER_REPORTES,
+        Icono: IconoGrafico,
+      },
+      {
+        ruta: "/retroalimentacion",
+        texto: "Retroalimentación",
+        permiso: PERMISOS.VER_RETROALIMENTACION,
+        Icono: IconoEstrella,
       },
     ],
   },
@@ -510,6 +532,22 @@ function Panel() {
               }
             />
             <Route
+              path="/reportes"
+              element={
+                <Protegida permiso={PERMISOS.VER_REPORTES}>
+                  <Reportes />
+                </Protegida>
+              }
+            />
+            <Route
+              path="/retroalimentacion"
+              element={
+                <Protegida permiso={PERMISOS.VER_RETROALIMENTACION}>
+                  <Retroalimentacion />
+                </Protegida>
+              }
+            />
+            <Route
               path="/clinicas/:clinicaId"
               element={
                 <Protegida permiso={PERMISOS.CREAR_CLINICAS}>
@@ -532,6 +570,14 @@ function Panel() {
 function Raiz() {
   const { usuario } = useApp();
   const { pathname } = useLocation();
+  // La encuesta de satisfacción (QR de cada ficha) siempre es pública
+  if (pathname.startsWith("/encuesta/"))
+    return (
+      <Encuesta
+        key={pathname}
+        token={decodeURIComponent(pathname.slice("/encuesta/".length))}
+      />
+    );
   const publica =
     pathname === "/inscripcion" && !puede(usuario, PERMISOS.RECEPCIONAR);
   return publica ? <FormInscripcion /> : <Panel />;
