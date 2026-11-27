@@ -3,9 +3,11 @@ import { crearDatosIniciales } from "./data/seed.js";
 import {
   PERMISOS,
   ROLES,
-  copiarPlantillasServicio,
+  IDS_PLANTILLAS_SERVICIO,
+  SEDES,
   copiarRolesBase,
 } from "./constantes.js";
+import { plantillasBaseFaltantes } from "./lib/checklists.js";
 
 const CLAVE_DATOS = "clinica-pc-datos";
 const CLAVE_SESION = "clinica-pc-sesion";
@@ -31,16 +33,51 @@ const migrarRoles = (datos) =>
         ),
       };
 
-// Datos de antes de los checklists por servicio: se agregan los 3 checklists
-// de servicio. Las fichas que ya tenían ítems los conservan con el servicio
-// "Checklist general"; las que no, quedan para que el técnico elija uno.
+// Datos de antes de los checklists por clínica y de las sedes:
+// - los usuarios quedan sin sede hasta que el administrador les asigne una;
+// - los checklists globales se copian a cada clínica (los 3 de servicio
+//   globales se reemplazan por las copias propias de cada clínica);
+// - las fichas sin servicio que ya tenían ítems los conservan con el servicio
+//   "Checklist general"; las que no, quedan para que el técnico elija uno.
 const migrarServicios = (datos) => {
-  const faltantes = copiarPlantillasServicio().filter(
-    (p) => !datos.plantillas.some((x) => x.id === p.id),
-  );
+  const globales = datos.plantillas.filter((p) => !p.clinicaId);
+  let plantillas = [
+    ...datos.plantillas.filter((p) => p.clinicaId),
+    ...datos.clinicas.flatMap((c) =>
+      globales
+        .filter((p) => !IDS_PLANTILLAS_SERVICIO.includes(p.id))
+        .map((p) => ({
+          ...p,
+          id: `${p.id}-${c.id}`,
+          clinicaId: c.id,
+          items: p.items.map((i) => ({ ...i })),
+        })),
+    ),
+  ];
+  for (const c of datos.clinicas)
+    plantillas = [...plantillasBaseFaltantes(plantillas, c.id), ...plantillas];
+
   return {
     ...datos,
-    plantillas: [...faltantes, ...datos.plantillas],
+    plantillas,
+    usuarios: datos.usuarios.map((u) =>
+      u.sede === undefined ? { ...u, sede: "" } : u,
+    ),
+    // Propietarios sin sede: la de la clínica de su ficha más reciente
+    // (sin fichas, la primera sede)
+    propietarios: datos.propietarios.map((p) => {
+      if (p.sede) return p;
+      const equipos = new Set(
+        datos.equipos.filter((e) => e.propietarioId === p.id).map((e) => e.id),
+      );
+      const ultima = datos.fichas
+        .filter((f) => equipos.has(f.equipoId))
+        .sort((a, b) => b.creada.localeCompare(a.creada))[0];
+      const sede = ultima
+        ? datos.clinicas.find((c) => c.id === ultima.clinicaId)?.sede
+        : null;
+      return { ...p, sede: sede ?? SEDES[0] };
+    }),
     fichas: datos.fichas.map((f) =>
       f.plantillaId !== undefined
         ? f

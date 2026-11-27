@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
-import { ETIQUETA_PERMISO, PERMISOS, ROLES } from "../constantes.js";
+import { ETIQUETA_PERMISO, PERMISOS, ROLES, SEDES } from "../constantes.js";
 import { nombreRol, permisosDeRol } from "../lib/roles.js";
 import { normalizar } from "../lib/texto.js";
 import { aplicarRol, motivoBloqueoCambioRol } from "../lib/usuarios.js";
@@ -33,7 +33,20 @@ const FORMULARIO_VACIO = {
   correo: "",
   clave: "",
   rol: ROLES.TECNICO,
+  sede: "",
 };
+
+// Opciones de sede: "" = sin sede (por ejemplo, quien ve todas las sedes)
+const OpcionesSede = () => (
+  <>
+    <option value="">Sin sede</option>
+    {SEDES.map((s) => (
+      <option key={s} value={s}>
+        {s}
+      </option>
+    ))}
+  </>
+);
 const POR_PAGINA = 20;
 
 export default function Usuarios() {
@@ -97,6 +110,8 @@ export default function Usuarios() {
 
     if (!datos.roles.some((r) => r.id === form.rol))
       return setError("Elige un rol válido.");
+    if (form.sede && !SEDES.includes(form.sede))
+      return setError("Elige una sede válida.");
     if (form.clave.length < 8)
       return setError("La contraseña debe tener al menos 8 caracteres.");
     if (datos.usuarios.some((u) => u.correo === correo))
@@ -110,6 +125,7 @@ export default function Usuarios() {
       clave: form.clave,
       rol: form.rol,
       permisos: permisosDeRol(datos, form.rol), // permisos iniciales según el rol
+      sede: form.sede,
       activo: true,
     };
     actualizar((d) => ({ ...d, usuarios: [...d.usuarios, nuevo] }));
@@ -131,6 +147,13 @@ export default function Usuarios() {
             : [...u.permisos, permiso],
         };
       }),
+    }));
+
+  // La sede define qué clínicas ve con los permisos "de su sede"
+  const cambiarSede = (id, sede) =>
+    actualizar((d) => ({
+      ...d,
+      usuarios: d.usuarios.map((u) => (u.id === id ? { ...u, sede } : u)),
     }));
 
   // Dar de baja o reactivar (no se borra: se conserva el historial)
@@ -253,6 +276,15 @@ export default function Usuarios() {
                       {r.nombre}
                     </option>
                   ))}
+                </Campo>
+                <Campo
+                  as="select"
+                  etiqueta="Sede"
+                  value={form.sede}
+                  onChange={cambiar("sede")}
+                  ayuda="Con los permisos “de su sede” solo verá las clínicas de esta sede."
+                >
+                  <OpcionesSede />
                 </Campo>
               </div>
             </Paso>
@@ -382,6 +414,9 @@ export default function Usuarios() {
                         <p className="break-all text-sm text-slate-600">
                           {u.correo}
                         </p>
+                        <p className="text-xs text-slate-500">
+                          {u.sede || "Sin sede asignada"}
+                        </p>
                       </div>
                     </div>
                     {!esYo && (
@@ -397,6 +432,7 @@ export default function Usuarios() {
 
                   {/* Rol y permisos */}
                   <div className="grid gap-4 border-t border-slate-100 px-4 py-4 sm:grid-cols-[16rem_minmax(0,1fr)] sm:items-start sm:px-5">
+                    <div className="space-y-3">
                     <Campo
                       as="select"
                       etiqueta="Rol"
@@ -415,6 +451,15 @@ export default function Usuarios() {
                         </option>
                       ))}
                     </Campo>
+                    <Campo
+                      as="select"
+                      etiqueta="Sede"
+                      value={u.sede ?? ""}
+                      onChange={(e) => cambiarSede(u.id, e.target.value)}
+                    >
+                      <OpcionesSede />
+                    </Campo>
+                    </div>
 
                     {/* Permisos, plegados para que la lista sea manejable */}
                     <details className="group rounded-control border border-slate-200 sm:mt-[1.625rem]">

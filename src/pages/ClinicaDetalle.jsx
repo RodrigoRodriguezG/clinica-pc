@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useApp } from "../store.jsx";
-import { PERMISOS } from "../constantes.js";
+import { puedeClinica } from "../lib/sedes.js";
 import { nombreRol } from "../lib/roles.js";
-import { puede } from "../lib/permisos.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { formatearFecha } from "../lib/fechas.js";
 import { limpiarRut, enmascararRut } from "../lib/rut.js";
@@ -63,13 +62,17 @@ export default function ClinicaDetalle() {
   const [filtroPropietarios, setFiltroPropietarios] = useState("");
   const [filtroEquipos, setFiltroEquipos] = useState("");
 
-  const puedeConfigurar = puede(usuario, PERMISOS.CREAR_CLINICAS);
+  // Una clínica de otra sede (sin el permiso de todas las sedes) se trata
+  // como no encontrada
+  const encontrada = datos.clinicas.find((c) => c.id === clinicaId);
+  const clinica = puedeClinica(usuario, encontrada, "clinicas")
+    ? encontrada
+    : null;
+  const puedeConfigurar = Boolean(clinica);
   // Solo visual: qué pestaña se está mirando
   const [pestana, setPestana] = useState(
     puedeConfigurar ? "personal" : "participantes",
   );
-
-  const clinica = datos.clinicas.find((c) => c.id === clinicaId);
 
   if (!clinica) {
     return (

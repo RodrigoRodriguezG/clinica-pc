@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
+import {
+  alcanceTodas,
+  clinicasPermitidas,
+  motivoSinClinicas,
+} from "../lib/sedes.js";
 import { ESTADO_ENTREGADO } from "../constantes.js";
 import { notaPromedio, porcentaje } from "../lib/encuestas.js";
 import BarraFiltros from "../components/ui/BarraFiltros.jsx";
@@ -30,12 +35,16 @@ function Dato({ etiqueta, valor }) {
 
 // Respuestas de la encuesta de satisfacción (RF-10)
 export default function Retroalimentacion() {
-  const { datos } = useApp();
+  const { datos, usuario } = useApp();
+  // Con el permiso de su sede solo aparecen las clínicas de esa sede
+  const clinicas = clinicasPermitidas(datos, usuario, "retro");
+  const todas = alcanceTodas(usuario, "retro");
   const [clinicaId, setClinicaId] = useState("");
+  const ids = clinicas
+    .filter((c) => !clinicaId || c.id === clinicaId)
+    .map((c) => c.id);
 
-  const fichas = datos.fichas.filter(
-    (f) => !clinicaId || f.clinicaId === clinicaId,
-  );
+  const fichas = datos.fichas.filter((f) => ids.includes(f.clinicaId));
   const idsFichas = new Set(fichas.map((f) => f.id));
   const respuestas = (datos.retros ?? [])
     .filter((r) => idsFichas.has(r.fichaId))
@@ -65,8 +74,12 @@ export default function Retroalimentacion() {
           value={clinicaId}
           onChange={(e) => setClinicaId(e.target.value)}
         >
-          <option value="">Todas las clínicas</option>
-          {datos.clinicas.map((c) => (
+          <option value="">
+            {todas
+              ? "Todas las clínicas"
+              : `Todas las clínicas de ${usuario.sede || "mi sede"}`}
+          </option>
+          {clinicas.map((c) => (
             <option key={c.id} value={c.id}>
               {c.nombre} · {c.sede}
             </option>
@@ -95,7 +108,11 @@ export default function Retroalimentacion() {
           <EstadoVacio
             icono={<IconoEstrella className="h-6 w-6" />}
             titulo="Aún no hay respuestas"
-            descripcion="Las respuestas aparecen cuando los propietarios escanean el QR de la encuesta al retirar su equipo."
+            descripcion={
+              clinicas.length === 0
+                ? motivoSinClinicas(usuario, "retro")
+                : "Las respuestas aparecen cuando los propietarios escanean el QR de la encuesta al retirar su equipo."
+            }
           />
         ) : (
           <ul className="space-y-3">

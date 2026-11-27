@@ -15,9 +15,12 @@ import Paso from "./ui/Paso.jsx";
 import PanelCreacion, { PieAcciones } from "./ui/PanelCreacion.jsx";
 import { IconoDocumento } from "./ui/iconos.jsx";
 
-// Importación masiva de plantillas de checklist desde un Excel con columnas Plantilla e Ítem
-export default function ImportarChecklists({ onCerrar }) {
+// Importación masiva de plantillas de checklist desde un Excel con columnas
+// Plantilla e Ítem. Las plantillas se crean en la clínica elegida
+export default function ImportarChecklists({ clinica, onCerrar }) {
   const { datos, actualizar } = useApp();
+  const deLaClinica = (plantillas) =>
+    plantillas.filter((p) => p.clinicaId === clinica.id);
   const inputArchivo = useRef(null);
   const [filas, setFilas] = useState(null); // vista previa validada
   const [nombreArchivo, setNombreArchivo] = useState("");
@@ -58,7 +61,7 @@ export default function ImportarChecklists({ onCerrar }) {
       return;
     }
     setNombreArchivo(archivo.name);
-    setFilas(validarFilasChecklist(resultado.filas, datos.plantillas));
+    setFilas(validarFilasChecklist(resultado.filas, deLaClinica(datos.plantillas)));
   };
 
   const crear = () => {
@@ -68,10 +71,15 @@ export default function ImportarChecklists({ onCerrar }) {
       const existentes = new Set(plantillas.map((p) => normalizar(p.nombre).trim()));
       return lista.filter((p) => !existentes.has(normalizar(p.nombre).trim()));
     };
-    const creadas = sinRepetir(datos.plantillas, nuevas);
+    const creadas = sinRepetir(deLaClinica(datos.plantillas), nuevas).map(
+      (p) => ({ ...p, clinicaId: clinica.id }),
+    );
     actualizar((d) => ({
       ...d,
-      plantillas: [...d.plantillas, ...sinRepetir(d.plantillas, creadas)],
+      plantillas: [
+        ...d.plantillas,
+        ...sinRepetir(deLaClinica(d.plantillas), creadas),
+      ],
     }));
     setExito(
       creadas.length === 1
@@ -84,7 +92,7 @@ export default function ImportarChecklists({ onCerrar }) {
   return (
     <PanelCreacion
       titulo="Importar checklists desde Excel"
-      descripcion="Crea varias plantillas a la vez, cada una con sus ítems."
+      descripcion={`Crea varias plantillas a la vez en ${clinica.nombre} · ${clinica.sede}, cada una con sus ítems.`}
       icono={<IconoDocumento className="h-5 w-5" />}
       onCerrar={onCerrar}
     >

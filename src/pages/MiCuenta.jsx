@@ -95,6 +95,13 @@ function DatosPersonales() {
           <p className="text-sm text-slate-600">
             Rol: <strong>{nombreRol(datos, yo.rol)}</strong>
           </p>
+          {/* La sede la asigna el administrador: aquí solo se muestra */}
+          <p className="text-sm text-slate-600">
+            Sede: <strong>{yo.sede || "Sin sede asignada"}</strong>{" "}
+            <span className="text-xs text-slate-500">
+              (la asigna el administrador)
+            </span>
+          </p>
 
           {error && (
             <Alerta variante="error" role="alert">

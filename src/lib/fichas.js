@@ -9,6 +9,7 @@ import {
   PERMISOS,
 } from "../constantes.js";
 import { puede } from "./permisos.js";
+import { clinicaDeFicha, puedeClinica, tieneAlcance } from "./sedes.js";
 
 export const estaAbierta = (ficha) => !ESTADOS_CERRADOS.includes(ficha.estado);
 
@@ -32,10 +33,11 @@ export function propietarioDeFicha(datos, ficha) {
   return datos.propietarios.find((p) => p.id === equipo?.propietarioId) ?? null;
 }
 
-// Contacto del propietario: el encargado siempre; el técnico solo si está asignado y la ficha sigue abierta
-export const puedeVerContacto = (usuario, ficha) =>
+// Contacto del propietario: quien ve las fichas de esa clínica (encargado)
+// siempre; el técnico solo si está asignado y la ficha sigue abierta
+export const puedeVerContacto = (usuario, ficha, clinica) =>
   Boolean(usuario) &&
-  (puede(usuario, PERMISOS.VER_TODAS_FICHAS) ||
+  (puedeClinica(usuario, clinica, "fichas") ||
     (ficha.tecnicosIds.includes(usuario.id) && estaAbierta(ficha)));
 
 // Solo el técnico asignado edita, mientras la ficha esté en trabajo
@@ -56,13 +58,21 @@ export const puedeEntregarFicha = (usuario, ficha) =>
   [ESTADO_LISTO, ESTADO_CIERRE_ANTICIPADO].includes(ficha.estado);
 
 // Fichas que el usuario puede ver
+// Con "ver todas las fichas" se ven las de las clínicas permitidas (todas las
+// sedes o solo la suya). El técnico ve el historial de los equipos que revisó,
+// solo dentro de su sede
 export function fichasVisibles(datos, usuario) {
-  if (puede(usuario, PERMISOS.VER_TODAS_FICHAS)) return datos.fichas;
+  if (tieneAlcance(usuario, "fichas"))
+    return datos.fichas.filter((f) =>
+      puedeClinica(usuario, clinicaDeFicha(datos, f), "fichas"),
+    );
   if (!puede(usuario, PERMISOS.REVISAR_EQUIPOS)) return [];
 
   // Las fichas que el técnico rechazó ya no son suyas: no las ve
   const propias = datos.fichas.filter(
-    (f) => !(f.rechazadaPor ?? []).includes(usuario.id),
+    (f) =>
+      !(f.rechazadaPor ?? []).includes(usuario.id) &&
+      (!usuario.sede || clinicaDeFicha(datos, f)?.sede === usuario.sede),
   );
   // Equipos que este técnico revisó alguna vez
   const equiposRevisados = new Set(

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useApp } from "../store.jsx";
-import { ROLES } from "../constantes.js";
+import { ROLES, SEDES } from "../constantes.js";
 import { permisosDeRol } from "../lib/roles.js";
 import {
   crearTecnico,
@@ -95,7 +95,7 @@ export default function ImportarUsuarios({ onCerrar }) {
       <Paso
         numero={1}
         titulo="Prepara el archivo"
-        ayuda="Usa la plantilla: columnas Nombre y Correo."
+        ayuda={`Usa la plantilla: columnas Nombre, Correo y Sede. Sedes válidas: ${SEDES.join(", ")}.`}
       >
         <Boton
           type="button"
@@ -160,6 +160,7 @@ export default function ImportarUsuarios({ onCerrar }) {
                     <th className="px-3 py-2 font-semibold">Fila</th>
                     <th className="px-3 py-2 font-semibold">Nombre</th>
                     <th className="px-3 py-2 font-semibold">Correo</th>
+                    <th className="px-3 py-2 font-semibold">Sede</th>
                     <th className="px-3 py-2 font-semibold">Estado</th>
                   </tr>
                 </thead>
@@ -172,6 +173,9 @@ export default function ImportarUsuarios({ onCerrar }) {
                       <td className="px-3 py-2 text-slate-900">{f.nombre || "—"}</td>
                       <td className="break-all px-3 py-2 text-slate-700">
                         {f.correo || "—"}
+                      </td>
+                      <td className="px-3 py-2 text-slate-700">
+                        {f.sede || "—"}
                       </td>
                       <td className="px-3 py-2">
                         <Insignia tono={f.error ? "error" : "exito"}>

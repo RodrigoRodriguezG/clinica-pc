@@ -4,11 +4,12 @@ import {
   MAX_ITEM,
   MAX_NOMBRE_PLANTILLA,
 } from "../lib/importacionChecklists.js";
-import { normalizar } from "../lib/texto.js";
 import {
   esPlantillaDeServicio,
+  nombreOcupado,
   plantillasOrdenadas,
 } from "../lib/checklists.js";
+import { clinicasPermitidas, motivoSinClinicas } from "../lib/sedes.js";
 import ImportarChecklists from "../components/ImportarChecklists.jsx";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
@@ -174,7 +175,13 @@ function Plantilla({ plantilla, deServicio, onCambiar, onDuplicar, onEliminar })
 }
 
 export default function Checklists() {
-  const { datos, actualizar } = useApp();
+  const { datos, actualizar, usuario } = useApp();
+  // Cada checklist pertenece a una clínica: se trabaja sobre una a la vez
+  const clinicas = clinicasPermitidas(datos, usuario, "checklists");
+  const [clinicaElegida, setClinicaElegida] = useState("");
+  const clinica =
+    clinicas.find((c) => c.id === clinicaElegida) ?? clinicas[0] ?? null;
+  const plantillas = clinica ? plantillasOrdenadas(datos, clinica.id) : [];
   const [nombre, setNombre] = useState("");
   const [borrador, setBorrador] = useState([]); // ítems de la plantilla nueva
   const [nuevoItem, setNuevoItem] = useState("");
@@ -200,12 +207,8 @@ export default function Checklists() {
     e.preventDefault();
     const limpio = nombre.trim();
     if (!limpio) return setError("Escribe un nombre para la plantilla.");
-    if (
-      datos.plantillas.some(
-        (p) => normalizar(p.nombre).trim() === normalizar(limpio),
-      )
-    )
-      return setError("Ya existe una plantilla con ese nombre.");
+    if (nombreOcupado(datos, clinica.id, limpio))
+      return setError("Esta clínica ya tiene una plantilla con ese nombre.");
     // Lo que quedó escrito en "Nuevo ítem" también se incluye
     const pendiente = nuevoItem.trim()
       ? [{ id: crypto.randomUUID(), texto: nuevoItem.trim() }]
@@ -217,7 +220,7 @@ export default function Checklists() {
       ...d,
       plantillas: [
         ...d.plantillas,
-        { id: crypto.randomUUID(), nombre: limpio, items },
+        { id: crypto.randomUUID(), nombre: limpio, clinicaId: clinica.id, items },
       ],
     }));
     limpiarFormulario();
@@ -239,6 +242,7 @@ export default function Checklists() {
         {
           id: crypto.randomUUID(),
           nombre: `${p.nombre} (copia)`,
+          clinicaId: p.clinicaId,
           // ids nuevos para que los ítems de la copia sean independientes
           items: p.items.map((i) => ({ ...i, id: crypto.randomUUID() })),
         },
@@ -250,7 +254,6 @@ export default function Checklists() {
       ...d,
       plantillas: d.plantillas.filter((p) => p.id !== id),
     }));
-
 
   const cerrarPanel = () => {
     setPanel(null);
@@ -272,8 +275,9 @@ export default function Checklists() {
     <div className="space-y-8">
       <Encabezado
         titulo="Plantillas de checklist"
-        descripcion="Cada checklist corresponde a un servicio. Los tres servicios base los puede elegir el propietario al inscribirse; los checklists adicionales los elige el técnico, y su nombre queda como el servicio de la ficha."
+        descripcion="Cada clínica tiene sus propios checklists y cada uno corresponde a un servicio. Los tres servicios base los puede elegir el propietario al inscribirse; los checklists adicionales los elige el técnico, y su nombre queda como el servicio de la ficha."
         acciones={
+          clinica && (
           <>
             <Boton
               variante="contorno"
@@ -289,8 +293,34 @@ export default function Checklists() {
             </Boton>
             {botonNueva}
           </>
+          )
         }
       />
+
+      {!clinica ? (
+        <EstadoVacio
+          icono={<IconoChecklist className="h-6 w-6" />}
+          titulo="No hay clínicas para mostrar"
+          descripcion={motivoSinClinicas(usuario, "checklists")}
+        />
+      ) : (
+        <>
+      <Campo
+        as="select"
+        etiqueta="Clínica"
+        className="sm:max-w-md"
+        value={clinica.id}
+        onChange={(e) => {
+          setClinicaElegida(e.target.value);
+          cerrarPanel();
+        }}
+      >
+        {clinicas.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.nombre} · {c.sede}
+          </option>
+        ))}
+      </Campo>
 
       {panel === "crear" && (
         <PanelCreacion
@@ -386,10 +416,15 @@ export default function Checklists() {
         </PanelCreacion>
       )}
 
-      {panel === "importar" && <ImportarChecklists onCerrar={cerrarPanel} />}
+      {panel === "importar" && (
+        <ImportarChecklists clinica={clinica} onCerrar={cerrarPanel} />
+      )}
 
-      <Seccion titulo="Plantillas" contador={datos.plantillas.length}>
-        {datos.plantillas.length === 0 ? (
+      <Seccion
+        titulo={`Plantillas de ${clinica.nombre} · ${clinica.sede}`}
+        contador={plantillas.length}
+      >
+        {plantillas.length === 0 ? (
           <EstadoVacio
             icono={<IconoChecklist className="h-6 w-6" />}
             titulo="Aún no hay plantillas"
@@ -398,11 +433,11 @@ export default function Checklists() {
           />
         ) : (
           <div className="space-y-4">
-            {plantillasOrdenadas(datos).map((p) => (
+            {plantillas.map((p) => (
               <Plantilla
                 key={p.id}
                 plantilla={p}
-                deServicio={esPlantillaDeServicio(p.id)}
+                deServicio={esPlantillaDeServicio(p)}
                 onCambiar={(fn) => cambiar(p.id, fn)}
                 onDuplicar={() => duplicar(p)}
                 onEliminar={() => eliminar(p.id)}
@@ -411,6 +446,8 @@ export default function Checklists() {
           </div>
         )}
       </Seccion>
+        </>
+      )}
     </div>
   );
 }

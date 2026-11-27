@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { useApp } from "../store.jsx";
+import { SEDES, SIGLA_SEDE } from "../constantes.js";
 import { useCodigoQR } from "../lib/useCodigoQR.js";
+import Campo from "../components/ui/Campo.jsx";
 import CodigoQR from "../components/CodigoQR.jsx";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
@@ -12,15 +15,21 @@ import {
   IconoInscripcion,
 } from "../components/ui/iconos.jsx";
 
-// Enlace público al formulario de inscripción (la app usa HashRouter)
-const enlaceInscripcion = () =>
-  `${window.location.origin}${window.location.pathname}#/inscripcion`;
+// Enlace público al formulario de inscripción de una sede (la app usa
+// HashRouter). La sigla de la sede asocia cada inscripción a su sede
+const enlaceInscripcion = (sigla) =>
+  `${window.location.origin}${window.location.pathname}#/inscripcion?sede=${sigla}`;
 
 const esLocal = () =>
   ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
 
 export default function GenerarQR() {
-  const enlace = enlaceInscripcion();
+  const { usuario } = useApp();
+  // Quien tiene sede genera el QR de su sede; sin sede, la elige
+  const [sedeElegida, setSedeElegida] = useState(SEDES[0]);
+  const sede = usuario.sede || sedeElegida;
+  const sigla = SIGLA_SEDE[sede];
+  const enlace = enlaceInscripcion(sigla);
   const { imagen, error: errorQR } = useCodigoQR(enlace);
   const [errorCopia, setErrorCopia] = useState("");
   const error = errorQR || errorCopia;
@@ -44,9 +53,27 @@ export default function GenerarQR() {
   return (
     <div className="space-y-6">
       <Encabezado
+        eyebrow={sede}
         titulo="QR de inscripción"
-        descripcion="Comparte este código con los propietarios: al escanearlo llegan al formulario de inscripción sin iniciar sesión."
+        descripcion="Comparte este código con los propietarios: al escanearlo llegan al formulario de inscripción de esta sede sin iniciar sesión."
       />
+
+      {!usuario.sede && (
+        <Campo
+          as="select"
+          etiqueta="Sede del QR"
+          className="sm:max-w-sm"
+          value={sedeElegida}
+          onChange={(e) => setSedeElegida(e.target.value)}
+          ayuda="Tu cuenta no tiene sede: elige para qué sede es el código."
+        >
+          {SEDES.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </Campo>
+      )}
 
       {esLocal() && (
         <Alerta variante="aviso" titulo="Estás en un entorno local">
@@ -83,7 +110,7 @@ export default function GenerarQR() {
             <Boton
               as="a"
               href={imagen || undefined}
-              download="qr-inscripcion-clinica-pc.png"
+              download={`qr-inscripcion-${sigla}.png`}
               disabled={!imagen}
             >
               <IconoDescargar className="h-4 w-4" />

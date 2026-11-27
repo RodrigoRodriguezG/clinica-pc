@@ -13,6 +13,7 @@ import { AppProvider, useApp } from "./store.jsx";
 import { PERMISOS } from "./constantes.js";
 import { nombreRol } from "./lib/roles.js";
 import { puede } from "./lib/permisos.js";
+import { ALCANCES } from "./lib/sedes.js";
 import Login from "./pages/Login.jsx";
 import Usuarios from "./pages/Usuarios.jsx";
 import Clinicas from "./pages/Clinicas.jsx";
@@ -57,13 +58,13 @@ const MENU = [
       {
         ruta: "/clinicas",
         texto: "Clínicas",
-        permiso: PERMISOS.CREAR_CLINICAS,
+        permiso: ALCANCES.clinicas,
         Icono: IconoClinicas,
       },
       {
         ruta: "/checklists",
         texto: "Checklists",
-        permiso: PERMISOS.EDITAR_CHECKLISTS,
+        permiso: ALCANCES.checklists,
         Icono: IconoChecklist,
       },
     ],
@@ -92,7 +93,7 @@ const MENU = [
       {
         ruta: "/fichas",
         texto: "Fichas",
-        permiso: [PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS],
+        permiso: [...ALCANCES.fichas, PERMISOS.REVISAR_EQUIPOS],
         Icono: IconoFichas,
       },
     ],
@@ -103,13 +104,13 @@ const MENU = [
       {
         ruta: "/reportes",
         texto: "Reportes",
-        permiso: PERMISOS.VER_REPORTES,
+        permiso: ALCANCES.reportes,
         Icono: IconoGrafico,
       },
       {
         ruta: "/retroalimentacion",
         texto: "Retroalimentación",
-        permiso: PERMISOS.VER_RETROALIMENTACION,
+        permiso: ALCANCES.retro,
         Icono: IconoEstrella,
       },
     ],
@@ -492,7 +493,7 @@ function Panel() {
             <Route
               path="/clinicas"
               element={
-                <Protegida permiso={PERMISOS.CREAR_CLINICAS}>
+                <Protegida permiso={ALCANCES.clinicas}>
                   <Clinicas />
                 </Protegida>
               }
@@ -500,7 +501,7 @@ function Panel() {
             <Route
               path="/checklists"
               element={
-                <Protegida permiso={PERMISOS.EDITAR_CHECKLISTS}>
+                <Protegida permiso={ALCANCES.checklists}>
                   <Checklists />
                 </Protegida>
               }
@@ -517,7 +518,7 @@ function Panel() {
               path="/fichas"
               element={
                 <Protegida
-                  permiso={[PERMISOS.VER_TODAS_FICHAS, PERMISOS.REVISAR_EQUIPOS]}
+                  permiso={[...ALCANCES.fichas, PERMISOS.REVISAR_EQUIPOS]}
                 >
                   <Fichas />
                 </Protegida>
@@ -534,7 +535,7 @@ function Panel() {
             <Route
               path="/reportes"
               element={
-                <Protegida permiso={PERMISOS.VER_REPORTES}>
+                <Protegida permiso={ALCANCES.reportes}>
                   <Reportes />
                 </Protegida>
               }
@@ -542,7 +543,7 @@ function Panel() {
             <Route
               path="/retroalimentacion"
               element={
-                <Protegida permiso={PERMISOS.VER_RETROALIMENTACION}>
+                <Protegida permiso={ALCANCES.retro}>
                   <Retroalimentacion />
                 </Protegida>
               }
@@ -550,7 +551,7 @@ function Panel() {
             <Route
               path="/clinicas/:clinicaId"
               element={
-                <Protegida permiso={PERMISOS.CREAR_CLINICAS}>
+                <Protegida permiso={ALCANCES.clinicas}>
                   <ClinicaDetalle />
                 </Protegida>
               }

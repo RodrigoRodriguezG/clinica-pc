@@ -4,6 +4,12 @@ import { useApp } from "../store.jsx";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha, hoyLocal, mananaLocal } from "../lib/fechas.js";
 import { clinicaEsActiva } from "../lib/clinicas.js";
+import { plantillasBaseDe, SEDES } from "../constantes.js";
+import {
+  alcanceTodas,
+  clinicasPermitidas,
+  motivoSinClinicas,
+} from "../lib/sedes.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -27,9 +33,18 @@ import {
 const FORMULARIO_VACIO = { nombre: "", sede: "" };
 
 export default function Clinicas() {
-  const { datos, actualizar } = useApp();
+  const { datos, actualizar, usuario } = useApp();
 
-  const [form, setForm] = useState(FORMULARIO_VACIO);
+  // Con el permiso de todas las sedes se elige cualquier sede; con el de su
+  // sede, la clínica queda en la sede del usuario
+  const todas = alcanceTodas(usuario, "clinicas");
+  const sedesPermitidas = todas ? SEDES : usuario.sede ? [usuario.sede] : [];
+  const clinicas = clinicasPermitidas(datos, usuario, "clinicas");
+
+  const [form, setForm] = useState(() => ({
+    ...FORMULARIO_VACIO,
+    sede: sedesPermitidas[0] ?? "",
+  }));
   const [dias, setDias] = useState([]);
   // Por defecto se propone el día siguiente
   const [dia, setDia] = useState(mananaLocal);
@@ -63,8 +78,10 @@ export default function Clinicas() {
   const crear = (e) => {
     e.preventDefault();
     const nombre = form.nombre.trim();
-    const sede = form.sede.trim();
+    const sede = form.sede;
 
+    if (!sedesPermitidas.includes(sede))
+      return setError("Elige una sede válida.");
     if (dias.length === 0)
       return setError("Agrega al menos un día para la clínica.");
     // Por si el formulario quedó abierto de un día para otro
@@ -74,10 +91,12 @@ export default function Clinicas() {
       );
     if (
       datos.clinicas.some(
-        (c) => c.nombre.trim().toLowerCase() === nombre.toLowerCase(),
+        (c) =>
+          c.sede === sede &&
+          c.nombre.trim().toLowerCase() === nombre.toLowerCase(),
       )
     )
-      return setError("Ya existe una clínica con ese nombre.");
+      return setError("Ya existe una clínica con ese nombre en esta sede.");
 
     setError("");
     const nueva = {
@@ -86,10 +105,15 @@ export default function Clinicas() {
       sede,
       dias, // ya viene ordenado
     };
-    actualizar((d) => ({ ...d, clinicas: [...d.clinicas, nueva] }));
+    // La clínica parte con su propia copia de los 3 checklists de servicio
+    actualizar((d) => ({
+      ...d,
+      clinicas: [...d.clinicas, nueva],
+      plantillas: [...d.plantillas, ...plantillasBaseDe(nueva.id)],
+    }));
 
     // Limpiar el formulario
-    setForm(FORMULARIO_VACIO);
+    setForm({ ...FORMULARIO_VACIO, sede: sedesPermitidas[0] ?? "" });
     setDias([]);
     setDia(mananaLocal());
     setMostrarFormulario(false);
@@ -108,7 +132,7 @@ export default function Clinicas() {
     );
   };
 
-  const clinicasVisibles = datos.clinicas.filter((c) => {
+  const clinicasVisibles = clinicas.filter((c) => {
     const coincideTexto =
       !busqueda ||
       normalizar(c.nombre).includes(busqueda) ||
@@ -128,7 +152,7 @@ export default function Clinicas() {
     setError("");
   };
 
-  const botonNueva = (
+  const botonNueva = sedesPermitidas.length > 0 && (
     <Boton onClick={() => setMostrarFormulario(true)} className="pl-4.5">
       <IconoMas className="h-4 w-4" />
       Nueva clínica
@@ -139,14 +163,18 @@ export default function Clinicas() {
     <div className="space-y-8">
       <Encabezado
         titulo="Clínicas"
-        descripcion="Crea las jornadas de atención y define sus días. El checklist de cada equipo depende del servicio."
+        descripcion={
+          todas
+            ? "Crea las jornadas de atención de todas las sedes y define sus días. Cada clínica parte con los checklists de los tres servicios."
+            : `Crea las jornadas de atención de ${usuario.sede || "tu sede"} y define sus días. Cada clínica parte con los checklists de los tres servicios.`
+        }
         acciones={!mostrarFormulario && botonNueva}
       />
 
       {mostrarFormulario && (
         <PanelCreacion
           titulo="Nueva clínica"
-          descripcion="Completa los tres pasos. El personal se asigna después, desde el detalle de la clínica."
+          descripcion="Completa los dos pasos. El personal se asigna después, desde el detalle de la clínica."
           icono={<IconoClinicas className="h-5 w-5" />}
           onCerrar={cerrarFormulario}
         >
@@ -165,12 +193,21 @@ export default function Clinicas() {
                   required
                 />
                 <Campo
+                  as="select"
                   etiqueta="Sede"
-                  placeholder="Ej. Santiago Centro"
                   value={form.sede}
                   onChange={cambiar("sede")}
-                  required
-                />
+                  disabled={!todas}
+                  ayuda={
+                    todas ? undefined : "Solo puedes crear clínicas de tu sede."
+                  }
+                >
+                  {sedesPermitidas.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </Campo>
               </div>
             </Paso>
 
@@ -252,7 +289,7 @@ export default function Clinicas() {
         titulo="Clínicas registradas"
         contador={
           hayFiltros
-            ? `${clinicasVisibles.length} de ${datos.clinicas.length}`
+            ? `${clinicasVisibles.length} de ${clinicas.length}`
             : clinicasVisibles.length
         }
       >
@@ -286,7 +323,9 @@ export default function Clinicas() {
             descripcion={
               hayFiltros
                 ? "Prueba con otro nombre, sede o día."
-                : "Crea la primera clínica para comenzar a recibir equipos."
+                : sedesPermitidas.length === 0
+                  ? motivoSinClinicas(usuario, "clinicas")
+                  : "Crea la primera clínica para comenzar a recibir equipos."
             }
             accion={
               hayFiltros ? (

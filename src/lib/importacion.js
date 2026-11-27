@@ -1,9 +1,15 @@
-import { ROLES } from "../constantes.js";
+import { ROLES, SEDES } from "../constantes.js";
 import { normalizar } from "./texto.js";
 
 // Encabezados aceptados (ya normalizados: sin tildes ni mayúsculas)
 const ALIAS_NOMBRE = ["nombre", "nombre completo", "nombres"];
 const ALIAS_CORREO = ["correo", "email", "e-mail", "correo electronico", "mail"];
+const ALIAS_SEDE = ["sede"];
+
+// "san pedro de la paz" o "Sede San Pedro de la Paz" -> "Sede San Pedro de la Paz"
+const claveSede = (texto) => normalizar(texto).trim().replace(/^sede\s+/, "");
+export const sedeOficial = (texto) =>
+  SEDES.find((s) => claveSede(s) === claveSede(texto)) ?? null;
 
 export const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,15 +57,21 @@ export async function leerTablaExcel(archivo, columnas) {
   }
 }
 
-// Lee técnicos (columnas Nombre y Correo). Devuelve { filas } o { error }
+// Lee técnicos (columnas Nombre, Correo y Sede). Devuelve { filas } o { error }
 export async function leerFilasExcel(archivo) {
   const resultado = await leerTablaExcel(archivo, {
     nombre: { alias: ALIAS_NOMBRE, etiqueta: "Nombre" },
     correo: { alias: ALIAS_CORREO, etiqueta: "Correo" },
+    sede: { alias: ALIAS_SEDE, etiqueta: "Sede" },
   });
   if (resultado.error) return resultado;
   return {
-    filas: resultado.filas.map((f) => ({ ...f, correo: f.correo.toLowerCase() })),
+    filas: resultado.filas.map((f) => ({
+      ...f,
+      correo: f.correo.toLowerCase(),
+      // Se guarda con el nombre oficial; si no coincide queda el texto original
+      sede: sedeOficial(f.sede) ?? f.sede,
+    })),
   };
 }
 
@@ -74,19 +86,22 @@ export function validarFilas(filas, usuariosExistentes) {
     else if (!FORMATO_CORREO.test(f.correo)) error = "Correo inválido";
     else if (existentes.has(f.correo)) error = "Correo ya registrado";
     else if (vistos.has(f.correo)) error = "Correo repetido en el archivo";
+    else if (!f.sede) error = "Falta la sede";
+    else if (!SEDES.includes(f.sede)) error = "Sede no válida";
     vistos.add(f.correo);
     return { ...f, error };
   });
 }
 
 // Misma forma que un usuario creado desde el formulario de Usuarios
-export const crearTecnico = ({ nombre, correo }, clave, permisos) => ({
+export const crearTecnico = ({ nombre, correo, sede }, clave, permisos) => ({
   id: crypto.randomUUID(),
   nombre,
   correo,
   clave,
   rol: ROLES.TECNICO,
   permisos,
+  sede,
   activo: true,
 });
 
@@ -109,10 +124,10 @@ export async function descargarLibroXlsx(hojas, nombreArchivo) {
 export const descargarPlantilla = () =>
   descargarXlsx(
     [
-      ["Nombre", "Correo"],
-      ["Juan Pérez", "juan.perez@inacap.cl"],
+      ["Nombre", "Correo", "Sede"],
+      ["Juan Pérez", "juan.perez@inacap.cl", SEDES[0]],
     ],
-    [30, 34],
+    [30, 34, 28],
     "Técnicos",
     "plantilla-tecnicos.xlsx",
   );

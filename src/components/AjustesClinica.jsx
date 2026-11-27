@@ -17,9 +17,13 @@ export default function AjustesClinica({ clinica }) {
   const anio = anioDeClinica(clinica);
   const anioActual = new Date().getFullYear();
 
-  // Personas que pueden trabajar en una clínica: recepcionan o revisan equipos
+  // Personas que pueden trabajar en una clínica: recepcionan o revisan
+  // equipos y son de la sede de la clínica. Quien ya estaba asignado desde
+  // otra sede se sigue mostrando para poder quitarlo
   const personal = datos.usuarios.filter(
-    (u) => puede(u, PERMISOS.RECEPCIONAR) || puede(u, PERMISOS.REVISAR_EQUIPOS),
+    (u) =>
+      (puede(u, PERMISOS.RECEPCIONAR) || puede(u, PERMISOS.REVISAR_EQUIPOS)) &&
+      (u.sede === clinica.sede || ids.includes(u.id)),
   );
 
   const alternarPersona = (id) => {
@@ -99,7 +103,8 @@ export default function AjustesClinica({ clinica }) {
                   </span>
                   <span className="block text-xs text-slate-500">
                     {nombreRol(datos, u.rol)}
-                    {otra && ` · Ya asignado a ${otra.sede}`}
+                    {otra && ` · Ya asignado a ${otra.nombre}`}
+                    {u.sede !== clinica.sede && " · De otra sede"}
                   </span>
                 </span>
               </label>
@@ -107,7 +112,8 @@ export default function AjustesClinica({ clinica }) {
           })}
           {personal.length === 0 && (
             <p className="text-sm text-slate-600">
-              No hay usuarios con permisos de recepción o revisión.
+              No hay personas de {clinica.sede} con permisos de recepción o
+              revisión. Asigna la sede a cada persona en Usuarios.
             </p>
           )}
         </div>

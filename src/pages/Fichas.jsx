@@ -9,6 +9,7 @@ import { puede } from "../lib/permisos.js";
 import { normalizar } from "../lib/texto.js";
 import { formatearFecha, fechaLocal } from "../lib/fechas.js";
 import { fichasVisibles } from "../lib/fichas.js";
+import { puedeClinica, tieneAlcance } from "../lib/sedes.js";
 import DetalleFicha from "../components/DetalleFicha.jsx";
 import Boton from "../components/ui/Boton.jsx";
 import Campo from "../components/ui/Campo.jsx";
@@ -45,7 +46,14 @@ const posicionEstado = (estado) => {
 export default function Fichas() {
   const { datos, usuario } = useApp();
   const esTecnico = puede(usuario, PERMISOS.REVISAR_EQUIPOS);
-  const verTodas = puede(usuario, PERMISOS.VER_TODAS_FICHAS);
+  const verTodas = tieneAlcance(usuario, "fichas");
+  const visibles = fichasVisibles(datos, usuario);
+  // Solo las clínicas que el usuario puede ver (su sede o todas)
+  const clinicasFiltro = datos.clinicas.filter(
+    (c) =>
+      puedeClinica(usuario, c, "fichas") ||
+      visibles.some((f) => f.clinicaId === c.id),
+  );
   const soloTecnico = esTecnico && !verTodas;
   const estadoPorDefecto = soloTecnico ? EN_PODER : "";
 
@@ -72,7 +80,7 @@ export default function Fichas() {
       ];
 
   const q = normalizar(filtros.texto.trim());
-  const lista = fichasVisibles(datos, usuario)
+  const lista = visibles
     .filter((f) => {
       // La ficha abierta no desaparece si cambia de estado (por ejemplo, al
       // entregarla debe seguir a la vista para mostrar el QR de la encuesta)
@@ -154,7 +162,7 @@ export default function Fichas() {
             aria-label="Filtrar por clínica"
           >
             <option value="">Todas las clínicas</option>
-            {datos.clinicas.map((c) => (
+            {clinicasFiltro.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.nombre}
               </option>

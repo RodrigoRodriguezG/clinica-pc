@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useApp } from "../store.jsx";
-import { PERMISOS } from "../constantes.js";
-import { puede } from "../lib/permisos.js";
+import { puedeClinica } from "../lib/sedes.js";
 import { enlaceEncuesta, respuestaDeFicha } from "../lib/encuestas.js";
 import { useCodigoQR } from "../lib/useCodigoQR.js";
 import CodigoQR from "./CodigoQR.jsx";
@@ -20,7 +19,8 @@ const fechaHora = (iso) =>
 export default function EncuestaFicha({ ficha }) {
   const { datos, usuario } = useApp();
   const respuesta = respuestaDeFicha(datos, ficha.id);
-  const verDetalle = puede(usuario, PERMISOS.VER_RETROALIMENTACION);
+  const clinica = datos.clinicas.find((c) => c.id === ficha.clinicaId);
+  const verDetalle = puedeClinica(usuario, clinica, "retro");
 
   return (
     <section className="space-y-3 border-t border-slate-200 pt-4">

@@ -23,7 +23,11 @@ export default function FormularioFicha({
   const esReingreso = datos.fichas.some((f) => f.equipoId === equipo.id);
   // Servicio que eligió el propietario al inscribirse ("" = Otro)
   const servicioInscrito = equipo.servicio ?? "";
-  const plantilla = plantillaPorServicio(datos, servicioInscrito);
+  const plantilla = plantillaPorServicio(
+    datos,
+    servicioInscrito,
+    clinica.id,
+  );
 
   const [problema, setProblema] = useState("");
   const [tecnicosIds, setTecnicosIds] = useState([]);

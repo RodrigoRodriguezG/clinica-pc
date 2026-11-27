@@ -6,6 +6,7 @@ import { limpiarRut, enmascararRut } from "../lib/rut.js";
 import { normalizar, nombreCompleto } from "../lib/texto.js";
 import { estaAbierta, fichasDeEquipo } from "../lib/fichas.js";
 import { clinicaActivaDe } from "../lib/clinicas.js";
+import { sedeDeClinica } from "../lib/sedes.js";
 import {
   estaAusente,
   marcarAusente,
@@ -113,7 +114,11 @@ export default function Recepcion() {
     setConfirmar(null);
   };
 
-  const ausentes = datos.propietarios.filter((p) =>
+  // Solo los propietarios inscritos en la sede de la clínica activa
+  const propietariosSede = datos.propietarios.filter(
+    (p) => clinica && p.sede === clinica.sede,
+  );
+  const ausentes = propietariosSede.filter((p) =>
     estaAusente(p, clinica?.id),
   );
   const porReasignar = clinica
@@ -124,7 +129,7 @@ export default function Recepcion() {
 
   const q = normalizar(busqueda.trim());
   const qRut = limpiarRut(busqueda);
-  const lista = datos.propietarios
+  const lista = propietariosSede
     .filter((p) => {
       if (estaAusente(p, clinica?.id) && !verAusentes) return false;
       if (soloPendientes && pendientesDe(p.id) === 0) return false;
@@ -474,8 +479,15 @@ export default function Recepcion() {
             ) : (
               <ul className="space-y-3">
                 {equiposDe(propietario.id).map((e) => {
-                  const fichas = fichasDeEquipo(datos, e.id);
-                  const abierta = fichas.find(estaAbierta);
+                  // Una ficha abierta en otra sede también impide recibirlo,
+                  // pero el historial solo muestra atenciones de esta sede
+                  const todas = fichasDeEquipo(datos, e.id);
+                  const fichas = todas.filter(
+                    (f) => sedeDeClinica(datos, f.clinicaId) === clinica?.sede,
+                  );
+                  const abierta = todas.find(estaAbierta);
+                  // De una ficha abierta en otra sede no se muestran detalles
+                  const abiertaAqui = abierta && fichas.includes(abierta);
                   const anterior = fichas.find((f) => !estaAbierta(f));
                   // Ya atendido (y cerrado) en la clínica activa: no se vuelve a recibir
                   const atendidaAqui =
@@ -489,7 +501,7 @@ export default function Recepcion() {
                             <p className="font-semibold text-slate-900">
                               {e.numeroEquipo} · {e.tipo}
                             </p>
-                            {abierta && <Insignia estado={abierta.estado} />}
+                            {abiertaAqui && <Insignia estado={abierta.estado} />}
                             {fichas.length > 0 && (
                               <Insignia tono="neutral">
                                 Reingreso · {fichas.length}{" "}
@@ -521,7 +533,7 @@ export default function Recepcion() {
                                 : "Ver atención anterior"}
                             </Boton>
                           )}
-                          {fichas.length === 0 && (
+                          {todas.length === 0 && (
                             <Boton
                               variante="peligro-enlace"
                               onClick={() => setConfirmar(`e:${e.id}`)}
@@ -575,8 +587,9 @@ export default function Recepcion() {
 
                       {abierta && (
                         <Alerta variante="aviso" className="mt-4">
-                          Ya tiene una ficha abierta: {abierta.numero} (
-                          {abierta.estado}).
+                          {abiertaAqui
+                            ? `Ya tiene una ficha abierta: ${abierta.numero} (${abierta.estado}).`
+                            : "Tiene una atención abierta en otra sede. Se podrá recibir cuando esa atención termine."}
                         </Alerta>
                       )}
 

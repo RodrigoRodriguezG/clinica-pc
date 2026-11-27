@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../store.jsx";
 import { SERVICIOS } from "../constantes.js";
 import { validarRut, formatearRut, mismoRut } from "../lib/rut.js";
@@ -10,6 +10,7 @@ import Campo from "../components/ui/Campo.jsx";
 import Insignia from "../components/ui/Insignia.jsx";
 import Tarjeta from "../components/ui/Tarjeta.jsx";
 import MarcoPublico from "../components/MarcoPublico.jsx";
+import { siglaASede } from "../lib/sedes.js";
 import {
   IconoCheckCircle,
   IconoDocumento,
@@ -215,6 +216,12 @@ function MarcoInscripcion({ enPanel, children }) {
 export default function FormInscripcion({ enPanel = false }) {
   const { datos, actualizar, usuario } = useApp();
   const navegar = useNavigate();
+  const { search } = useLocation();
+  // Toda inscripción pertenece a una sede: en el panel es la de quien
+  // inscribe; desde el QR viene en el enlace (#/inscripcion?sede=LA)
+  const sede = enPanel
+    ? usuario?.sede || null
+    : siglaASede(new URLSearchParams(search).get("sede"));
 
   const [form, setForm] = useState(FORMULARIO_VACIO);
   const [equipo, setEquipo] = useState(EQUIPO_VACIO);
@@ -328,6 +335,7 @@ export default function FormInscripcion({ enPanel = false }) {
     setError("");
     const ahora = new Date().toISOString();
     const personales = {
+      sede, // un propietario que se inscribe en otra sede pasa a esa sede
       rut,
       nombre,
       apellidoPaterno,
@@ -398,6 +406,26 @@ export default function FormInscripcion({ enPanel = false }) {
     setEquipos([]);
     setInscrito(registrado);
   };
+
+  if (!sede)
+    return (
+      <MarcoInscripcion enPanel={enPanel}>
+        <div className="mx-auto max-w-xl">
+          <Alerta
+            variante="aviso"
+            titulo={
+              enPanel
+                ? "Tu cuenta no tiene una sede asignada"
+                : "Enlace de inscripción no válido"
+            }
+          >
+            {enPanel
+              ? "Cada inscripción pertenece a una sede. Pídele al administrador que te asigne una antes de inscribir propietarios."
+              : "Este enlace no indica la sede de la Clínica del PC. Escanea el código QR de tu sede para inscribirte."}
+          </Alerta>
+        </div>
+      </MarcoInscripcion>
+    );
 
   if (inscrito) {
     return (
@@ -526,6 +554,9 @@ export default function FormInscripcion({ enPanel = false }) {
               <IconoUsuarios className="h-5 w-5" />
             </span>
             <div className="min-w-0 space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-inacap">
+                {sede}
+              </p>
               <h1 className="text-2xl font-bold tracking-tight text-tinta">
                 Inscripción a la Clínica del PC
               </h1>

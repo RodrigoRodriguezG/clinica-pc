@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
 import { nombreRol } from "../lib/roles.js";
+import { SIGLA_SEDE } from "../constantes.js";
 import { crearDatosIniciales } from "../data/seed.js";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
@@ -143,6 +144,7 @@ export default function Login() {
                             </span>
                             <span className="text-neutral-500">
                               {nombreRol(datos, u.rol)}
+                              {SIGLA_SEDE[u.sede] && ` · ${SIGLA_SEDE[u.sede]}`}
                             </span>
                           </button>
                         </li>

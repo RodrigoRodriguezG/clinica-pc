@@ -35,7 +35,8 @@ export function validarFilasChecklist(filas, plantillasExistentes) {
     if (!f.plantilla) error = "Falta el nombre de la plantilla";
     else if (f.plantilla.length > MAX_NOMBRE_PLANTILLA)
       error = `Nombre muy largo (máx. ${MAX_NOMBRE_PLANTILLA})`;
-    else if (existentes.has(nombre)) error = "Ya existe una plantilla con ese nombre";
+    else if (existentes.has(nombre))
+      error = "La clínica ya tiene una plantilla con ese nombre";
     else if (!f.item) error = "Falta el ítem";
     else if (f.item.length > MAX_ITEM) error = `Ítem muy largo (máx. ${MAX_ITEM})`;
     else if (vistos.has(item)) error = "Ítem repetido en la plantilla";

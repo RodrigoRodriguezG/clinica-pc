@@ -18,9 +18,10 @@ export const DIMENSIONES = [
   { campo: "comuna", titulo: "Por comuna del propietario" },
 ];
 
-export function filasReporte(datos, clinicaId = "") {
+// idsClinicas: las clínicas que el usuario puede ver (y el filtro elegido)
+export function filasReporte(datos, idsClinicas) {
   return datos.fichas
-    .filter((f) => !clinicaId || f.clinicaId === clinicaId)
+    .filter((f) => idsClinicas.includes(f.clinicaId))
     .map((f) => {
       const equipo = datos.equipos.find((e) => e.id === f.equipoId);
       const propietario = datos.propietarios.find(

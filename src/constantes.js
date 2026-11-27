@@ -10,11 +10,18 @@ export const ROLES = {
 export const PERMISOS = {
   GESTIONAR_USUARIOS: "gestionarUsuarios",
   GESTIONAR_ROLES: "gestionarRoles",
+  // Los permisos de clínicas, checklists, reportes y retroalimentación tienen
+  // dos alcances: todas las sedes, o solo la sede del usuario (sufijo _SEDE)
   CREAR_CLINICAS: "crearClinicas",
+  CREAR_CLINICAS_SEDE: "crearClinicasSede",
   EDITAR_CHECKLISTS: "editarChecklists",
+  EDITAR_CHECKLISTS_SEDE: "editarChecklistsSede",
   VER_TODAS_FICHAS: "verTodasFichas",
+  VER_TODAS_FICHAS_SEDE: "verTodasFichasSede",
   VER_REPORTES: "verReportes",
+  VER_REPORTES_SEDE: "verReportesSede",
   VER_RETROALIMENTACION: "verRetroalimentacion",
+  VER_RETROALIMENTACION_SEDE: "verRetroalimentacionSede",
   RECEPCIONAR: "recepcionar",
   REVISAR_EQUIPOS: "revisarEquipos",
   GENERAR_QR: "generarQr",
@@ -23,14 +30,29 @@ export const PERMISOS = {
 export const ETIQUETA_PERMISO = {
   gestionarUsuarios: "Gestionar usuarios y permisos",
   gestionarRoles: "Crear y editar roles",
-  crearClinicas: "Crear y editar clínicas",
-  editarChecklists: "Editar plantillas de checklist",
-  verTodasFichas: "Ver todas las fichas",
-  verReportes: "Ver reportes",
-  verRetroalimentacion: "Ver retroalimentación",
+  crearClinicas: "Crear y editar clínicas de todas las sedes",
+  crearClinicasSede: "Crear y editar clínicas de su sede",
+  editarChecklists: "Editar checklists de todas las sedes",
+  editarChecklistsSede: "Editar checklists de su sede",
+  verTodasFichas: "Ver todas las fichas de todas las sedes",
+  verTodasFichasSede: "Ver todas las fichas de su sede",
+  verReportes: "Ver reportes de todas las sedes",
+  verReportesSede: "Ver reportes de su sede",
+  verRetroalimentacion: "Ver retroalimentación de todas las sedes",
+  verRetroalimentacionSede: "Ver retroalimentación de su sede",
   recepcionar: "Recepcionar equipos",
   revisarEquipos: "Revisar equipos",
   generarQr: "Generar QR de inscripción",
+};
+
+// Sedes de INACAP donde se realiza la Clínica del PC. Las clínicas y los
+// usuarios eligen de esta lista, así los nombres siempre coinciden.
+export const SEDES = ["Sede San Pedro de la Paz", "Sede Los Ángeles"];
+
+// Siglas para mostrar la sede donde hay poco espacio
+export const SIGLA_SEDE = {
+  "Sede San Pedro de la Paz": "SP",
+  "Sede Los Ángeles": "LA",
 };
 
 // Permisos que el rol Administrador nunca puede perder (evita quedar sin acceso)
@@ -42,17 +64,22 @@ export const ROLES_BASE = [
   {
     id: "admin",
     nombre: "Administrador de sistema",
-    permisos: ["gestionarUsuarios", "gestionarRoles", "verReportes"],
+    permisos: [
+      "gestionarUsuarios",
+      "gestionarRoles",
+      "crearClinicas",
+      "verReportes",
+    ],
   },
   {
     id: "encargado",
     nombre: "Encargado de clínica",
     permisos: [
-      "crearClinicas",
-      "editarChecklists",
-      "verTodasFichas",
-      "verReportes",
-      "verRetroalimentacion",
+      "crearClinicasSede",
+      "editarChecklistsSede",
+      "verTodasFichasSede",
+      "verReportesSede",
+      "verRetroalimentacionSede",
       "generarQr",
     ],
   },
@@ -94,10 +121,11 @@ export const ESTADOS_FICHA = [
 
 export const SERVICIOS = ["Mantención lógica", "Mantención física", "Formateo"];
 
-// Un checklist por servicio. Su nombre es el del servicio, así que la ficha
-// parte con él cuando el propietario elige el servicio al inscribirse. No se
-// pueden eliminar (sus ítems sí se editan). Los checklists creados después
-// usan su propio nombre como servicio.
+// Moldes de los checklists de servicio. Cada clínica tiene su propia copia
+// (servicioBase: true). Su nombre es el del servicio, así que la ficha parte
+// con él cuando el propietario elige el servicio al inscribirse. No se pueden
+// eliminar (sus ítems sí se editan). Los checklists adicionales usan su
+// propio nombre como servicio.
 export const PLANTILLAS_SERVICIO = [
   {
     id: "pl-logica",
@@ -139,10 +167,13 @@ export const PLANTILLAS_SERVICIO = [
 
 export const IDS_PLANTILLAS_SERVICIO = PLANTILLAS_SERVICIO.map((p) => p.id);
 
-// Copia limpia de los checklists de servicio (datos iniciales y migración)
-export const copiarPlantillasServicio = () =>
+// Copias de los 3 checklists de servicio para una clínica
+export const plantillasBaseDe = (clinicaId) =>
   PLANTILLAS_SERVICIO.map((p) => ({
     ...p,
+    id: `${p.id}-${clinicaId}`,
+    clinicaId,
+    servicioBase: true,
     items: p.items.map((i) => ({ ...i })),
   }));
 

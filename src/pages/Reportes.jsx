@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
 import {
+  alcanceTodas,
+  clinicasPermitidas,
+  motivoSinClinicas,
+} from "../lib/sedes.js";
+import {
   DIMENSIONES,
   contarPor,
   exportarReporte,
@@ -79,14 +84,23 @@ function TablaConteo({ titulo, conteo, total }) {
 }
 
 export default function Reportes() {
-  const { datos } = useApp();
+  const { datos, usuario } = useApp();
+  // Con el permiso de su sede solo aparecen las clínicas de esa sede
+  const clinicas = clinicasPermitidas(datos, usuario, "reportes");
+  const todas = alcanceTodas(usuario, "reportes");
   const [clinicaId, setClinicaId] = useState("");
   const [error, setError] = useState("");
   const [exportando, setExportando] = useState(false);
 
-  const filas = filasReporte(datos, clinicaId);
+  const clinica = clinicas.find((c) => c.id === clinicaId);
+  const filas = filasReporte(
+    datos,
+    clinica ? [clinica.id] : clinicas.map((c) => c.id),
+  );
   const r = resumen(filas);
-  const clinica = datos.clinicas.find((c) => c.id === clinicaId);
+  const textoTodas = todas
+    ? "Todas las clínicas"
+    : `Todas las clínicas de ${usuario.sede || "mi sede"}`;
 
   const exportar = async () => {
     setError("");
@@ -94,7 +108,7 @@ export default function Reportes() {
     try {
       await exportarReporte(
         filas,
-        clinica ? nombreClinica(clinica) : "Todas las clínicas",
+        clinica ? nombreClinica(clinica) : textoTodas,
       );
     } catch {
       setError("No se pudo generar el archivo Excel. Inténtalo de nuevo.");
@@ -126,8 +140,8 @@ export default function Reportes() {
           value={clinicaId}
           onChange={(e) => setClinicaId(e.target.value)}
         >
-          <option value="">Todas las clínicas</option>
-          {datos.clinicas.map((c) => (
+          <option value="">{textoTodas}</option>
+          {clinicas.map((c) => (
             <option key={c.id} value={c.id}>
               {nombreClinica(c)}
             </option>
@@ -145,7 +159,11 @@ export default function Reportes() {
         <EstadoVacio
           icono={<IconoGrafico className="h-6 w-6" />}
           titulo="Sin fichas para reportar"
-          descripcion="Esta clínica todavía no tiene equipos recepcionados."
+          descripcion={
+            clinicas.length === 0
+              ? motivoSinClinicas(usuario, "reportes")
+              : "Esta selección todavía no tiene equipos recepcionados."
+          }
         />
       ) : (
         <>

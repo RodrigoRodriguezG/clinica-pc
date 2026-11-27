@@ -26,6 +26,7 @@ import {
   esPlantillaDeServicio,
   plantillasOrdenadas,
 } from "../lib/checklists.js";
+import { clinicaDeFicha, mismaSede } from "../lib/sedes.js";
 import AtencionAnterior from "./AtencionAnterior.jsx";
 import EncuestaFicha from "./EncuestaFicha.jsx";
 import Alerta from "./ui/Alerta.jsx";
@@ -84,8 +85,10 @@ export default function DetalleFicha({ ficha }) {
   const equipo = datos.equipos.find((e) => e.id === ficha.equipoId);
   const propietario = propietarioDeFicha(datos, ficha);
   const editable = puedeEditarFicha(usuario, ficha);
+  // El historial solo considera atenciones de la misma sede
+  const deEstaSede = (f) => mismaSede(datos, f.clinicaId, ficha.clinicaId);
   const anterior = fichasDeEquipo(datos, ficha.equipoId).find(
-    (f) => f.id !== ficha.id && f.creada < ficha.creada,
+    (f) => f.id !== ficha.id && f.creada < ficha.creada && deEstaSede(f),
   );
   const nombreUsuario = (id) =>
     datos.usuarios.find((u) => u.id === id)?.nombre ?? "Usuario no disponible";
@@ -124,7 +127,7 @@ export default function DetalleFicha({ ficha }) {
   });
 
   // Checklists que puede elegir el técnico. Con ítems ya revisados no se cambia
-  const plantillas = plantillasOrdenadas(datos);
+  const plantillas = plantillasOrdenadas(datos, ficha.clinicaId);
   const checklistFijo = checklistIniciado(ficha);
 
   const revisados = ficha.checklist.filter((i) => i.ok !== null).length;
@@ -135,7 +138,7 @@ export default function DetalleFicha({ ficha }) {
   const reingresos = serieBuscada
     ? datos.fichas
         .filter((f) => {
-          if (f.id === ficha.id) return false;
+          if (f.id === ficha.id || !deEstaSede(f)) return false;
           const eq = datos.equipos.find((e) => e.id === f.equipoId);
           return (
             eq &&
@@ -382,7 +385,7 @@ export default function DetalleFicha({ ficha }) {
         )}
       </section>
 
-      {propietario && puedeVerContacto(usuario, ficha) && (
+      {propietario && puedeVerContacto(usuario, ficha, clinicaDeFicha(datos, ficha)) && (
         <section className="space-y-2 rounded-control border border-slate-200 bg-white p-4">
           <h3 className="flex items-center gap-2 font-semibold text-slate-900">
             <IconoTelefono className="h-4 w-4 text-slate-500" />
@@ -543,7 +546,7 @@ export default function DetalleFicha({ ficha }) {
                 {plantillas.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.nombre}
-                    {!esPlantillaDeServicio(p.id) && " (checklist adicional)"}
+                    {!esPlantillaDeServicio(p) && " (checklist adicional)"}
                   </option>
                 ))}
               </Campo>
