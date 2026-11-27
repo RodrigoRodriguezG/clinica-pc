@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../store.jsx";
+import { SERVICIOS } from "../constantes.js";
 import { validarRut, formatearRut, mismoRut } from "../lib/rut.js";
 import { normalizar, normalizarTelefono } from "../lib/texto.js";
 import Alerta from "../components/ui/Alerta.jsx";
@@ -78,7 +79,8 @@ const DATOS_PERSONALES = [
   "comuna",
 ];
 
-const EQUIPO_VACIO = { tipo: "", problema: "" };
+// servicio "" = Otro: el técnico elige el checklist al revisar el equipo
+const EQUIPO_VACIO = { tipo: "", servicio: "", problema: "" };
 
 const ESTILO_INPUT =
   "block w-full min-h-11 rounded-control border border-neutral-300 bg-white px-3 py-2.5 text-base text-tinta placeholder:text-neutral-400 transition-[border-color,box-shadow,background-color] duration-150 hover:border-neutral-400 focus:border-inacap focus:outline-none focus:ring-4 focus:ring-inacap/15";
@@ -291,6 +293,7 @@ export default function FormInscripcion({ enPanel = false }) {
       {
         id: crypto.randomUUID(),
         tipo: equipo.tipo,
+        servicio: equipo.servicio,
         problema,
         numeroEquipo: siguienteNumeroEquipo(),
       },
@@ -357,8 +360,8 @@ export default function FormInscripcion({ enPanel = false }) {
           creadoEn: ahora,
         };
 
-    // El propietario indica el problema; los datos técnicos (marca, modelo,
-    // serie, accesorios y servicio) los completa después el técnico
+    // El propietario indica el problema y, si lo sabe, el servicio; los datos
+    // técnicos (marca, modelo, serie y accesorios) los completa el técnico
     const nuevosEquipos = equipos.map((e) => ({
       id: e.id,
       propietarioId: propietario.id,
@@ -369,7 +372,7 @@ export default function FormInscripcion({ enPanel = false }) {
       numeroSerie: "",
       numeroEquipo: e.numeroEquipo,
       accesorios: "",
-      servicio: "",
+      servicio: e.servicio,
       creadoEn: ahora,
     }));
 
@@ -682,7 +685,26 @@ export default function FormInscripcion({ enPanel = false }) {
                     </option>
                   ))}
                 </Campo>
+                <Campo
+                  as="select"
+                  etiqueta="Servicio"
+                  className="flex-1"
+                  value={equipo.servicio}
+                  onChange={(e) =>
+                    setEquipo({ ...equipo, servicio: e.target.value })
+                  }
+                >
+                  {SERVICIOS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                  <option value="">Otro</option>
+                </Campo>
               </div>
+              <p className="mt-1.5 text-xs leading-relaxed text-neutral-600 sm:text-right">
+                Opcional. Si no estás seguro, elige Otro y el técnico decidirá.
+              </p>
               <Campo
                 as="textarea"
                 etiqueta="¿Qué problema tiene?"
@@ -732,7 +754,7 @@ export default function FormInscripcion({ enPanel = false }) {
                             <span className="font-semibold text-tinta">
                               {e.numeroEquipo}
                             </span>{" "}
-                            · {e.tipo}
+                            · {e.tipo} · {e.servicio || "Otro"}
                           </p>
                           <p className="text-xs text-neutral-500">
                             {e.problema}

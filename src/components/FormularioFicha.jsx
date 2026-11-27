@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../store.jsx";
 import { siguienteCodigo } from "../lib/codigos.js";
+import { aplicarPlantilla, plantillaPorServicio } from "../lib/checklists.js";
 import Alerta from "./ui/Alerta.jsx";
 import Boton from "./ui/Boton.jsx";
 import Campo from "./ui/Campo.jsx";
@@ -20,6 +21,9 @@ export default function FormularioFicha({
   const problemaInscrito = (equipo.problema ?? "").trim();
   const pedirProblema = !problemaInscrito;
   const esReingreso = datos.fichas.some((f) => f.equipoId === equipo.id);
+  // Servicio que eligió el propietario al inscribirse ("" = Otro)
+  const servicioInscrito = equipo.servicio ?? "";
+  const plantilla = plantillaPorServicio(datos, servicioInscrito);
 
   const [problema, setProblema] = useState("");
   const [tecnicosIds, setTecnicosIds] = useState([]);
@@ -39,11 +43,9 @@ export default function FormularioFicha({
       return setError("Asigna uno o dos técnicos al equipo.");
     setError("");
 
-    // El checklist se copia de la plantilla de la clínica, con el texto de cada ítem
-    const plantilla = datos.plantillas.find(
-      (p) => p.id === clinica.plantillaId,
-    );
-    const ficha = {
+    // Si el propietario eligió un servicio, la ficha parte con su checklist
+    // (copia de los ítems). Si eligió "Otro", el técnico lo elige después.
+    const base = {
       id: crypto.randomUUID(),
       numero: siguienteCodigo("FT", datos.fichas, "numero"),
       clinicaId: clinica.id,
@@ -53,21 +55,21 @@ export default function FormularioFicha({
       diagnostico: problemaFicha, // el problema lo indica el propietario
       trabajo: "", // lo registra el técnico
       estado: "Recibido",
-      checklist: (plantilla?.items ?? []).map((i) => ({
-        itemId: i.id,
-        texto: i.texto,
-        ok: null,
-      })),
+      plantillaId: null,
+      servicio: "",
+      checklist: [],
       observaciones: [],
       creada: new Date().toISOString(),
       cerrada: null,
     };
+    const ficha = plantilla ? aplicarPlantilla(base, plantilla) : base;
 
-    // El problema queda en la ficha; el equipo lo libera para la próxima visita
+    // El problema y el servicio quedan en la ficha; el equipo los libera
+    // para la próxima visita
     actualizar((d) => ({
       ...d,
       equipos: d.equipos.map((x) =>
-        x.id === equipo.id ? { ...x, problema: "" } : x,
+        x.id === equipo.id ? { ...x, problema: "", servicio: "" } : x,
       ),
       fichas: [...d.fichas, ficha],
     }));
@@ -118,6 +120,17 @@ export default function FormularioFicha({
           <p className="mt-0.5 text-slate-800">{problemaInscrito}</p>
         </div>
       )}
+
+      <div className="rounded-control border border-slate-200 bg-white p-3 text-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Servicio solicitado
+        </p>
+        <p className="mt-0.5 text-slate-800">
+          {plantilla
+            ? plantilla.nombre
+            : "Otro: el técnico elegirá el checklist al revisar el equipo."}
+        </p>
+      </div>
 
       <SelectorTecnicos
         clinica={clinica}

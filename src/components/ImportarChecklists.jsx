@@ -75,8 +75,8 @@ export default function ImportarChecklists({ onCerrar }) {
     }));
     setExito(
       creadas.length === 1
-        ? "Se creó 1 plantilla. Ya puedes asignarla a una clínica."
-        : `Se crearon ${creadas.length} plantillas. Ya puedes asignarlas a una clínica.`,
+        ? "Se creó 1 plantilla. Ya la pueden elegir los técnicos."
+        : `Se crearon ${creadas.length} plantillas. Ya las pueden elegir los técnicos.`,
     );
     limpiar();
   };

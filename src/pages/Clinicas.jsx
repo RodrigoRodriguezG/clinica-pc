@@ -24,16 +24,12 @@ import {
   IconoMas,
 } from "../components/ui/iconos.jsx";
 
-const FORMULARIO_VACIO = { nombre: "", sede: "", plantillaId: "" };
+const FORMULARIO_VACIO = { nombre: "", sede: "" };
 
 export default function Clinicas() {
   const { datos, actualizar } = useApp();
 
-  // Se parte con la primera plantilla seleccionada
-  const [form, setForm] = useState(() => ({
-    ...FORMULARIO_VACIO,
-    plantillaId: datos.plantillas[0]?.id ?? "",
-  }));
+  const [form, setForm] = useState(FORMULARIO_VACIO);
   const [dias, setDias] = useState([]);
   // Por defecto se propone el día siguiente
   const [dia, setDia] = useState(mananaLocal);
@@ -47,8 +43,8 @@ export default function Clinicas() {
   const cambiar = (campo) => (e) =>
     setForm({ ...form, [campo]: e.target.value });
 
-  const nombrePlantilla = (id) =>
-    datos.plantillas.find((p) => p.id === id)?.nombre ?? "Sin plantilla";
+  const fichasDe = (id) =>
+    datos.fichas.filter((f) => f.clinicaId === id).length;
 
   // Agrega una fecha a la lista, sin duplicados y ordenada
   const agregarDia = () => {
@@ -76,8 +72,6 @@ export default function Clinicas() {
       return setError(
         "Hay días anteriores a hoy; quítalos antes de crear la clínica.",
       );
-    if (!form.plantillaId)
-      return setError("Selecciona una plantilla de checklist.");
     if (
       datos.clinicas.some(
         (c) => c.nombre.trim().toLowerCase() === nombre.toLowerCase(),
@@ -91,15 +85,11 @@ export default function Clinicas() {
       nombre,
       sede,
       dias, // ya viene ordenado
-      plantillaId: form.plantillaId,
     };
     actualizar((d) => ({ ...d, clinicas: [...d.clinicas, nueva] }));
 
     // Limpiar el formulario
-    setForm({
-      ...FORMULARIO_VACIO,
-      plantillaId: datos.plantillas[0]?.id ?? "",
-    });
+    setForm(FORMULARIO_VACIO);
     setDias([]);
     setDia(mananaLocal());
     setMostrarFormulario(false);
@@ -149,7 +139,7 @@ export default function Clinicas() {
     <div className="space-y-8">
       <Encabezado
         titulo="Clínicas"
-        descripcion="Crea las jornadas de atención, define sus días y asigna la plantilla de checklist."
+        descripcion="Crea las jornadas de atención y define sus días. El checklist de cada equipo depende del servicio."
         acciones={!mostrarFormulario && botonNueva}
       />
 
@@ -241,25 +231,6 @@ export default function Clinicas() {
               )}
             </Paso>
 
-            <Paso
-              numero={3}
-              titulo="Checklist"
-              ayuda="La plantilla que completarán los técnicos al revisar cada equipo."
-            >
-              <Campo
-                as="select"
-                etiqueta="Plantilla de checklist"
-                className="sm:max-w-sm"
-                value={form.plantillaId}
-                onChange={cambiar("plantillaId")}
-              >
-                {datos.plantillas.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
-                ))}
-              </Campo>
-            </Paso>
 
             {error && (
               <Alerta variante="error" role="alert" className="mt-5">
@@ -362,7 +333,7 @@ export default function Clinicas() {
                     </span>
                   }
                 >
-                  Plantilla: {nombrePlantilla(c.plantillaId)}
+                  {fichasDe(c.id)} ficha(s) registradas
                 </TarjetaEnlace>
               </li>
             ))}

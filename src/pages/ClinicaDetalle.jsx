@@ -88,12 +88,11 @@ export default function ClinicaDetalle() {
     );
   }
 
-  const nombrePlantilla =
-    datos.plantillas.find((p) => p.id === clinica.plantillaId)?.nombre ??
-    "Sin plantilla";
-
   // Todo lo que ocurrió en esta clínica
   const fichas = datos.fichas.filter((f) => f.clinicaId === clinica.id);
+  const serviciosAtendidos = [
+    ...new Set(fichas.map((f) => f.servicio).filter(Boolean)),
+  ];
 
   // Participantes: recepcionistas y técnicos que aparecen en las fichas
   const resumenUsuarios = new Map();
@@ -243,10 +242,12 @@ export default function ClinicaDetalle() {
           <div>
             <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
               <IconoChecklist className="h-3.5 w-3.5" />
-              Plantilla de checklist
+              Servicios atendidos
             </dt>
             <dd className="mt-0.5 font-medium text-slate-900">
-              {nombrePlantilla}
+              {serviciosAtendidos.length > 0
+                ? serviciosAtendidos.join(", ")
+                : "Aún sin servicios definidos"}
             </dd>
           </div>
           <div>

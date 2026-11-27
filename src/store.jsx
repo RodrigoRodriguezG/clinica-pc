@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { crearDatosIniciales } from "./data/seed.js";
-import { PERMISOS, ROLES, copiarRolesBase } from "./constantes.js";
+import {
+  PERMISOS,
+  ROLES,
+  copiarPlantillasServicio,
+  copiarRolesBase,
+} from "./constantes.js";
 
 const CLAVE_DATOS = "clinica-pc-datos";
 const CLAVE_SESION = "clinica-pc-sesion";
@@ -26,20 +31,42 @@ const migrarRoles = (datos) =>
         ),
       };
 
+// Datos de antes de los checklists por servicio: se agregan los 3 checklists
+// de servicio. Las fichas que ya tenían ítems los conservan con el servicio
+// "Checklist general"; las que no, quedan para que el técnico elija uno.
+const migrarServicios = (datos) => {
+  const faltantes = copiarPlantillasServicio().filter(
+    (p) => !datos.plantillas.some((x) => x.id === p.id),
+  );
+  return {
+    ...datos,
+    plantillas: [...faltantes, ...datos.plantillas],
+    fichas: datos.fichas.map((f) =>
+      f.plantillaId !== undefined
+        ? f
+        : f.checklist.length > 0
+          ? { ...f, plantillaId: "legacy", servicio: "Checklist general" }
+          : { ...f, plantillaId: null, servicio: "" },
+    ),
+  };
+};
+
 // Ajusta datos guardados con versiones anteriores: "En diagnóstico" ya no existe
 // y las fichas entregadas antes de la encuesta reciben su token
 const migrar = (datos) =>
-  migrarRoles({
-    ...datos,
-    retros: datos.retros ?? [],
-    fichas: datos.fichas.map((f) => {
-      const ficha =
-        f.estado === "En diagnóstico" ? { ...f, estado: "En reparación" } : f;
-      return ficha.estado === "Entregado" && !ficha.tokenEncuesta
-        ? { ...ficha, tokenEncuesta: crypto.randomUUID() }
-        : ficha;
+  migrarServicios(
+    migrarRoles({
+      ...datos,
+      retros: datos.retros ?? [],
+      fichas: datos.fichas.map((f) => {
+        const ficha =
+          f.estado === "En diagnóstico" ? { ...f, estado: "En reparación" } : f;
+        return ficha.estado === "Entregado" && !ficha.tokenEncuesta
+          ? { ...ficha, tokenEncuesta: crypto.randomUUID() }
+          : ficha;
+      }),
     }),
-  });
+  );
 
 // Lee los datos guardados; si no hay (o están dañados), usa los de ejemplo
 function cargarDatos() {

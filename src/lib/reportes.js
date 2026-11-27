@@ -37,7 +37,7 @@ export function filasReporte(datos, clinicaId = "") {
         marca: equipo?.marca?.trim() || SIN_DATO,
         modelo: equipo?.modelo ?? "",
         numeroSerie: equipo?.numeroSerie ?? "",
-        servicio: equipo?.servicio || SIN_DATO,
+        servicio: f.servicio || SIN_DATO,
         estado: f.estado,
         comuna: propietario?.comuna || SIN_DATO,
         tecnicos: f.tecnicosIds

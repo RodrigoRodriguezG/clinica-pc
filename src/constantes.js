@@ -94,6 +94,58 @@ export const ESTADOS_FICHA = [
 
 export const SERVICIOS = ["Mantención lógica", "Mantención física", "Formateo"];
 
+// Un checklist por servicio. Su nombre es el del servicio, así que la ficha
+// parte con él cuando el propietario elige el servicio al inscribirse. No se
+// pueden eliminar (sus ítems sí se editan). Los checklists creados después
+// usan su propio nombre como servicio.
+export const PLANTILLAS_SERVICIO = [
+  {
+    id: "pl-logica",
+    nombre: "Mantención lógica",
+    items: [
+      { id: "lg1", texto: "Revisión del arranque y rendimiento del sistema" },
+      { id: "lg2", texto: "Desinstalación de programas innecesarios" },
+      { id: "lg3", texto: "Limpieza de archivos temporales" },
+      { id: "lg4", texto: "Análisis antivirus y antimalware" },
+      { id: "lg5", texto: "Actualizaciones del sistema operativo" },
+      { id: "lg6", texto: "Estado del disco sin errores (SMART)" },
+    ],
+  },
+  {
+    id: "pl-fisica",
+    nombre: "Mantención física",
+    items: [
+      { id: "fs1", texto: "Enciende correctamente" },
+      { id: "fs2", texto: "Limpieza interna de polvo" },
+      { id: "fs3", texto: "Cambio de pasta térmica" },
+      { id: "fs4", texto: "Ventiladores funcionan sin ruido" },
+      { id: "fs5", texto: "Conectores y puertos en buen estado" },
+      { id: "fs6", texto: "Pantalla, teclado y mouse/touchpad funcionan" },
+    ],
+  },
+  {
+    id: "pl-formateo",
+    nombre: "Formateo",
+    items: [
+      { id: "fm1", texto: "Respaldo de archivos confirmado con el propietario" },
+      { id: "fm2", texto: "Instalación del sistema operativo" },
+      { id: "fm3", texto: "Instalación de controladores" },
+      { id: "fm4", texto: "Actualizaciones del sistema" },
+      { id: "fm5", texto: "Programas básicos instalados" },
+      { id: "fm6", texto: "Verificación de arranque y conexión a red" },
+    ],
+  },
+];
+
+export const IDS_PLANTILLAS_SERVICIO = PLANTILLAS_SERVICIO.map((p) => p.id);
+
+// Copia limpia de los checklists de servicio (datos iniciales y migración)
+export const copiarPlantillasServicio = () =>
+  PLANTILLAS_SERVICIO.map((p) => ({
+    ...p,
+    items: p.items.map((i) => ({ ...i })),
+  }));
+
 // Una ficha en estos estados ya terminó su atención
 export const ESTADOS_CERRADOS = ["Entregado", "No retirado"];
 

@@ -20,6 +20,12 @@ import {
   puedeEntregarFicha,
   estadoTrasGuardarDatos,
 } from "../lib/fichas.js";
+import {
+  aplicarPlantilla,
+  checklistIniciado,
+  esPlantillaDeServicio,
+  plantillasOrdenadas,
+} from "../lib/checklists.js";
 import AtencionAnterior from "./AtencionAnterior.jsx";
 import EncuestaFicha from "./EncuestaFicha.jsx";
 import Alerta from "./ui/Alerta.jsx";
@@ -89,7 +95,8 @@ export default function DetalleFicha({ ficha }) {
     equipo?.marca &&
     equipo?.modelo &&
     equipo?.numeroSerie &&
-    ficha.trabajo,
+    ficha.trabajo &&
+    ficha.plantillaId,
   );
   // El técnico no avanza a checklist y observaciones hasta guardar los datos técnicos
   const bloqueado = editable && !datosCompletos;
@@ -113,7 +120,12 @@ export default function DetalleFicha({ ficha }) {
     numeroSerie: equipo?.numeroSerie ?? "",
     accesorios: equipo?.accesorios ?? "",
     trabajo: ficha.trabajo ?? "",
+    plantillaId: ficha.plantillaId ?? "",
   });
+
+  // Checklists que puede elegir el técnico. Con ítems ya revisados no se cambia
+  const plantillas = plantillasOrdenadas(datos);
+  const checklistFijo = checklistIniciado(ficha);
 
   const revisados = ficha.checklist.filter((i) => i.ok !== null).length;
   const checklistCompleto = revisados === ficha.checklist.length;
@@ -171,6 +183,13 @@ export default function DetalleFicha({ ficha }) {
     if (!marca || !modelo || !numeroSerie)
       return setErrorDatos("Completa marca, modelo y número de serie.");
     if (!trabajo) return setErrorDatos("Completa el trabajo a realizar.");
+    const plantilla = datos.plantillas.find(
+      (p) => p.id === datosForm.plantillaId,
+    );
+    const cambiaChecklist =
+      !checklistFijo && datosForm.plantillaId !== ficha.plantillaId;
+    if (cambiaChecklist && !plantilla)
+      return setErrorDatos("Elige el servicio (checklist) para este equipo.");
     if (reingresos.length > 0 && !confirmarReingreso)
       return setErrorDatos(
         "Este número de serie tiene atenciones anteriores. Revisa el historial y marca la confirmación de reingreso.",
@@ -186,11 +205,18 @@ export default function DetalleFicha({ ficha }) {
           : x,
       ),
       // Guardar los datos técnicos pasa la ficha a "En reparación"
-      fichas: d.fichas.map((f) =>
-        f.id === ficha.id
-          ? { ...f, trabajo, estado: estadoTrasGuardarDatos(f) }
-          : f,
-      ),
+      // Elegir el checklist define el servicio de la ficha (su nombre)
+      fichas: d.fichas.map((f) => {
+        if (f.id !== ficha.id) return f;
+        const actualizada = {
+          ...f,
+          trabajo,
+          estado: estadoTrasGuardarDatos(f),
+        };
+        return cambiaChecklist
+          ? aplicarPlantilla(actualizada, plantilla)
+          : actualizada;
+      }),
     }));
     setAviso(
       ficha.estado === "Recibido"
@@ -311,6 +337,14 @@ export default function DetalleFicha({ ficha }) {
               </dt>
               <dd className="mt-0.5 text-slate-800">
                 {ficha.diagnostico || "No indicado"}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Servicio
+              </dt>
+              <dd className="mt-0.5 text-slate-800">
+                {ficha.servicio || "Por definir"}
               </dd>
             </div>
             {equipo?.accesorios && (
@@ -488,6 +522,33 @@ export default function DetalleFicha({ ficha }) {
               )}
 
               <Campo
+                as="select"
+                etiqueta="Servicio (checklist)"
+                value={datosForm.plantillaId}
+                onChange={cambiarDato("plantillaId")}
+                disabled={checklistFijo}
+                ayuda={
+                  checklistFijo
+                    ? "El checklist ya tiene ítems revisados, por eso no se puede cambiar."
+                    : ficha.plantillaId
+                      ? "Puedes cambiarlo mientras no revises ningún ítem del checklist."
+                      : "El propietario no eligió servicio. Elige el checklist que corresponde a este equipo."
+                }
+              >
+                <option value="">Selecciona...</option>
+                {ficha.plantillaId &&
+                  !plantillas.some((p) => p.id === ficha.plantillaId) && (
+                    <option value={ficha.plantillaId}>{ficha.servicio}</option>
+                  )}
+                {plantillas.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                    {!esPlantillaDeServicio(p.id) && " (checklist adicional)"}
+                  </option>
+                ))}
+              </Campo>
+
+              <Campo
                 as="textarea"
                 etiqueta="Trabajo a realizar"
                 rows={3}
@@ -527,6 +588,14 @@ export default function DetalleFicha({ ficha }) {
                 </dt>
                 <dd className="mt-0.5 text-slate-800">
                   {equipo?.numeroSerie || "Pendiente"}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Servicio
+                </dt>
+                <dd className="mt-0.5 text-slate-800">
+                  {ficha.servicio || "Por definir"}
                 </dd>
               </div>
               <div className="sm:col-span-2">

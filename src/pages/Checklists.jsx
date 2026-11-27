@@ -5,6 +5,10 @@ import {
   MAX_NOMBRE_PLANTILLA,
 } from "../lib/importacionChecklists.js";
 import { normalizar } from "../lib/texto.js";
+import {
+  esPlantillaDeServicio,
+  plantillasOrdenadas,
+} from "../lib/checklists.js";
 import ImportarChecklists from "../components/ImportarChecklists.jsx";
 import Alerta from "../components/ui/Alerta.jsx";
 import Boton from "../components/ui/Boton.jsx";
@@ -57,7 +61,7 @@ function FilaItem({ id, indice, texto, onEditar, onQuitar }) {
   );
 }
 
-function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
+function Plantilla({ plantilla, deServicio, onCambiar, onDuplicar, onEliminar }) {
   const [nuevoItem, setNuevoItem] = useState("");
 
   const agregarItem = (e) => {
@@ -98,9 +102,9 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
               <Insignia tono="neutral" punto={false}>
                 {plantilla.items.length} ítems
               </Insignia>
-              {enUso && (
-                <Insignia tono="aviso">En uso por una clínica</Insignia>
-              )}
+              <Insignia tono={deServicio ? "inacap" : "blanco"} punto={false}>
+                {deServicio ? "Servicio base" : "Checklist adicional"}
+              </Insignia>
             </div>
           </div>
         </div>
@@ -111,8 +115,12 @@ function Plantilla({ plantilla, enUso, onCambiar, onDuplicar, onEliminar }) {
           <Boton
             variante="peligro-enlace"
             onClick={onEliminar}
-            disabled={enUso}
-            title={enUso ? "No se puede eliminar: una clínica la usa" : ""}
+            disabled={deServicio}
+            title={
+              deServicio
+                ? "No se puede eliminar: es el checklist de un servicio que el propietario puede elegir al inscribirse"
+                : ""
+            }
           >
             Eliminar
           </Boton>
@@ -243,7 +251,6 @@ export default function Checklists() {
       plantillas: d.plantillas.filter((p) => p.id !== id),
     }));
 
-  const usaClinica = (id) => datos.clinicas.some((c) => c.plantillaId === id);
 
   const cerrarPanel = () => {
     setPanel(null);
@@ -265,7 +272,7 @@ export default function Checklists() {
     <div className="space-y-8">
       <Encabezado
         titulo="Plantillas de checklist"
-        descripcion="Cada clínica elige una plantilla. Los técnicos la completan al revisar cada equipo."
+        descripcion="Cada checklist corresponde a un servicio. Los tres servicios base los puede elegir el propietario al inscribirse; los checklists adicionales los elige el técnico, y su nombre queda como el servicio de la ficha."
         acciones={
           <>
             <Boton
@@ -386,16 +393,16 @@ export default function Checklists() {
           <EstadoVacio
             icono={<IconoChecklist className="h-6 w-6" />}
             titulo="Aún no hay plantillas"
-            descripcion="Crea la primera plantilla o impórtalas desde Excel para que las clínicas puedan revisar equipos."
+            descripcion="Crea la primera plantilla o impórtalas desde Excel para que los técnicos puedan revisar equipos."
             accion={!panel && botonNueva}
           />
         ) : (
           <div className="space-y-4">
-            {datos.plantillas.map((p) => (
+            {plantillasOrdenadas(datos).map((p) => (
               <Plantilla
                 key={p.id}
                 plantilla={p}
-                enUso={usaClinica(p.id)}
+                deServicio={esPlantillaDeServicio(p.id)}
                 onCambiar={(fn) => cambiar(p.id, fn)}
                 onDuplicar={() => duplicar(p)}
                 onEliminar={() => eliminar(p.id)}

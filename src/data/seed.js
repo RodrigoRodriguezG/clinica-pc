@@ -1,4 +1,19 @@
-import { ROLES_BASE, copiarRolesBase } from "../constantes.js";
+import {
+  PLANTILLAS_SERVICIO,
+  ROLES_BASE,
+  copiarPlantillasServicio,
+  copiarRolesBase,
+} from "../constantes.js";
+
+const PLANTILLA = Object.fromEntries(PLANTILLAS_SERVICIO.map((p) => [p.id, p]));
+
+// Checklist de una ficha de ejemplo: los ítems del servicio con su resultado
+const checklistDe = (plantillaId, resultados) =>
+  PLANTILLA[plantillaId].items.map((i, n) => ({
+    itemId: i.id,
+    texto: i.texto,
+    ok: resultados[n],
+  }));
 
 const permisosBase = (id) => [
   ...ROLES_BASE.find((r) => r.id === id).permisos,
@@ -55,26 +70,14 @@ export const crearDatosIniciales = () => ({
       activo: true,
     },
   ],
-  plantillas: [
-    {
-      id: "pl1",
-      nombre: "Checklist general",
-      items: [
-        { id: "i1", texto: "Enciende correctamente" },
-        { id: "i2", texto: "Pantalla sin fallas" },
-        { id: "i3", texto: "Teclado y mouse funcionan" },
-        { id: "i4", texto: "Red / Wi-Fi operativa" },
-        { id: "i5", texto: "Almacenamiento sin errores" },
-      ],
-    },
-  ],
+  // Un checklist por servicio (Mantención lógica, Mantención física y Formateo)
+  plantillas: copiarPlantillasServicio(),
   clinicas: [
     {
       id: "c0",
       nombre: "Clínica del PC 2025",
       sede: "Sede San Pedro de la Paz",
       dias: ["2025-10-09"],
-      plantillaId: "pl1",
       personalIds: ["u3", "u4", "u5"],
     },
     {
@@ -82,7 +85,6 @@ export const crearDatosIniciales = () => ({
       nombre: "Clínica del PC 2026",
       sede: "Sede San Pedro de la Paz",
       dias: ["2026-12-01", "2026-12-02"],
-      plantillaId: "pl1",
       personalIds: ["u3", "u4", "u5"],
     },
     {
@@ -90,7 +92,6 @@ export const crearDatosIniciales = () => ({
       nombre: "Clínica del PC 2026",
       sede: "Sede Los Ángeles",
       dias: ["2026-12-03"],
-      plantillaId: "pl1",
       personalIds: [],
     },
   ],
@@ -234,13 +235,9 @@ export const crearDatosIniciales = () => ({
       diagnostico: "No enciende; fuente de poder dañada.",
       trabajo: "Reemplazar fuente de poder y probar arranque.",
       estado: "Entregado",
-      checklist: [
-        { itemId: "i1", texto: "Enciende correctamente", ok: true },
-        { itemId: "i2", texto: "Pantalla sin fallas", ok: true },
-        { itemId: "i3", texto: "Teclado y mouse funcionan", ok: false },
-        { itemId: "i4", texto: "Red / Wi-Fi operativa", ok: true },
-        { itemId: "i5", texto: "Almacenamiento sin errores", ok: true },
-      ],
+      plantillaId: "pl-fisica",
+      servicio: PLANTILLA["pl-fisica"].nombre,
+      checklist: checklistDe("pl-fisica", [true, true, true, true, true, false]),
       observaciones: [
         {
           id: "o1",
@@ -269,13 +266,9 @@ export const crearDatosIniciales = () => ({
       diagnostico: "Lentitud general al iniciar.",
       trabajo: "Revisar disco y limpiar programas de inicio.",
       estado: "En reparación",
-      checklist: [
-        { itemId: "i1", texto: "Enciende correctamente", ok: true },
-        { itemId: "i2", texto: "Pantalla sin fallas", ok: null },
-        { itemId: "i3", texto: "Teclado y mouse funcionan", ok: null },
-        { itemId: "i4", texto: "Red / Wi-Fi operativa", ok: null },
-        { itemId: "i5", texto: "Almacenamiento sin errores", ok: null },
-      ],
+      plantillaId: "pl-logica",
+      servicio: PLANTILLA["pl-logica"].nombre,
+      checklist: checklistDe("pl-logica", [true, null, null, null, null, null]),
       observaciones: [],
       creada: "2026-11-10T10:00:00.000Z",
       cerrada: null,
@@ -290,13 +283,9 @@ export const crearDatosIniciales = () => ({
       diagnostico: "No enciende la pantalla; posible falla de inverter.",
       trabajo: "Revisar pantalla y reemplazar cable flex si es necesario.",
       estado: "En reparación",
-      checklist: [
-        { itemId: "i1", texto: "Enciende correctamente", ok: false },
-        { itemId: "i2", texto: "Pantalla sin fallas", ok: false },
-        { itemId: "i3", texto: "Teclado y mouse funcionan", ok: true },
-        { itemId: "i4", texto: "Red / Wi-Fi operativa", ok: true },
-        { itemId: "i5", texto: "Almacenamiento sin errores", ok: null },
-      ],
+      plantillaId: "pl-fisica",
+      servicio: PLANTILLA["pl-fisica"].nombre,
+      checklist: checklistDe("pl-fisica", [false, true, null, null, true, null]),
       observaciones: [],
       creada: "2026-11-09T15:10:00.000Z",
       cerrada: null,
@@ -311,13 +300,9 @@ export const crearDatosIniciales = () => ({
       diagnostico: "Equipo lento y con ventilador ruidoso.",
       trabajo: "Limpieza interna, cambio de pasta térmica y optimización.",
       estado: "Listo",
-      checklist: [
-        { itemId: "i1", texto: "Enciende correctamente", ok: true },
-        { itemId: "i2", texto: "Pantalla sin fallas", ok: true },
-        { itemId: "i3", texto: "Teclado y mouse funcionan", ok: true },
-        { itemId: "i4", texto: "Red / Wi-Fi operativa", ok: true },
-        { itemId: "i5", texto: "Almacenamiento sin errores", ok: true },
-      ],
+      plantillaId: "pl-logica",
+      servicio: PLANTILLA["pl-logica"].nombre,
+      checklist: checklistDe("pl-logica", [true, true, true, true, true, true]),
       observaciones: [],
       creada: "2026-11-10T09:45:00.000Z",
       cerrada: null,
@@ -332,13 +317,10 @@ export const crearDatosIniciales = () => ({
       diagnostico: "Formateo solicitado por el propietario.",
       trabajo: "Respaldo de archivos y formateo con Windows 11.",
       estado: "Recibido",
-      checklist: [
-        { itemId: "i1", texto: "Enciende correctamente", ok: null },
-        { itemId: "i2", texto: "Pantalla sin fallas", ok: null },
-        { itemId: "i3", texto: "Teclado y mouse funcionan", ok: null },
-        { itemId: "i4", texto: "Red / Wi-Fi operativa", ok: null },
-        { itemId: "i5", texto: "Almacenamiento sin errores", ok: null },
-      ],
+      // El propietario eligió "Otro": el técnico elige el checklist
+      plantillaId: null,
+      servicio: "",
+      checklist: [],
       observaciones: [],
       creada: "2026-11-11T16:30:00.000Z",
       cerrada: null,
